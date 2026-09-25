@@ -97,9 +97,10 @@ impl ClientShellState {
                 .endpoint_status(&self.active_endpoint_id)
                 .unwrap_or(ClientEndpointStatus::Connecting);
             let (_, label, _) = endpoint_status_presentation(status, &self.config.palette);
-            format!(
-                "{}: {label}. Select a connected machine.",
-                self.active_endpoint_label()
+            crate::trf!(
+                "{endpoint}: {label}. Select a connected machine.",
+                endpoint = self.active_endpoint_label(),
+                label = label
             )
         });
         let message_area = if layout.sidebar.width > 0 {

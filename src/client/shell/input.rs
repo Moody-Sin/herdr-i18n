@@ -688,8 +688,8 @@ impl ClientShellState {
             self.push_endpoint_notice(
                 ClientEndpointNoticeKind::Rejected,
                 "navigate_endpoint_inactive",
-                "Confirm workspace first",
-                "Select an available workspace and press Enter before using workspace or pane actions",
+                crate::tr!("Confirm workspace first"),
+                crate::tr!("Select an available workspace and press Enter before using workspace or pane actions"),
             );
             outcome.repaint = true;
             return;

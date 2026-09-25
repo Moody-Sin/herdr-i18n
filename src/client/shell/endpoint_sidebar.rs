@@ -238,7 +238,7 @@ pub(super) fn render_expanded(
         workspace_area.x,
         workspace_area.y,
         workspace_area.width,
-        " machines",
+        crate::tr!(" machines"),
         Style::default()
             .fg(palette.overlay0)
             .add_modifier(Modifier::BOLD),
@@ -499,7 +499,7 @@ pub(super) fn render_expanded(
 
     let footer_y = workspace_area.bottom().saturating_sub(1);
     if config.mouse_capture {
-        let label = format!(" new · {}", active_endpoint_label(state));
+        let label = crate::trf!(" new · {label}", label = active_endpoint_label(state));
         hits.new_workspace = Rect::new(
             workspace_area.x,
             footer_y,

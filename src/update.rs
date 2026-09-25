@@ -2110,6 +2110,12 @@ fn homebrew_cellar_keg_root(path: &Path) -> Option<PathBuf> {
 
 /// Manual self-update command (`herdr update`).
 pub fn self_update(options: SelfUpdateOptions) -> Result<Version, String> {
+    if crate::i18n::LOCALIZED_BUILD {
+        return Err(crate::tr!(
+            "self-update is disabled for this local Chinese build; sync upstream and rebuild"
+        )
+        .to_owned());
+    }
     let channel = UpdateChannel::configured();
 
     if is_homebrew_managed_install() {

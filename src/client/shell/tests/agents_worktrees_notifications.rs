@@ -624,7 +624,7 @@ fn workspace_state_text_does_not_stack_terminal_faint() {
     let frame = state.compose(106, 30).expect("workspace sidebar frame");
     let rect = state.hits.workspaces.first().expect("workspace hit").rect;
     let buffer = frame.to_ratatui_buffer().expect("workspace sidebar buffer");
-    let (x, y) = cell_symbol_position(&frame, rect, "idle");
+    let (x, y) = cell_symbol_position(&frame, rect, crate::tr!("idle"));
     let cell = buffer.cell((x, y)).expect("workspace state text cell");
     assert!(
         !cell.modifier.contains(Modifier::DIM),
@@ -980,7 +980,7 @@ fn navigate_mode_selects_workspace_locally_then_focuses_by_stable_id() {
         .collect::<Vec<_>>()
         .join("\n");
     assert!(text.contains("second"));
-    assert!(text.contains("NAVIGATE"));
+    assert!(text.contains(crate::tr!(" NAVIGATE ")));
 
     let focus = state.handle_input_bytes(b"\r");
     let [ClientShellAction::Endpoint { request, .. }] = &focus.actions[..] else {
@@ -1029,8 +1029,8 @@ fn worktree_create_previews_the_endpoint_owned_checkout_path() {
         })
         .collect::<Vec<_>>()
         .join("\n");
-    assert!(text.contains("new worktree"));
-    assert!(text.contains("create and open"));
+    assert!(text.contains(crate::tr!("new worktree")));
+    assert!(text.contains(crate::tr!(" ↵ create and open ")));
     assert!(frame.cursor.as_ref().is_some_and(|cursor| cursor.visible));
 
     assert!(state
@@ -1273,8 +1273,10 @@ fn worktree_remove_escalates_recoverable_failure_to_force_confirmation() {
             })
             .collect::<Vec<_>>()
             .join("\n");
-        assert!(text.contains("delete anyway"));
-        assert!(text.contains("permanently deleted"));
+        assert!(text.contains(crate::tr!(" ↵ delete anyway ")));
+        assert!(text.contains(crate::tr!(
+            " Dirty or untracked files will be permanently deleted."
+        )));
         let force = state.handle_input_bytes(b"\r");
         let [ClientShellAction::Endpoint { request, .. }] = &force.actions[..] else {
             panic!("forced worktree remove should use endpoint API");
@@ -1367,7 +1369,7 @@ fn semantic_notifications_use_client_policy_and_stable_navigation_targets() {
         })
         .collect::<Vec<_>>()
         .join("\n");
-    assert!(rendered.contains("codex needs attention"));
+    assert!(rendered.contains(crate::trf!("{agent} needs attention", agent = "codex").as_str()));
     let hit = state.hits.notification_toast;
     let click = || {
         RawInputEvent::Mouse(crossterm::event::MouseEvent {

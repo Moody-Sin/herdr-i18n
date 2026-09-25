@@ -348,9 +348,9 @@ fn render_release_notes_overlay(
         subtitle_area.y,
         subtitle_area.width,
         if notes.preview {
-            "update ready"
+            crate::tr!("update ready")
         } else {
-            "what's new in this release"
+            crate::tr!("what's new in this release")
         },
         base.fg(p.overlay1),
     );
@@ -363,7 +363,7 @@ fn render_release_notes_overlay(
     button(
         b,
         close,
-        " esc close ",
+        crate::tr!(" esc close "),
         Style::default()
             .fg(contrast(p))
             .bg(p.accent)
@@ -392,11 +392,11 @@ fn render_release_notes_overlay(
 
     if let Some(footer_area) = stack.footer {
         let footer_line = ratatui::text::Line::from(vec![
-            ratatui::text::Span::styled(" scroll ", base.fg(p.overlay0)),
-            ratatui::text::Span::styled("wheel ↑↓", base.fg(p.text)),
+            ratatui::text::Span::styled(crate::tr!(" scroll "), base.fg(p.overlay0)),
+            ratatui::text::Span::styled(crate::tr!("wheel ↑↓"), base.fg(p.text)),
             ratatui::text::Span::styled("  ·  ", base.fg(p.overlay0)),
-            ratatui::text::Span::styled("close", base.fg(p.overlay0)),
-            ratatui::text::Span::styled(" esc / enter ", base.fg(p.text)),
+            ratatui::text::Span::styled(crate::tr!("close"), base.fg(p.overlay0)),
+            ratatui::text::Span::styled(crate::tr!(" esc / enter "), base.fg(p.text)),
         ]);
         ratatui::widgets::Widget::render(
             ratatui::widgets::Paragraph::new(footer_line),
@@ -458,9 +458,9 @@ fn render_product_announcement_overlay(
         base.fg(p.text).add_modifier(Modifier::BOLD),
     );
     let subtitle = if announcement.preview {
-        "product announcement preview"
+        crate::tr!("product announcement preview")
     } else {
-        "product announcement"
+        crate::tr!("product announcement")
     };
     put_text(
         b,
@@ -479,7 +479,7 @@ fn render_product_announcement_overlay(
     button(
         b,
         close,
-        " esc close ",
+        crate::tr!(" esc close "),
         Style::default()
             .fg(contrast(p))
             .bg(p.accent)
@@ -508,11 +508,11 @@ fn render_product_announcement_overlay(
 
     if let Some(footer_area) = stack.footer {
         let footer_line = ratatui::text::Line::from(vec![
-            ratatui::text::Span::styled(" scroll ", base.fg(p.overlay0)),
-            ratatui::text::Span::styled("wheel ↑↓", base.fg(p.text)),
+            ratatui::text::Span::styled(crate::tr!(" scroll "), base.fg(p.overlay0)),
+            ratatui::text::Span::styled(crate::tr!("wheel ↑↓"), base.fg(p.text)),
             ratatui::text::Span::styled("  ·  ", base.fg(p.overlay0)),
-            ratatui::text::Span::styled("close", base.fg(p.overlay0)),
-            ratatui::text::Span::styled(" esc / enter ", base.fg(p.text)),
+            ratatui::text::Span::styled(crate::tr!("close"), base.fg(p.overlay0)),
+            ratatui::text::Span::styled(crate::tr!(" esc / enter "), base.fg(p.text)),
         ]);
         ratatui::widgets::Widget::render(
             ratatui::widgets::Paragraph::new(footer_line),
@@ -562,12 +562,19 @@ fn render_onboarding_overlay(b: &mut Buffer, p: &Palette) -> Option<OverlayRende
         stack.header.x,
         stack.header.y.saturating_add(1),
         stack.header.width,
-        crate::ui::ONBOARDING_SUBTITLE,
+        crate::tr!("  terminal workspace manager for coding agents"),
         muted,
     );
 
     let content = stack.content;
-    for (offset, line) in crate::ui::ONBOARDING_DESCRIPTION.iter().enumerate() {
+    for (offset, line) in [
+        crate::tr!("  this is a mouse-first terminal."),
+        crate::tr!("  click the sidebar to switch workspaces, drag pane"),
+        crate::tr!("  borders to resize, right-click for context menus."),
+    ]
+    .iter()
+    .enumerate()
+    {
         put_text(
             b,
             content.x,
@@ -583,9 +590,9 @@ fn render_onboarding_overlay(b: &mut Buffer, p: &Palette) -> Option<OverlayRende
     for (value, style) in [
         ("  ", base),
         (crate::ui::ONBOARDING_PREFIX_LABEL, accent),
-        (crate::ui::ONBOARDING_PREFIX_SUFFIX, text),
+        (crate::tr!(" enters prefix mode · "), text),
         (crate::ui::ONBOARDING_HELP_LABEL, accent),
-        (crate::ui::ONBOARDING_HELP_SUFFIX, text),
+        (crate::tr!(" shows keybinds and settings"), text),
     ] {
         let width = display_width(value);
         put_text(
@@ -603,7 +610,7 @@ fn render_onboarding_overlay(b: &mut Buffer, p: &Palette) -> Option<OverlayRende
         content.x,
         content.y.saturating_add(5),
         content.width,
-        crate::ui::ONBOARDING_NEXT,
+        crate::tr!("  next: install optional agent integrations for more reliable state"),
         text,
     );
 
@@ -611,7 +618,7 @@ fn render_onboarding_overlay(b: &mut Buffer, p: &Palette) -> Option<OverlayRende
     button(
         b,
         primary,
-        " ↵ continue ",
+        crate::tr!(" ↵ continue "),
         Style::default()
             .fg(contrast(p))
             .bg(p.accent)
@@ -658,7 +665,7 @@ fn render_rename_overlay(
     button(
         b,
         *save,
-        " ↵ save ",
+        crate::tr!(" ↵ save "),
         Style::default()
             .fg(contrast(p))
             .bg(p.accent)
@@ -668,8 +675,8 @@ fn render_rename_overlay(
         .fg(p.text)
         .bg(p.surface0)
         .add_modifier(Modifier::BOLD);
-    button(b, *clear, " ^c clear ", n);
-    button(b, *cancel, " esc cancel ", n);
+    button(b, *clear, crate::tr!(" ^c clear "), n);
+    button(b, *cancel, crate::tr!(" esc cancel "), n);
     Some(OverlayRender {
         area: q,
         primary: *save,
@@ -728,14 +735,14 @@ fn render_navigator_overlay(
         format!(
             " / {}",
             match f {
-                ClientNavigatorFilter::Blocked => "blocked",
-                ClientNavigatorFilter::Working => "working",
-                ClientNavigatorFilter::Idle => "idle",
-                ClientNavigatorFilter::Done => "done",
+                ClientNavigatorFilter::Blocked => crate::tr!("blocked"),
+                ClientNavigatorFilter::Working => crate::tr!("working"),
+                ClientNavigatorFilter::Idle => crate::tr!("idle"),
+                ClientNavigatorFilter::Done => crate::tr!("done"),
             }
         )
     } else if n.query.is_empty() {
-        " / search panes".to_owned()
+        crate::tr!(" / search panes").to_owned()
     } else {
         format!(" / {}", n.query)
     };
@@ -749,12 +756,11 @@ fn render_navigator_overlay(
             .fg(if n.search_focused { p.text } else { p.overlay0 })
             .bg(p.panel_bg),
     );
-    let count = format!(
-        "{} panes",
-        rows.iter()
-            .filter(|row| matches!(row.target, ClientNavigatorTarget::Pane { .. }))
-            .count()
-    );
+    let pane_count = rows
+        .iter()
+        .filter(|row| matches!(row.target, ClientNavigatorTarget::Pane { .. }))
+        .count();
+    let count = crate::trf!("{count} panes", count = pane_count);
     let cursor = if n.search_focused {
         text_editor::render(
             b,
@@ -934,9 +940,11 @@ fn render_navigator_overlay(
         i.bottom() - 1,
         i.width,
         if n.search_focused {
-            " search type · move ↑↓/ctrl+n/p · open enter · back esc"
+            crate::tr!(" search type · move ↑↓/ctrl+n/p · open enter · back esc")
         } else {
-            " move j/k · expand space · filter a/b/w/i/d · search / · open enter · close esc"
+            crate::tr!(
+                " move j/k · expand space · filter a/b/w/i/d · search / · open enter · close esc"
+            )
         },
         Style::default().fg(p.overlay0).bg(p.panel_bg),
     );
@@ -968,13 +976,17 @@ fn help_lines(
     );
     let key_width = groups
         .iter()
-        .flat_map(|(_, entries)| entries.iter().map(|(key, _)| key.chars().count()))
+        .flat_map(|(_, entries)| {
+            entries
+                .iter()
+                .map(|(key, _)| usize::from(display_width(key)))
+        })
         .max()
         .unwrap_or(8);
     if groups.is_empty() {
-        let message = " no matching keybinds";
+        let message = crate::tr!(" no matching keybinds");
         return vec![(
-            message.chars().count(),
+            usize::from(display_width(message)),
             Line::from(Span::styled(
                 message,
                 Style::default().fg(palette.overlay1).bg(palette.panel_bg),
@@ -985,7 +997,7 @@ fn help_lines(
     let mut lines = Vec::new();
     for (group, entries) in groups {
         lines.push((
-            group.len() + 1,
+            usize::from(display_width(group)) + 1,
             Line::from(Span::styled(
                 format!(" {group}"),
                 Style::default()
@@ -996,7 +1008,9 @@ fn help_lines(
         ));
         for (key, label) in entries {
             let padded_key = format!(" {key:<key_width$} ");
-            let width = padded_key.chars().count() + label.chars().count();
+            let label = label.into_owned();
+            let width =
+                usize::from(display_width(&padded_key)) + usize::from(display_width(&label));
             lines.push((
                 width,
                 Line::from(vec![
@@ -1008,7 +1022,7 @@ fn help_lines(
                             .add_modifier(Modifier::BOLD),
                     ),
                     Span::styled(
-                        label.into_owned(),
+                        label,
                         Style::default().fg(palette.text).bg(palette.panel_bg),
                     ),
                 ]),
@@ -1037,7 +1051,7 @@ fn render_help_overlay(
         i.x,
         i.y,
         i.width,
-        "keybinds",
+        crate::tr!("keybinds"),
         Style::default()
             .fg(p.text)
             .bg(p.panel_bg)
@@ -1048,9 +1062,9 @@ fn render_help_overlay(
         b,
         close,
         if h.search_focused {
-            " esc back "
+            crate::tr!(" esc back ")
         } else {
-            " esc close "
+            crate::tr!(" esc close ")
         },
         Style::default()
             .fg(contrast(p))
@@ -1066,7 +1080,7 @@ fn render_help_overlay(
         &if h.search_focused {
             " / ".to_owned()
         } else {
-            " / press / to filter by command or shortcut".to_owned()
+            crate::tr!(" / press / to filter by command or shortcut").to_owned()
         },
         Style::default()
             .fg(if h.search_focused { p.text } else { p.overlay0 })
@@ -1141,9 +1155,9 @@ fn render_help_overlay(
         i.bottom() - 1,
         i.width,
         if h.search_focused {
-            " edit ←→/home/end · kill ^u/^k · yank ^y · scroll ↑↓ · back esc"
+            crate::tr!(" edit ←→/home/end · kill ^u/^k · yank ^y · scroll ↑↓ · back esc")
         } else {
-            " search / · scroll j/k/↑↓/pgup/pgdn · close esc/enter"
+            crate::tr!(" search / · scroll j/k/↑↓/pgup/pgdn · close esc/enter")
         },
         Style::default().fg(p.overlay0).bg(p.panel_bg),
     );
@@ -1191,7 +1205,7 @@ fn render_confirm_close_overlay(
     button(
         b,
         *ok,
-        " ↵ confirm ",
+        crate::tr!(" ↵ confirm "),
         Style::default()
             .fg(contrast(p))
             .bg(p.red)
@@ -1200,7 +1214,7 @@ fn render_confirm_close_overlay(
     button(
         b,
         *cancel,
-        " esc cancel ",
+        crate::tr!(" esc cancel "),
         Style::default()
             .fg(p.text)
             .bg(p.surface0)

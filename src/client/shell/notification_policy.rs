@@ -70,7 +70,7 @@ impl ClientShellState {
             && !self.endpoint_is_online(&notification.endpoint_id)
         {
             let label = self.endpoint_label(&notification.endpoint_id).to_owned();
-            self.receive_endpoint_unavailable(format!("{label} is unavailable"));
+            self.receive_endpoint_unavailable(crate::trf!("{label} is unavailable", label = label));
             outcome.repaint = true;
             return;
         }
@@ -224,14 +224,14 @@ impl ClientShellState {
                 crate::config::ToastDelivery::Herdr => {}
                 crate::config::ToastDelivery::Terminal if !suppress_external => {
                     effects.push(ClientShellNotificationEffect::Terminal {
-                        title: pending.event.title,
-                        body: pending.event.body,
+                        title: super::notifications::localized_notification_title(&pending.event),
+                        body: super::notifications::localized_notification_body(&pending.event),
                     });
                 }
                 crate::config::ToastDelivery::System if !suppress_external => {
                     effects.push(ClientShellNotificationEffect::System {
-                        title: pending.event.title,
-                        body: pending.event.body,
+                        title: super::notifications::localized_notification_title(&pending.event),
+                        body: super::notifications::localized_notification_body(&pending.event),
                     });
                 }
                 crate::config::ToastDelivery::Terminal | crate::config::ToastDelivery::System => {}

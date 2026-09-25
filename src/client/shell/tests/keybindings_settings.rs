@@ -232,7 +232,7 @@ detach = "prefix+x"
         })
         .collect::<Vec<_>>()
         .join("\n");
-    assert!(text.contains("PREFIX"), "frame: {text:?}");
+    assert!(text.contains(crate::tr!(" PREFIX ")), "frame: {text:?}");
     assert!(text.contains("ctrl+a"), "frame: {text:?}");
 
     let detach = state.handle_input_bytes(b"x");
@@ -725,7 +725,7 @@ fn help_overlay_restores_released_search_scroll_and_custom_binding_behavior() {
         })
         .collect::<Vec<_>>()
         .join("\n");
-    assert!(text.contains("global"));
+    assert!(text.contains(crate::tr!("global")));
     assert!(state.hits.help_max_scroll > 0);
     assert_ne!(state.hits.help_scrollbar, Rect::default());
 
@@ -742,7 +742,7 @@ fn help_overlay_restores_released_search_scroll_and_custom_binding_behavior() {
         })
         .collect::<Vec<_>>()
         .join("\n");
-    assert!(text.contains("custom"));
+    assert!(text.contains(crate::tr!("custom")));
     assert!(text.contains("run plugin action"));
     state.handle_input_bytes(b"\x1b");
 
@@ -759,7 +759,7 @@ fn help_overlay_restores_released_search_scroll_and_custom_binding_behavior() {
         })
         .collect::<Vec<_>>()
         .join("\n");
-    assert!(text.contains("no matching keybinds"));
+    assert!(text.contains(crate::tr!(" no matching keybinds")));
 
     state.handle_input_bytes(b"\x1b");
     assert!(matches!(

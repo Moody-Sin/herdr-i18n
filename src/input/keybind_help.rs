@@ -24,7 +24,7 @@ pub(crate) fn keybind_help_text_char(key: &TerminalKey) -> Option<char> {
 }
 
 fn entry(key: impl Into<String>, label: &'static str) -> KeybindHelpEntry {
-    (key.into(), Cow::Borrowed(label))
+    (key.into(), Cow::Borrowed(crate::i18n::text(label)))
 }
 
 fn binding_label(bindings: &ActionKeybinds) -> String {
@@ -67,7 +67,7 @@ pub(crate) fn keybind_help_groups(
 ) -> Vec<KeybindHelpGroup> {
     let mut groups = vec![
         (
-            "global",
+            crate::tr!("global"),
             vec![
                 entry(crate::config::format_key_combo(prefix), "prefix mode"),
                 entry(binding_label(&keybinds.help), "keybinds"),
@@ -81,7 +81,7 @@ pub(crate) fn keybind_help_groups(
             ],
         ),
         (
-            "navigation",
+            crate::tr!("navigation"),
             vec![
                 entry("esc", "back"),
                 entry(
@@ -108,7 +108,7 @@ pub(crate) fn keybind_help_groups(
             ],
         ),
         (
-            "workspaces / tabs",
+            crate::tr!("workspaces / tabs"),
             vec![
                 entry(
                     binding_label(&keybinds.workspace_picker),
@@ -150,7 +150,7 @@ pub(crate) fn keybind_help_groups(
             ],
         ),
         (
-            "panes",
+            crate::tr!("panes"),
             vec![
                 entry(binding_label(&keybinds.split_vertical), "split vertical"),
                 entry(
@@ -196,7 +196,7 @@ pub(crate) fn keybind_help_groups(
 
     if !keybinds.custom_commands.is_empty() {
         groups.push((
-            "custom",
+            crate::tr!("custom"),
             keybinds
                 .custom_commands
                 .iter()
@@ -207,7 +207,7 @@ pub(crate) fn keybind_help_groups(
                             .description
                             .clone()
                             .map(Cow::Owned)
-                            .unwrap_or(Cow::Borrowed("custom command")),
+                            .unwrap_or(Cow::Borrowed(crate::tr!("custom command"))),
                     )
                 })
                 .collect(),

@@ -195,9 +195,9 @@ impl ClientShellState {
             .is_some_and(|worktree| worktree.is_linked_worktree);
         let kind = match action {
             KeybindAction::NewWorktree | KeybindAction::OpenWorktree if linked => {
-                self.set_endpoint_error(
-                    "New and open worktree actions start from the repo parent workspace.",
-                );
+                self.set_endpoint_error(crate::tr!(
+                    "New and open worktree actions start from the repo parent workspace."
+                ));
                 outcome.repaint = true;
                 return;
             }
@@ -208,7 +208,9 @@ impl ClientShellState {
                 workspace_id: workspace_id.clone(),
             },
             KeybindAction::RemoveWorktree if !linked => {
-                self.set_endpoint_error("This workspace is not a Herdr-managed worktree checkout.");
+                self.set_endpoint_error(crate::tr!(
+                    "This workspace is not a Herdr-managed worktree checkout."
+                ));
                 outcome.repaint = true;
                 return;
             }
@@ -420,7 +422,7 @@ impl ClientShellState {
                     })
                     .collect::<Vec<_>>();
                 if entries.is_empty() {
-                    self.set_endpoint_error("No Git worktrees found for this repo.");
+                    self.set_endpoint_error(crate::tr!("No Git worktrees found for this repo."));
                 } else {
                     self.overlay = Some(ClientShellOverlay::WorktreeOpen(
                         ClientWorktreeOpenOverlay {
@@ -522,7 +524,9 @@ impl ClientShellState {
                 Err(_),
             ) => true,
             (_, Ok(_)) => {
-                self.set_endpoint_error("endpoint returned an unexpected worktree result");
+                self.set_endpoint_error(
+                    crate::tr!("endpoint returned an unexpected worktree result").to_owned(),
+                );
                 true
             }
             (

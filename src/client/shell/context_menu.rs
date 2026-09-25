@@ -7,44 +7,54 @@ impl ClientContextMenuOverlay {
         let item = |label, action| ClientContextMenuItem { label, action };
         match &self.target {
             ClientContextMenuTarget::Workspace { is_git: false, .. } => {
-                vec![item("Rename", Action::Rename), item("Close", Action::Close)]
+                vec![
+                    item(crate::tr!("Rename"), Action::Rename),
+                    item(crate::tr!("Close"), Action::Close),
+                ]
             }
             ClientContextMenuTarget::Workspace {
                 is_linked_worktree: false,
                 has_worktree_children: false,
                 ..
             } => vec![
-                item("Rename", Action::Rename),
-                item("Close", Action::Close),
-                item("New worktree", Action::NewWorktree),
-                item("Open worktree...", Action::OpenWorktree),
+                item(crate::tr!("Rename"), Action::Rename),
+                item(crate::tr!("Close"), Action::Close),
+                item(crate::tr!("New worktree"), Action::NewWorktree),
+                item(crate::tr!("Open worktree..."), Action::OpenWorktree),
             ],
             ClientContextMenuTarget::Workspace {
                 is_linked_worktree: true,
                 ..
             } => vec![
-                item("Rename", Action::Rename),
-                item("Close", Action::Close),
-                item("Delete worktree checkout...", Action::RemoveWorktree),
+                item(crate::tr!("Rename"), Action::Rename),
+                item(crate::tr!("Close"), Action::Close),
+                item(
+                    crate::tr!("Delete worktree checkout..."),
+                    Action::RemoveWorktree,
+                ),
             ],
             ClientContextMenuTarget::Workspace {
                 has_worktree_children: true,
                 collapsed,
                 ..
             } => vec![
-                item("Rename", Action::Rename),
-                item("Close group", Action::Close),
-                item("New worktree", Action::NewWorktree),
-                item("Open worktree...", Action::OpenWorktree),
+                item(crate::tr!("Rename"), Action::Rename),
+                item(crate::tr!("Close group"), Action::Close),
+                item(crate::tr!("New worktree"), Action::NewWorktree),
+                item(crate::tr!("Open worktree..."), Action::OpenWorktree),
                 item(
-                    if *collapsed { "Expand" } else { "Collapse" },
+                    if *collapsed {
+                        crate::tr!("Expand")
+                    } else {
+                        crate::tr!("Collapse")
+                    },
                     Action::ToggleGroup,
                 ),
             ],
             ClientContextMenuTarget::Tab { .. } => vec![
-                item("New tab", Action::NewTab),
-                item("Rename", Action::Rename),
-                item("Close", Action::Close),
+                item(crate::tr!("New tab"), Action::NewTab),
+                item(crate::tr!("Rename"), Action::Rename),
+                item(crate::tr!("Close"), Action::Close),
             ],
             ClientContextMenuTarget::Pane {
                 source_pane_id,
@@ -52,26 +62,29 @@ impl ClientContextMenuOverlay {
                 right_click_passthrough,
                 ..
             } => {
-                let mut items = vec![item("Rename pane", Action::RenamePane)];
+                let mut items = vec![item(crate::tr!("Rename pane"), Action::RenamePane)];
                 if *has_manual_label {
-                    items.push(item("Clear pane name", Action::ClearPaneName));
+                    items.push(item(crate::tr!("Clear pane name"), Action::ClearPaneName));
                 }
                 if source_pane_id.is_some() {
-                    items.push(item("Swap with focused pane", Action::SwapWithFocusedPane));
+                    items.push(item(
+                        crate::tr!("Swap with focused pane"),
+                        Action::SwapWithFocusedPane,
+                    ));
                 }
                 items.extend([
-                    item("Split right", Action::SplitRight),
-                    item("Split down", Action::SplitDown),
-                    item("Zoom", Action::Zoom),
+                    item(crate::tr!("Split right"), Action::SplitRight),
+                    item(crate::tr!("Split down"), Action::SplitDown),
+                    item(crate::tr!("Zoom"), Action::Zoom),
                     item(
                         if *right_click_passthrough {
-                            "Use Herdr right-click menu"
+                            crate::tr!("Use Herdr right-click menu")
                         } else {
-                            "Send right-clicks to pane"
+                            crate::tr!("Send right-clicks to pane")
                         },
                         Action::ToggleRightClickPassthrough,
                     ),
-                    item("Close pane", Action::ClosePane),
+                    item(crate::tr!("Close pane"), Action::ClosePane),
                 ]);
                 items
             }
@@ -239,7 +252,7 @@ impl ClientShellState {
                     .map(|workspace| workspace.label.clone());
                 if let Some(label) = label {
                     self.overlay = Some(ClientShellOverlay::Rename(ClientRenameOverlay {
-                        title: "rename workspace",
+                        title: crate::tr!("rename workspace"),
                         input: TextEditor::new(&label, false),
                         target: ClientRenameTarget::Workspace { workspace_id },
                     }));
@@ -320,7 +333,7 @@ impl ClientShellState {
                         + 1)
                     .to_string();
                     self.overlay = Some(ClientShellOverlay::Rename(ClientRenameOverlay {
-                        title: "new tab",
+                        title: crate::tr!("new tab"),
                         input: TextEditor::new(&default_name, true),
                         target: ClientRenameTarget::NewTab {
                             workspace_id,
@@ -347,7 +360,7 @@ impl ClientShellState {
                     .and_then(|snapshot| snapshot.tabs.iter().find(|tab| tab.tab_id == tab_id));
                 if let Some(tab) = tab {
                     self.overlay = Some(ClientShellOverlay::Rename(ClientRenameOverlay {
-                        title: "rename tab",
+                        title: crate::tr!("rename tab"),
                         input: TextEditor::new(&tab.label, false),
                         target: ClientRenameTarget::Tab {
                             tab_id,
@@ -388,7 +401,7 @@ impl ClientShellState {
                         .and_then(|pane| pane.label.clone())
                 });
                 self.overlay = Some(ClientShellOverlay::Rename(ClientRenameOverlay {
-                    title: "rename pane",
+                    title: crate::tr!("rename pane"),
                     input: TextEditor::new(label.as_deref().unwrap_or_default(), label.is_none()),
                     target: ClientRenameTarget::Pane { pane_id },
                 }));

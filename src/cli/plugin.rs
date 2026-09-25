@@ -47,7 +47,10 @@ pub(super) fn run_plugin_command(args: &[String]) -> std::io::Result<i32> {
 
 fn plugin_link(args: &[String]) -> std::io::Result<i32> {
     let Some(path) = args.first() else {
-        eprintln!("usage: herdr plugin link <path> [--disabled]");
+        eprintln!(
+            "{}",
+            crate::tr!("usage: herdr plugin link <path> [--disabled]")
+        );
         return Ok(2);
     };
     let path = normalize_plugin_path_arg(path)?;
@@ -64,7 +67,10 @@ fn plugin_link(args: &[String]) -> std::io::Result<i32> {
                 index += 1;
             }
             other => {
-                eprintln!("unknown option: {other}");
+                eprintln!(
+                    "{}",
+                    crate::trf!("unknown option: {option}", option = other)
+                );
                 return Ok(2);
             }
         }
@@ -87,11 +93,17 @@ fn plugin_link(args: &[String]) -> std::io::Result<i32> {
 
 fn plugin_config_dir_command(args: &[String]) -> std::io::Result<i32> {
     let Some(plugin_id) = args.first() else {
-        eprintln!("usage: herdr plugin config-dir <plugin_id>");
+        eprintln!(
+            "{}",
+            crate::tr!("usage: herdr plugin config-dir <plugin_id>")
+        );
         return Ok(2);
     };
     if args.len() != 1 {
-        eprintln!("usage: herdr plugin config-dir <plugin_id>");
+        eprintln!(
+            "{}",
+            crate::tr!("usage: herdr plugin config-dir <plugin_id>")
+        );
         return Ok(2);
     }
     let path = crate::plugin_paths::plugin_config_dir(plugin_id);
@@ -117,7 +129,10 @@ fn plugin_list(args: &[String]) -> std::io::Result<i32> {
                 plugin_id = Some(value);
             }
             other => {
-                eprintln!("unknown option: {other}");
+                eprintln!(
+                    "{}",
+                    crate::trf!("unknown option: {option}", option = other)
+                );
                 return Ok(2);
             }
         }
@@ -139,11 +154,11 @@ fn plugin_list(args: &[String]) -> std::io::Result<i32> {
 
 fn plugin_unlink(args: &[String]) -> std::io::Result<i32> {
     let Some(plugin_id) = args.first() else {
-        eprintln!("usage: herdr plugin unlink <plugin_id>");
+        eprintln!("{}", crate::tr!("usage: herdr plugin unlink <plugin_id>"));
         return Ok(2);
     };
     if args.len() != 1 {
-        eprintln!("usage: herdr plugin unlink <plugin_id>");
+        eprintln!("{}", crate::tr!("usage: herdr plugin unlink <plugin_id>"));
         return Ok(2);
     }
     print_plugin_response(Method::PluginUnlink(PluginUnlinkParams {
@@ -153,7 +168,12 @@ fn plugin_unlink(args: &[String]) -> std::io::Result<i32> {
 
 fn plugin_install(args: &[String]) -> std::io::Result<i32> {
     let Some(source_arg) = args.first() else {
-        eprintln!("usage: herdr plugin install <owner>/<repo>[/subdir...] [--ref REF] [--yes]");
+        eprintln!(
+            "{}",
+            crate::tr!(
+                "usage: herdr plugin install <owner>/<repo>[/subdir...] [--ref REF] [--yes]"
+            )
+        );
         return Ok(2);
     };
     let source = match GithubPluginSource::parse(source_arg) {
@@ -179,14 +199,20 @@ fn plugin_install(args: &[String]) -> std::io::Result<i32> {
                 index += 1;
             }
             other => {
-                eprintln!("unknown option: {other}");
+                eprintln!(
+                    "{}",
+                    crate::trf!("unknown option: {option}", option = other)
+                );
                 return Ok(2);
             }
         }
     }
 
     if !yes && !io::stdin().is_terminal() {
-        eprintln!("remote plugin install requires --yes when stdin is not interactive");
+        eprintln!(
+            "{}",
+            crate::tr!("remote plugin install requires --yes when stdin is not interactive")
+        );
         return Ok(2);
     }
 
@@ -204,7 +230,7 @@ fn plugin_install(args: &[String]) -> std::io::Result<i32> {
             source.to_source_info(requested_ref, resolved_commit, None, current_unix_ms());
         print_install_preview(&preview_plugin, &source_info, existing.as_ref());
         if !yes && !confirm("Install this plugin?")? {
-            eprintln!("plugin install cancelled");
+            eprintln!("{}", crate::tr!("plugin install cancelled"));
             return Ok(0);
         }
         if let Err(err) = run_plugin_build_commands(&preview_plugin, &manifest_root) {
@@ -249,10 +275,20 @@ fn plugin_install(args: &[String]) -> std::io::Result<i32> {
             }
             Err(InstallFailure::KeepCheckout(err)) => return Err(err),
         };
-        println!("Installed {} from {}.", plugin.plugin_id, source.display());
         println!(
-            "Config: {}",
-            crate::plugin_paths::plugin_config_dir(&plugin.plugin_id).display()
+            "{}",
+            crate::trf!(
+                "Installed {plugin_id} from {source}.",
+                plugin_id = plugin.plugin_id,
+                source = source.display()
+            )
+        );
+        println!(
+            "{}",
+            crate::trf!(
+                "Config: {path}",
+                path = crate::plugin_paths::plugin_config_dir(&plugin.plugin_id).display()
+            )
         );
         Ok(0)
     })();
@@ -262,11 +298,17 @@ fn plugin_install(args: &[String]) -> std::io::Result<i32> {
 
 fn plugin_uninstall(args: &[String]) -> std::io::Result<i32> {
     let Some(target) = args.first() else {
-        eprintln!("usage: herdr plugin uninstall <plugin_id|owner/repo[/subdir...]>");
+        eprintln!(
+            "{}",
+            crate::tr!("usage: herdr plugin uninstall <plugin_id|owner/repo[/subdir...]>")
+        );
         return Ok(2);
     };
     if args.len() != 1 {
-        eprintln!("usage: herdr plugin uninstall <plugin_id|owner/repo[/subdir...]>");
+        eprintln!(
+            "{}",
+            crate::tr!("usage: herdr plugin uninstall <plugin_id|owner/repo[/subdir...]>")
+        );
         return Ok(2);
     }
 
@@ -274,7 +316,10 @@ fn plugin_uninstall(args: &[String]) -> std::io::Result<i32> {
         Ok(source) => {
             let existing = installed_plugin_by_github_source(&source)?;
             let Some(existing) = existing else {
-                eprintln!("plugin not installed: {}", source.display());
+                eprintln!(
+                    "{}",
+                    crate::trf!("plugin not installed: {target}", target = source.display())
+                );
                 return Ok(1);
             };
             (existing.plugin_id.clone(), Some(existing))
@@ -300,7 +345,10 @@ fn plugin_uninstall(args: &[String]) -> std::io::Result<i32> {
                 return super::print_response(&response);
             }
             if response["result"]["removed"].as_bool() == Some(false) {
-                eprintln!("plugin not installed: {target}");
+                eprintln!(
+                    "{}",
+                    crate::trf!("plugin not installed: {target}", target = target)
+                );
                 return Ok(1);
             }
         }
@@ -311,7 +359,10 @@ fn plugin_uninstall(args: &[String]) -> std::io::Result<i32> {
                 before != plugins.len()
             })?;
             if !removed {
-                eprintln!("plugin not installed: {target}");
+                eprintln!(
+                    "{}",
+                    crate::trf!("plugin not installed: {target}", target = target)
+                );
                 return Ok(1);
             }
         }
@@ -321,7 +372,10 @@ fn plugin_uninstall(args: &[String]) -> std::io::Result<i32> {
     if let Some(plugin) = existing.as_ref() {
         remove_managed_plugin_files(plugin)?;
     }
-    println!("Uninstalled {plugin_id}.");
+    println!(
+        "{}",
+        crate::trf!("Uninstalled {plugin_id}.", plugin_id = plugin_id)
+    );
     Ok(0)
 }
 
@@ -368,13 +422,19 @@ fn plugin_log_list(args: &[String]) -> std::io::Result<i32> {
                     return Ok(2);
                 };
                 let Ok(parsed) = raw.parse::<usize>() else {
-                    eprintln!("invalid --limit value: {raw}");
+                    eprintln!(
+                        "{}",
+                        crate::trf!("invalid --limit value: {value}", value = raw)
+                    );
                     return Ok(2);
                 };
                 limit = Some(parsed);
             }
             other => {
-                eprintln!("unknown option: {other}");
+                eprintln!(
+                    "{}",
+                    crate::trf!("unknown option: {option}", option = other)
+                );
                 return Ok(2);
             }
         }
@@ -417,7 +477,10 @@ fn plugin_action_list(args: &[String]) -> std::io::Result<i32> {
                 plugin_id = Some(value);
             }
             other => {
-                eprintln!("unknown option: {other}");
+                eprintln!(
+                    "{}",
+                    crate::trf!("unknown option: {option}", option = other)
+                );
                 return Ok(2);
             }
         }
@@ -430,7 +493,10 @@ fn plugin_action_list(args: &[String]) -> std::io::Result<i32> {
 
 fn plugin_action_invoke(args: &[String]) -> std::io::Result<i32> {
     let Some(action_id) = args.first() else {
-        eprintln!("usage: herdr plugin action invoke <action_id> [--plugin ID]");
+        eprintln!(
+            "{}",
+            crate::tr!("usage: herdr plugin action invoke <action_id> [--plugin ID]")
+        );
         return Ok(2);
     };
     let mut plugin_id = None;
@@ -444,7 +510,10 @@ fn plugin_action_invoke(args: &[String]) -> std::io::Result<i32> {
                 plugin_id = Some(value);
             }
             other => {
-                eprintln!("unknown option: {other}");
+                eprintln!(
+                    "{}",
+                    crate::trf!("unknown option: {option}", option = other)
+                );
                 return Ok(2);
             }
         }
@@ -598,18 +667,21 @@ fn plugin_pane_open(args: &[String]) -> std::io::Result<i32> {
                 index += 1;
             }
             other => {
-                eprintln!("unknown option: {other}");
+                eprintln!(
+                    "{}",
+                    crate::trf!("unknown option: {option}", option = other)
+                );
                 return Ok(2);
             }
         }
     }
 
     let Some(plugin_id) = plugin_id else {
-        eprintln!("missing required --plugin");
+        eprintln!("{}", crate::tr!("missing required --plugin"));
         return Ok(2);
     };
     let Some(entrypoint) = entrypoint else {
-        eprintln!("missing required --entrypoint");
+        eprintln!("{}", crate::tr!("missing required --entrypoint"));
         return Ok(2);
     };
 
@@ -632,7 +704,14 @@ fn parse_popup_dimension(value: &str, flag: &str) -> Option<PopupSize> {
     match PopupSize::parse_cli(value) {
         Ok(value) => Some(value),
         Err(message) => {
-            eprintln!("{flag} {message}");
+            eprintln!(
+                "{}",
+                crate::trf!(
+                    "invalid value for {flag}: {message}",
+                    flag = flag,
+                    message = message
+                )
+            );
             None
         }
     }
@@ -640,11 +719,11 @@ fn parse_popup_dimension(value: &str, flag: &str) -> Option<PopupSize> {
 
 fn plugin_pane_focus(args: &[String]) -> std::io::Result<i32> {
     let Some(pane_id) = args.first() else {
-        eprintln!("usage: herdr plugin pane focus <pane_id>");
+        eprintln!("{}", crate::tr!("usage: herdr plugin pane focus <pane_id>"));
         return Ok(2);
     };
     if args.len() != 1 {
-        eprintln!("usage: herdr plugin pane focus <pane_id>");
+        eprintln!("{}", crate::tr!("usage: herdr plugin pane focus <pane_id>"));
         return Ok(2);
     }
     print_plugin_response(Method::PluginPaneFocus(PluginPaneFocusParams {
@@ -654,11 +733,11 @@ fn plugin_pane_focus(args: &[String]) -> std::io::Result<i32> {
 
 fn plugin_pane_close(args: &[String]) -> std::io::Result<i32> {
     let Some(pane_id) = args.first() else {
-        eprintln!("usage: herdr plugin pane close <pane_id>");
+        eprintln!("{}", crate::tr!("usage: herdr plugin pane close <pane_id>"));
         return Ok(2);
     };
     if args.len() != 1 {
-        eprintln!("usage: herdr plugin pane close <pane_id>");
+        eprintln!("{}", crate::tr!("usage: herdr plugin pane close <pane_id>"));
         return Ok(2);
     }
     print_plugin_response(Method::PluginPaneClose(PluginPaneCloseParams {
@@ -668,7 +747,7 @@ fn plugin_pane_close(args: &[String]) -> std::io::Result<i32> {
 
 fn required_value(args: &[String], index: &mut usize, flag: &str) -> Option<String> {
     let Some(value) = args.get(*index + 1) else {
-        eprintln!("missing value for {flag}");
+        eprintln!("{}", crate::trf!("missing value for {flag}", flag = flag));
         return None;
     };
     *index += 2;
@@ -683,7 +762,10 @@ fn parse_pane_placement(value: &str) -> Option<PluginPanePlacement> {
         "tab" => Some(PluginPanePlacement::Tab),
         "zoomed" | "fullscreen" => Some(PluginPanePlacement::Zoomed),
         _ => {
-            eprintln!("invalid pane placement: {value}");
+            eprintln!(
+                "{}",
+                crate::trf!("invalid pane placement: {value}", value = value)
+            );
             None
         }
     }
@@ -694,7 +776,10 @@ fn parse_split_direction(value: &str) -> Option<SplitDirection> {
         "right" => Some(SplitDirection::Right),
         "down" => Some(SplitDirection::Down),
         _ => {
-            eprintln!("invalid split direction: {value}");
+            eprintln!(
+                "{}",
+                crate::trf!("invalid split direction: {value}", value = value)
+            );
             None
         }
     }
@@ -1147,39 +1232,44 @@ fn print_plugin_list_human(response: &serde_json::Value) -> std::io::Result<i32>
         return super::print_response(response);
     };
     if plugins.is_empty() {
-        println!("No plugins installed.");
+        println!("{}", crate::tr!("No plugins installed."));
         return Ok(0);
     }
     println!(
-        "{} plugin{} installed:",
-        plugins.len(),
-        if plugins.len() == 1 { "" } else { "s" }
+        "{}",
+        crate::trf!("{count} plugins installed:", count = plugins.len())
     );
     for plugin in plugins {
         let enabled = if plugin.enabled {
-            "enabled"
+            crate::tr!("enabled")
         } else {
-            "disabled"
+            crate::tr!("disabled")
         };
         let warning = if plugin.warnings.is_empty() {
             String::new()
         } else {
-            format!("; {} warning(s)", plugin.warnings.len())
+            crate::trf!("; {count} warning(s)", count = plugin.warnings.len())
         };
         println!(
-            "- {} ({}) {} [{}{}]",
-            plugin.plugin_id,
-            plugin.name,
-            enabled,
-            source_display(&plugin),
-            warning
+            "{}",
+            crate::trf!(
+                "- {plugin_id} ({name}) {enabled} [{source}{warning}]",
+                plugin_id = plugin.plugin_id,
+                name = plugin.name,
+                enabled = enabled,
+                source = source_display(&plugin),
+                warning = warning
+            )
         );
         println!(
-            "  config: {}",
-            crate::plugin_paths::plugin_config_dir(&plugin.plugin_id).display()
+            "{}",
+            crate::trf!(
+                "  config: {path}",
+                path = crate::plugin_paths::plugin_config_dir(&plugin.plugin_id).display()
+            )
         );
         for warning in plugin.warnings {
-            println!("  warning: {warning}");
+            println!("{}", crate::trf!("  warning: {warning}", warning = warning));
         }
     }
     Ok(0)
@@ -1213,61 +1303,134 @@ fn print_install_preview(
     source: &PluginSourceInfo,
     existing: Option<&InstalledPluginInfo>,
 ) {
-    eprintln!("Plugin install preview:");
-    eprintln!("  id: {}", plugin.plugin_id);
-    eprintln!("  name: {}", plugin.name);
-    eprintln!("  version: {}", plugin.version);
+    eprintln!("{}", crate::tr!("Plugin install preview:"));
+    eprintln!("{}", crate::trf!("  id: {id}", id = plugin.plugin_id));
+    eprintln!("{}", crate::trf!("  name: {name}", name = plugin.name));
+    eprintln!(
+        "{}",
+        crate::trf!("  version: {version}", version = plugin.version)
+    );
     if let (Some(owner), Some(repo)) = (&source.owner, &source.repo) {
         let subdir = source
             .subdir
             .as_deref()
             .map(|subdir| format!("/{subdir}"))
             .unwrap_or_default();
-        eprintln!("  source: {owner}/{repo}{subdir}");
+        eprintln!(
+            "{}",
+            crate::trf!(
+                "  source: {source}",
+                source = format!("{owner}/{repo}{subdir}")
+            )
+        );
     }
     if let Some(reference) = &source.requested_ref {
-        eprintln!("  ref: {reference}");
+        eprintln!(
+            "{}",
+            crate::trf!("  ref: {reference}", reference = reference)
+        );
     }
     if let Some(commit) = &source.resolved_commit {
-        eprintln!("  commit: {commit}");
+        eprintln!("{}", crate::trf!("  commit: {commit}", commit = commit));
     }
-    eprintln!("  actions: {}", plugin.actions.len());
-    eprintln!("  startup commands: {}", plugin.startup.len());
-    eprintln!("  events: {}", plugin.events.len());
-    eprintln!("  panes: {}", plugin.panes.len());
-    eprintln!("  link handlers: {}", plugin.link_handlers.len());
-    eprintln!("  build commands: {}", plugin.build.len());
+    eprintln!(
+        "{}",
+        crate::trf!("  actions: {count}", count = plugin.actions.len())
+    );
+    eprintln!(
+        "{}",
+        crate::trf!("  startup commands: {count}", count = plugin.startup.len())
+    );
+    eprintln!(
+        "{}",
+        crate::trf!("  events: {count}", count = plugin.events.len())
+    );
+    eprintln!(
+        "{}",
+        crate::trf!("  panes: {count}", count = plugin.panes.len())
+    );
+    eprintln!(
+        "{}",
+        crate::trf!(
+            "  link handlers: {count}",
+            count = plugin.link_handlers.len()
+        )
+    );
+    eprintln!(
+        "{}",
+        crate::trf!("  build commands: {count}", count = plugin.build.len())
+    );
     for build in &plugin.build {
         let support = if build_platform_supported(&build.platforms, &plugin.platforms) {
             String::new()
         } else {
             format!(
-                " (skipped on {})",
-                plugin_platform_name(current_plugin_platform())
+                " ({})",
+                crate::trf!(
+                    "skipped on {platform}",
+                    platform = plugin_platform_name(current_plugin_platform())
+                )
             )
         };
-        eprintln!("    build{}: {}", support, build.command.join(" "));
+        eprintln!(
+            "{}",
+            crate::trf!(
+                "    build{support}: {command}",
+                support = support,
+                command = build.command.join(" ")
+            )
+        );
     }
     for startup in &plugin.startup {
-        eprintln!("    startup: {}", startup.command.join(" "));
+        eprintln!(
+            "{}",
+            crate::trf!(
+                "    startup: {command}",
+                command = startup.command.join(" ")
+            )
+        );
     }
     for action in &plugin.actions {
-        eprintln!("    action {}: {}", action.id, action.command.join(" "));
+        eprintln!(
+            "{}",
+            crate::trf!(
+                "    action {id}: {command}",
+                id = action.id,
+                command = action.command.join(" ")
+            )
+        );
     }
     for event in &plugin.events {
-        eprintln!("    event {}: {}", event.on, event.command.join(" "));
+        eprintln!(
+            "{}",
+            crate::trf!(
+                "    event {event}: {command}",
+                event = event.on,
+                command = event.command.join(" ")
+            )
+        );
     }
     for pane in &plugin.panes {
-        eprintln!("    pane {}: {}", pane.id, pane.command.join(" "));
+        eprintln!(
+            "{}",
+            crate::trf!(
+                "    pane {id}: {command}",
+                id = pane.id,
+                command = pane.command.join(" ")
+            )
+        );
     }
     for warning in &plugin.warnings {
-        eprintln!("  warning: {warning}");
+        eprintln!("{}", crate::trf!("  warning: {warning}", warning = warning));
     }
     if let Some(existing) = existing {
         eprintln!(
-            "  replaces: {} from {}",
-            existing.plugin_id,
-            source_display(existing)
+            "{}",
+            crate::trf!(
+                "  replaces: {plugin_id} from {source}",
+                plugin_id = existing.plugin_id,
+                source = source_display(existing)
+            )
         );
     }
 }
@@ -1653,7 +1816,7 @@ fn print_plugin_response(method: Method) -> std::io::Result<i32> {
 }
 
 fn print_plugin_help() {
-    eprintln!("herdr plugin commands:");
+    eprintln!("{}", crate::tr!("Herdr plugin commands:"));
     eprintln!("  herdr plugin install <owner>/<repo>[/subdir...] [--ref REF] [--yes]");
     eprintln!("  herdr plugin uninstall <plugin_id|owner/repo[/subdir...]>");
     eprintln!("  herdr plugin link <path> [--disabled]");
@@ -1668,13 +1831,13 @@ fn print_plugin_help() {
 }
 
 fn print_plugin_action_help() {
-    eprintln!("herdr plugin action commands:");
+    eprintln!("{}", crate::tr!("Herdr plugin action commands:"));
     eprintln!("  herdr plugin action list [--plugin ID]");
     eprintln!("  herdr plugin action invoke <action_id> [--plugin ID]");
 }
 
 fn print_plugin_pane_help() {
-    eprintln!("herdr plugin pane commands:");
+    eprintln!("{}", crate::tr!("Herdr plugin pane commands:"));
     eprintln!("  herdr plugin pane open --plugin ID --entrypoint ID [--placement overlay|popup|split|tab|zoomed] [--width SIZE] [--height SIZE] [--workspace ID] [--target-pane PANE] [--direction right|down] [--cwd PATH] [--env KEY=VALUE] [--focus|--no-focus]");
     eprintln!("  herdr plugin pane focus <pane_id>");
     eprintln!("  herdr plugin pane close <pane_id>");

@@ -58,7 +58,7 @@ pub(super) fn render_settings_overlay(
         inner.x,
         inner.y,
         inner.width,
-        " settings",
+        crate::tr!(" settings"),
         Style::default()
             .fg(palette.text)
             .bg(palette.panel_bg)
@@ -162,9 +162,12 @@ pub(super) fn render_settings_overlay(
             render_choice_section(
                 buffer,
                 content,
-                "agent status indicators",
-                "choose color dots or distinct symbols for each state",
-                &["color dots  ● ● ● ○ ·", "distinct symbols  × ◐ ✓ ○ ·"],
+                crate::tr!("agent status indicators"),
+                crate::tr!("choose color dots or distinct symbols for each state"),
+                &[
+                    crate::tr!("color dots  ● ● ● ○ ·"),
+                    crate::tr!("distinct symbols  × ◐ ✓ ○ ·"),
+                ],
                 settings.selected,
                 palette,
                 &mut choice_hits,
@@ -174,9 +177,9 @@ pub(super) fn render_settings_overlay(
             render_choice_section(
                 buffer,
                 content,
-                "sound alerts",
-                "play sounds when agents change state in background",
-                &["on", "off"],
+                crate::tr!("sound alerts"),
+                crate::tr!("play sounds when agents change state in background"),
+                &[crate::tr!("on"), crate::tr!("off")],
                 settings.selected,
                 palette,
                 &mut choice_hits,
@@ -186,9 +189,14 @@ pub(super) fn render_settings_overlay(
             render_choice_section(
                 buffer,
                 content,
-                "notification popups",
-                "choose where background popup notifications should appear",
-                &["off", "inside herdr", "via terminal", "via system"],
+                crate::tr!("notification popups"),
+                crate::tr!("choose where background popup notifications should appear"),
+                &[
+                    crate::tr!("off"),
+                    crate::tr!("inside herdr"),
+                    crate::tr!("via terminal"),
+                    crate::tr!("via system"),
+                ],
                 settings.selected,
                 palette,
                 &mut choice_hits,
@@ -212,9 +220,9 @@ pub(super) fn render_settings_overlay(
             buffer,
             primary,
             if settings.section == ClientSettingsSection::Integrations {
-                " ↵ install "
+                crate::tr!(" ↵ install ")
             } else {
-                " ↵ apply "
+                crate::tr!(" ↵ apply ")
             },
             Style::default()
                 .fg(contrast(palette))
@@ -228,7 +236,7 @@ pub(super) fn render_settings_overlay(
     button(
         buffer,
         close,
-        " esc close ",
+        crate::tr!(" esc close "),
         Style::default()
             .fg(palette.text)
             .bg(palette.surface0)
@@ -239,7 +247,7 @@ pub(super) fn render_settings_overlay(
         inner.x,
         inner.bottom().saturating_sub(2),
         inner.width,
-        " ↑↓ select  tab section",
+        crate::tr!(" ↑↓ select  tab section"),
         Style::default().fg(palette.overlay1).bg(palette.panel_bg),
     );
 
@@ -306,7 +314,7 @@ fn render_integrations(
         area.x,
         area.y,
         area.width,
-        "agent integrations",
+        crate::tr!("agent integrations"),
         Style::default()
             .fg(palette.text)
             .bg(palette.panel_bg)
@@ -317,7 +325,7 @@ fn render_integrations(
         area.x,
         area.y + 1,
         area.width,
-        "enable session restore and, where supported, direct status updates",
+        crate::tr!("enable session restore and, where supported, direct status updates"),
         Style::default().fg(palette.overlay1).bg(palette.panel_bg),
     );
     if settings.loading_integrations {
@@ -326,7 +334,7 @@ fn render_integrations(
             area.x,
             area.y + 3,
             area.width,
-            " loading integrations…",
+            crate::tr!(" loading integrations…"),
             Style::default().fg(palette.overlay1).bg(palette.panel_bg),
         );
         return;
@@ -337,7 +345,7 @@ fn render_integrations(
             area.x,
             area.y + 3,
             area.width,
-            " no integration targets available",
+            crate::tr!(" no integration targets available"),
             Style::default().fg(palette.overlay1).bg(palette.panel_bg),
         );
         return;
@@ -348,15 +356,17 @@ fn render_integrations(
             break;
         }
         let (marker, color, status) = match integration.state {
-            crate::api::schema::IntegrationState::Current => ("✓", palette.green, "installed"),
+            crate::api::schema::IntegrationState::Current => {
+                ("✓", palette.green, crate::tr!("installed"))
+            }
             crate::api::schema::IntegrationState::Outdated => {
-                ("↻", palette.yellow, "update available")
+                ("↻", palette.yellow, crate::tr!("update available"))
             }
             crate::api::schema::IntegrationState::NotInstalled if integration.available => {
-                ("+", palette.accent, "available")
+                ("+", palette.accent, crate::tr!("available"))
             }
             crate::api::schema::IntegrationState::NotInstalled => {
-                ("–", palette.overlay0, "not found")
+                ("–", palette.overlay0, crate::tr!("not found"))
             }
         };
         put_text(
@@ -408,7 +418,7 @@ fn render_integrations(
             area.x,
             message_y,
             area.width,
-            " installing…",
+            crate::tr!(" installing…"),
             Style::default().fg(palette.overlay1).bg(palette.panel_bg),
         );
     }

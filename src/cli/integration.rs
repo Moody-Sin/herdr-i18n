@@ -26,7 +26,10 @@ fn integration_status(args: &[String]) -> std::io::Result<i32> {
         [] => false,
         [flag] if flag == "--outdated-only" => true,
         _ => {
-            eprintln!("usage: herdr integration status [--outdated-only]");
+            eprintln!(
+                "{}",
+                crate::tr!("usage: herdr integration status [--outdated-only]")
+            );
             return Ok(2);
         }
     };
@@ -72,15 +75,23 @@ fn describe_integration_state(
         None => "legacy".to_string(),
     };
     match state {
-        crate::integration::IntegrationStatusKind::NotInstalled => "not installed".to_string(),
-        crate::integration::IntegrationStatusKind::Current => format!("current ({version})"),
+        crate::integration::IntegrationStatusKind::NotInstalled => {
+            crate::tr!("not installed").to_owned()
+        }
+        crate::integration::IntegrationStatusKind::Current => {
+            crate::trf!("current ({version})", version = version)
+        }
         crate::integration::IntegrationStatusKind::Outdated
             if installed_version.is_some_and(|installed| installed >= expected_version) =>
         {
-            format!("needs repair ({version})")
+            crate::trf!("needs repair ({version})", version = version)
         }
         crate::integration::IntegrationStatusKind::Outdated => {
-            format!("outdated ({version} < v{expected_version})")
+            crate::trf!(
+                "outdated ({version} < v{expected_version})",
+                version = version,
+                expected_version = expected_version
+            )
         }
     }
 }
@@ -100,7 +111,7 @@ fn integration_install(args: &[String]) -> std::io::Result<i32> {
             Ok(0)
         }
         Err(err) => {
-            eprintln!("{err}");
+            eprintln!("{}", crate::trf!("error: {error}", error = err));
             Ok(1)
         }
     }
@@ -121,7 +132,7 @@ fn integration_uninstall(args: &[String]) -> std::io::Result<i32> {
             Ok(0)
         }
         Err(err) => {
-            eprintln!("{err}");
+            eprintln!("{}", crate::trf!("error: {error}", error = err));
             Ok(1)
         }
     }
@@ -146,15 +157,17 @@ fn parse_integration_target(
     action: &str,
 ) -> std::io::Result<Option<IntegrationCommandTarget>> {
     let Some(target) = args.first().map(|arg| arg.as_str()) else {
-        eprintln!(
-            "usage: herdr integration {action} <pi|omp|claude|codex|copilot|devin|droid|kimi|opencode|kilo|hermes|qodercli|qwen|letta|cursor|mastracode|grok>"
-        );
+        eprintln!("{}", crate::trf!(
+            "usage: herdr integration {action} <pi|omp|claude|codex|copilot|devin|droid|kimi|opencode|kilo|hermes|qodercli|qwen|letta|cursor|mastracode|grok>",
+            action = action
+        ));
         return Ok(None);
     };
     if args.len() != 1 {
-        eprintln!(
-            "usage: herdr integration {action} <pi|omp|claude|codex|copilot|devin|droid|kimi|opencode|kilo|hermes|qodercli|qwen|letta|cursor|mastracode|grok>"
-        );
+        eprintln!("{}", crate::trf!(
+            "usage: herdr integration {action} <pi|omp|claude|codex|copilot|devin|droid|kimi|opencode|kilo|hermes|qodercli|qwen|letta|cursor|mastracode|grok>",
+            action = action
+        ));
         return Ok(None);
     }
 
@@ -180,10 +193,13 @@ fn parse_integration_target(
         }
         "grok" => IntegrationCommandTarget::Builtin(IntegrationTarget::Grok),
         _ => {
-            eprintln!("unknown integration target: {target}");
             eprintln!(
-                "currently supported: pi, omp, claude, codex, copilot, devin, droid, kimi, opencode, kilo, hermes, qodercli, qwen, letta, cursor, mastracode, antigravity-cli, grok"
+                "{}",
+                crate::trf!("unknown integration target: {target}", target = target)
             );
+            eprintln!("{}", crate::tr!(
+                "currently supported: pi, omp, claude, codex, copilot, devin, droid, kimi, opencode, kilo, hermes, qodercli, qwen, letta, cursor, mastracode, antigravity-cli, grok"
+            ));
             return Ok(None);
         }
     };
@@ -192,7 +208,7 @@ fn parse_integration_target(
 }
 
 fn print_integration_help() {
-    eprintln!("herdr integration commands:");
+    eprintln!("{}", crate::tr!("Herdr integration commands:"));
     eprintln!("  herdr integration install pi");
     eprintln!("  herdr integration install omp");
     eprintln!("  herdr integration install claude");

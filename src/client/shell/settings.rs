@@ -303,9 +303,9 @@ impl ClientShellState {
                                 .min(settings.integrations.len().saturating_sub(1));
                         }
                         Ok(_) => {
-                            self.set_endpoint_error(
-                                "endpoint returned an unexpected integration list result",
-                            );
+                            self.set_endpoint_error(crate::tr!(
+                                "endpoint returned an unexpected integration list result"
+                            ));
                         }
                         Err(_) => {}
                     }
@@ -324,9 +324,9 @@ impl ClientShellState {
                             details,
                             ..
                         }) => settings.integration_messages.extend(details.messages),
-                        Ok(_) => settings
-                            .integration_messages
-                            .push("endpoint returned an unexpected integration result".into()),
+                        Ok(_) => settings.integration_messages.push(
+                            crate::tr!("endpoint returned an unexpected integration result").into(),
+                        ),
                         Err(error) => settings.integration_messages.push(error.message),
                     }
                     settings.installing_integrations = self.pending_integration_installs > 0;

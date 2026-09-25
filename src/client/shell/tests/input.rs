@@ -569,8 +569,8 @@ fn help_overlay_uses_live_keymap_and_owns_filter_state() {
         })
         .collect::<Vec<_>>()
         .join("\n");
-    assert!(text.contains("keybinds"));
-    assert!(text.contains("prefix mode"));
+    assert!(text.contains(crate::tr!("keybinds")));
+    assert!(text.contains(crate::tr!("prefix mode")));
 
     assert!(state.handle_input_bytes(b"/").actions.is_empty());
     assert!(state.handle_input_bytes(b"workspace").actions.is_empty());
@@ -585,8 +585,8 @@ fn help_overlay_uses_live_keymap_and_owns_filter_state() {
         })
         .collect::<Vec<_>>()
         .join("\n");
-    assert!(text.contains("workspace navigation"));
-    assert!(!text.contains("prefix mode"));
+    assert!(text.contains(crate::tr!("workspace navigation")));
+    assert!(!text.contains(crate::tr!("prefix mode")));
     assert!(filtered
         .cursor
         .as_ref()

@@ -540,8 +540,11 @@ impl App {
         // Background auto-update is disabled for non-persistent test apps
         // and in debug/test builds so local development never mutates the
         // running binary out from under spawned test processes.
-        let version_check_enabled =
-            background_update_check_enabled(policy.background_updates, config.update.version_check);
+        let version_check_enabled = !crate::i18n::LOCALIZED_BUILD
+            && background_update_check_enabled(
+                policy.background_updates,
+                config.update.version_check,
+            );
         let manifest_check_enabled = background_update_check_enabled(
             policy.background_updates,
             config.update.manifest_check,
@@ -595,7 +598,8 @@ impl App {
                 .then_some(Instant::now() + AUTO_UPDATE_CHECK_INTERVAL),
             next_agent_manifest_update_check: manifest_check_enabled
                 .then_some(Instant::now() + AUTO_UPDATE_CHECK_INTERVAL),
-            update_version_check_enabled: config.update.version_check,
+            update_version_check_enabled: !crate::i18n::LOCALIZED_BUILD
+                && config.update.version_check,
             update_manifest_check_enabled: config.update.manifest_check,
             loaded_host_cursor: config.ui.host_cursor,
             agent_metadata_deadline: None,
@@ -898,7 +902,8 @@ impl App {
             let now = Instant::now();
             let previous_version_check_enabled = self.update_version_check_enabled;
             let previous_manifest_check_enabled = self.update_manifest_check_enabled;
-            self.update_version_check_enabled = config.update.version_check;
+            self.update_version_check_enabled =
+                !crate::i18n::LOCALIZED_BUILD && config.update.version_check;
             self.update_manifest_check_enabled = config.update.manifest_check;
 
             if !self.update_version_check_enabled {

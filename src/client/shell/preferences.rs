@@ -47,25 +47,45 @@ pub(super) fn load(path: &Path) -> Option<ClientChromePreferences> {
 }
 
 pub(super) fn store(path: &Path, preferences: ClientChromePreferences) -> Result<(), String> {
-    let parent = path
-        .parent()
-        .ok_or_else(|| format!("invalid client shell state path: {}", path.display()))?;
-    std::fs::create_dir_all(parent)
-        .map_err(|error| format!("failed to create client shell state directory: {error}"))?;
-    let content = serde_json::to_vec_pretty(&preferences)
-        .map_err(|error| format!("failed to encode client shell state: {error}"))?;
+    let parent = path.parent().ok_or_else(|| {
+        crate::trf!(
+            "invalid client shell state path: {path}",
+            path = path.display()
+        )
+    })?;
+    std::fs::create_dir_all(parent).map_err(|error| {
+        crate::trf!(
+            "failed to create client shell state directory: {error}",
+            error = error
+        )
+    })?;
+    let content = serde_json::to_vec_pretty(&preferences).map_err(|error| {
+        crate::trf!(
+            "failed to encode client shell state: {error}",
+            error = error
+        )
+    })?;
     let sequence = NEXT_TEMP_FILE.fetch_add(1, Ordering::Relaxed);
     let mut temp_name = path
         .file_name()
-        .ok_or_else(|| format!("invalid client shell state path: {}", path.display()))?
+        .ok_or_else(|| {
+            crate::trf!(
+                "invalid client shell state path: {path}",
+                path = path.display()
+            )
+        })?
         .to_os_string();
     temp_name.push(format!(".tmp-{}-{sequence}", std::process::id()));
     let temp_path = parent.join(temp_name);
-    std::fs::write(&temp_path, content)
-        .map_err(|error| format!("failed to write client shell state: {error}"))?;
+    std::fs::write(&temp_path, content).map_err(|error| {
+        crate::trf!("failed to write client shell state: {error}", error = error)
+    })?;
     std::fs::rename(&temp_path, path).map_err(|error| {
         let _ = std::fs::remove_file(&temp_path);
-        format!("failed to replace client shell state: {error}")
+        crate::trf!(
+            "failed to replace client shell state: {error}",
+            error = error
+        )
     })
 }
 

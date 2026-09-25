@@ -324,7 +324,7 @@ fn machine_navigation_does_not_require_a_local_snapshot_or_surface() {
         let local_row = (local.x..local.right())
             .map(|x| buffer[(x, local.y)].symbol())
             .collect::<String>();
-        assert!(!local_row.contains("reconnecting"));
+        assert!(!local_row.contains(crate::tr!("reconnecting")));
         assert!(
             !local_row.contains('◐'),
             "Local never gets a connection badge"
@@ -370,7 +370,7 @@ fn sidebar_renders_local_and_saved_ssh_endpoints_with_status() {
         })
         .collect::<Vec<_>>()
         .join("\n");
-    assert!(text.contains("Local"));
+    assert!(text.contains(crate::tr!("Local")));
     assert!(text.contains("Build"));
     assert!(text.contains("remote-workspace"));
     let local = state
@@ -860,9 +860,12 @@ fn aggregate_agents_use_configured_rows_machine_token_and_status_colors() {
         })
         .collect::<Vec<_>>()
         .join("\n");
-    assert!(text.contains("○ Local · local agent"), "frame: {text}");
+    assert!(
+        text.contains(format!("○ {} · local agent", crate::tr!("Local")).as_str()),
+        "frame: {text}"
+    );
     assert!(text.contains("× Build · remote agent"), "frame: {text}");
-    assert!(text.contains("grouped"), "frame: {text}");
+    assert!(text.contains(crate::tr!("grouped")), "frame: {text}");
     let toggle = state.hits.agent_sort_toggle;
     assert!(!toggle.is_empty());
     let click = state.handle_raw_events(vec![RawInputEvent::Mouse(MouseEvent {
@@ -928,7 +931,10 @@ fn current_workspace_agent_view_excludes_same_workspace_id_on_other_machine() {
         })
         .collect::<Vec<_>>()
         .join("\n");
-    assert!(text.contains("Local · local agent"), "frame: {text}");
+    assert!(
+        text.contains(format!("{} · local agent", crate::tr!("Local")).as_str()),
+        "frame: {text}"
+    );
     assert!(!text.contains("Build · remote agent"), "frame: {text}");
 
     assert!(state.activate_endpoint_projection(&endpoint_id));
@@ -946,7 +952,10 @@ fn current_workspace_agent_view_excludes_same_workspace_id_on_other_machine() {
         })
         .collect::<Vec<_>>()
         .join("\n");
-    assert!(!text.contains("Local · local agent"), "frame: {text}");
+    assert!(
+        !text.contains(format!("{} · local agent", crate::tr!("Local")).as_str()),
+        "frame: {text}"
+    );
     assert!(text.contains("Build · remote agent"), "frame: {text}");
 }
 
@@ -1015,7 +1024,10 @@ fn current_workspace_or_blocked_keeps_foreign_attention_only() {
         })
         .collect::<Vec<_>>()
         .join("\n");
-    assert!(text.contains("Local · local agent"), "frame: {text}");
+    assert!(
+        text.contains(format!("{} · local agent", crate::tr!("Local")).as_str()),
+        "frame: {text}"
+    );
     assert!(!text.contains("Build · remote idle"), "frame: {text}");
     assert!(text.contains("Build · remote blocked"), "frame: {text}");
 }
@@ -1071,9 +1083,12 @@ fn selected_default_view_ignores_inactive_endpoint_projection() {
         })
         .collect::<Vec<_>>()
         .join("\n");
-    assert!(text.contains("Local · local agent"), "frame: {text}");
+    assert!(
+        text.contains(format!("{} · local agent", crate::tr!("Local")).as_str()),
+        "frame: {text}"
+    );
     assert!(text.contains("Build · remote agent"), "frame: {text}");
-    assert!(text.contains("grouped"), "frame: {text}");
+    assert!(text.contains(crate::tr!("grouped")), "frame: {text}");
 }
 
 #[test]
@@ -1157,7 +1172,10 @@ fn legacy_custom_views_keep_v1_per_endpoint_projection() {
         })
         .collect::<Vec<_>>()
         .join("\n");
-    assert!(text.contains("Local · local agent"), "frame: {text}");
+    assert!(
+        text.contains(format!("{} · local agent", crate::tr!("Local")).as_str()),
+        "frame: {text}"
+    );
     assert!(text.contains("Build · remote agent"), "frame: {text}");
 }
 
@@ -1211,7 +1229,9 @@ fn selected_custom_sort_orders_rendering_and_indexed_navigation() {
         .join("\n");
     assert!(
         text.find("Build · remote idle").expect("remote row")
-            < text.find("Local · local blocked").expect("local row"),
+            < text
+                .find(format!("{} · local blocked", crate::tr!("Local")).as_str())
+                .expect("local row"),
         "frame: {text}"
     );
 
@@ -1337,7 +1357,8 @@ fn aggregate_priority_uses_client_observed_recency_across_machines() {
     };
     let text = frame_text(&mut state);
     assert!(
-        text.find("Local · local agent").expect("local agent")
+        text.find(format!("{} · local agent", crate::tr!("Local")).as_str())
+            .expect("local agent")
             < text.find("Build · remote agent").expect("remote agent")
     );
 
@@ -1346,7 +1367,9 @@ fn aggregate_priority_uses_client_observed_recency_across_machines() {
     let text = frame_text(&mut state);
     assert!(
         text.find("Build · remote agent").expect("remote agent")
-            < text.find("Local · local agent").expect("local agent")
+            < text
+                .find(format!("{} · local agent", crate::tr!("Local")).as_str())
+                .expect("local agent")
     );
 
     remote.agents = vec![agent("remote agent", AgentStatus::Idle, 3)];
@@ -1354,7 +1377,9 @@ fn aggregate_priority_uses_client_observed_recency_across_machines() {
     let text = frame_text(&mut state);
     assert!(
         text.find("Build · remote agent").expect("remote agent")
-            < text.find("Local · local agent").expect("local agent")
+            < text
+                .find(format!("{} · local agent", crate::tr!("Local")).as_str())
+                .expect("local agent")
     );
     let mut outcome = ClientShellInput::default();
     assert!(
@@ -1803,7 +1828,10 @@ fn disconnected_active_endpoint_freezes_surface_and_marks_cached_ui_stale() {
         state.endpoint_status(&endpoint_id),
         Some(ClientEndpointStatus::Reconnecting)
     );
-    assert!(text.contains("◐ reconnecting"), "frame: {text}");
+    assert!(
+        text.contains(format!("◐ {}", crate::tr!("reconnecting")).as_str()),
+        "frame: {text}"
+    );
     assert!(text.contains("Build · remote agent"), "frame: {text}");
     assert!(
         text.contains("LIVE"),
@@ -1899,11 +1927,14 @@ fn navigator_uses_machine_parents_only_for_federated_clients() {
             .iter()
             .map(|row| row.label.as_str())
             .collect::<Vec<_>>(),
-        vec!["Local", "Build"]
+        vec![crate::tr!("Local"), "Build"]
     );
     assert!(rows.iter().all(|row| {
         matches!(row.target, ClientNavigatorTarget::Machine { .. })
-            || (!row.label.contains("Local ·") && !row.label.contains("Build ·"))
+            || (!row
+                .label
+                .contains(format!("{} ·", crate::tr!("Local")).as_str())
+                && !row.label.contains("Build ·"))
     }));
     assert!(rows.iter().all(|row| match row.target {
         ClientNavigatorTarget::Machine { .. } => row.depth == 0 && row.status.is_none(),
@@ -1944,7 +1975,7 @@ fn navigator_uses_machine_parents_only_for_federated_clients() {
         })
         .collect::<Vec<_>>()
         .join("\n")
-        .contains(" machines"));
+        .contains(crate::tr!(" machines")));
     local.open_navigator_overlay();
     let ClientShellOverlay::Navigator(navigator) = local.overlay.as_ref().expect("navigator")
     else {
@@ -2211,7 +2242,7 @@ fn cached_offline_navigator_and_mobile_targets_are_dimmed_and_disabled() {
             })
             .expect("cached remote pane row");
         assert!(row.stale);
-        assert!(!row.meta.contains("reconnecting"));
+        assert!(!row.meta.contains(crate::tr!("reconnecting")));
         row.target.clone()
     };
     if let Some(ClientShellOverlay::Navigator(navigator)) = state.overlay.as_mut() {

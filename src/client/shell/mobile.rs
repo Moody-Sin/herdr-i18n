@@ -94,7 +94,7 @@ fn render_header_status(
             area.x,
             area.y,
             area.width,
-            " no workspace",
+            crate::tr!(" no workspace"),
             Style::default().fg(palette.text).bg(palette.panel_bg),
         );
         return;
@@ -204,11 +204,11 @@ fn render_header_button(
 
 fn mobile_endpoint_state(status: ClientEndpointStatus) -> &'static str {
     match status {
-        ClientEndpointStatus::Connecting => "connecting",
-        ClientEndpointStatus::Online => "online",
-        ClientEndpointStatus::Reconnecting => "reconnecting",
-        ClientEndpointStatus::Attention => "attention",
-        ClientEndpointStatus::Disabled => "disabled",
+        ClientEndpointStatus::Connecting => crate::tr!("connecting"),
+        ClientEndpointStatus::Online => crate::tr!("online"),
+        ClientEndpointStatus::Reconnecting => crate::tr!("reconnecting"),
+        ClientEndpointStatus::Attention => crate::tr!("attention"),
+        ClientEndpointStatus::Disabled => crate::tr!("disabled"),
     }
 }
 
@@ -227,9 +227,14 @@ fn compact_tab_status(snapshot: &ClientShellSnapshot, workspace: &ClientShellWor
         .map(|tab| tab.label.as_str())
         .unwrap_or("1");
     if tabs.len() <= 1 {
-        format!("tab {label}")
+        crate::trf!("tab {label}", label = label)
     } else {
-        format!("tab {label} · {}/{}", active + 1, tabs.len())
+        format!(
+            "{} · {}/{}",
+            crate::trf!("tab {label}", label = label),
+            active + 1,
+            tabs.len()
+        )
     }
 }
 
@@ -241,10 +246,10 @@ fn render_agent_summary(
 ) {
     use crate::api::schema::AgentStatus;
     let counts = [
-        (AgentStatus::Blocked, "blocked"),
-        (AgentStatus::Done, "done"),
-        (AgentStatus::Working, "working"),
-        (AgentStatus::Idle, "idle"),
+        (AgentStatus::Blocked, crate::tr!("blocked")),
+        (AgentStatus::Done, crate::tr!("done")),
+        (AgentStatus::Working, crate::tr!("working")),
+        (AgentStatus::Idle, crate::tr!("idle")),
     ]
     .map(|(status, label)| {
         (
@@ -265,7 +270,7 @@ fn render_agent_summary(
             area.x,
             area.y,
             area.width,
-            " no agents",
+            crate::tr!(" no agents"),
             Style::default()
                 .fg(config.palette.overlay1)
                 .bg(config.palette.panel_bg),
@@ -278,7 +283,7 @@ fn render_agent_summary(
             area.x,
             area.y,
             area.width,
-            " all idle",
+            crate::tr!(" all idle"),
             Style::default()
                 .fg(config.palette.overlay1)
                 .bg(config.palette.panel_bg),
@@ -300,8 +305,15 @@ fn render_agent_summary(
             _ => Some(status_icon(status, config.status_indicators)),
         };
         let text = symbol.map_or_else(
-            || format!("{count} {label}"),
-            |symbol| format!("{symbol} {count} {label}"),
+            || crate::trf!("{count} {label}", count = count, label = label),
+            |symbol| {
+                crate::trf!(
+                    "{symbol} {count} {label}",
+                    symbol = symbol,
+                    count = count,
+                    label = label
+                )
+            },
         );
         let separator = if shown == 0 { "" } else { " · " };
         let needed = display_width(separator).saturating_add(display_width(&text));
@@ -551,7 +563,7 @@ fn render_close_button(buffer: &mut Buffer, area: Rect, palette: &Palette) {
         label_x,
         area.y,
         area.width.saturating_sub(1),
-        "close",
+        crate::tr!("close"),
         Style::default()
             .fg(palette.overlay1)
             .bg(palette.surface0)
@@ -583,7 +595,7 @@ fn mobile_items(
     let palette = &config.palette;
     let mut items = Vec::new();
     if endpoints.len() > 1 {
-        items.push(MobileItem::section("machines", palette));
+        items.push(MobileItem::section(crate::tr!("machines"), palette));
         for endpoint in endpoints {
             let background = palette.panel_bg;
             let (symbol, state, color) = endpoint_status_presentation(endpoint.status, palette);
@@ -618,13 +630,13 @@ fn mobile_items(
     let agent_view_label = snapshot.agent_view_label.as_deref();
     if !agents.is_empty() || agent_view_label.is_some() {
         let title = agent_view_label
-            .map(|label| format!("agents · {label}"))
-            .unwrap_or_else(|| "agents".to_owned());
+            .map(|label| format!("{} · {label}", crate::tr!("agents")))
+            .unwrap_or_else(|| crate::tr!("agents").to_owned());
         items.push(MobileItem::section(title, palette));
         if agents.is_empty() {
             items.push(MobileItem {
                 lines: vec![Line::from(Span::styled(
-                    "  no matching agents",
+                    crate::tr!("  no matching agents"),
                     Style::default()
                         .fg(palette.overlay0)
                         .bg(palette.panel_bg)
@@ -652,7 +664,7 @@ fn mobile_items(
                 .as_deref()
                 .or(agent.name.as_deref())
                 .or(agent.agent.as_deref())
-                .unwrap_or("agent");
+                .unwrap_or(crate::tr!("agent"));
             let primary = workspace
                 .map(|workspace| workspace.label.as_str())
                 .unwrap_or(agent_label);
@@ -675,7 +687,7 @@ fn mobile_items(
                     .map(|(_, label)| label.clone())
                     .unwrap_or_else(|| {
                         if agent.agent_status == crate::api::schema::AgentStatus::Unknown {
-                            "idle".to_owned()
+                            crate::tr!("idle").to_owned()
                         } else {
                             status_key.to_owned()
                         }
@@ -747,9 +759,9 @@ fn mobile_items(
         }
     }
 
-    items.push(MobileItem::section("spaces", palette));
+    items.push(MobileItem::section(crate::tr!("spaces"), palette));
     items.push(MobileItem::action(
-        "  + new workspace",
+        crate::tr!("  + new workspace"),
         ClientMobileTarget::NewWorkspace,
         palette,
     ));
@@ -874,9 +886,9 @@ fn mobile_items(
     }
 
     if let Some(workspace_id) = snapshot.focused_workspace_id.as_deref() {
-        items.push(MobileItem::section("tabs", palette));
+        items.push(MobileItem::section(crate::tr!("tabs"), palette));
         items.push(MobileItem::action(
-            "  + new tab",
+            crate::tr!("  + new tab"),
             ClientMobileTarget::NewTab,
             palette,
         ));
@@ -894,7 +906,7 @@ fn mobile_items(
             let label = if tab.custom_label {
                 format!("{} · {}", index + 1, tab.label)
             } else {
-                format!("tab {}", tab.label)
+                crate::trf!("tab {label}", label = tab.label)
             };
             let label = format!(
                 "  {}",
@@ -917,7 +929,7 @@ fn mobile_items(
         }
     }
 
-    items.push(MobileItem::section("menu", palette));
+    items.push(MobileItem::section(crate::tr!("menu"), palette));
     for (index, (label, _)) in super::global_menu::global_menu_items(snapshot)
         .into_iter()
         .enumerate()

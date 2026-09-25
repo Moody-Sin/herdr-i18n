@@ -21,8 +21,8 @@ fn navigate_update_status_uses_released_desktop_and_mobile_placement() {
             .map(|cell| cell.symbol.as_str())
             .collect::<String>()
     };
-    assert!(row_text(&bottom, 29).contains("update ready"));
-    assert!(!row_text(&bottom, 28).contains("update ready"));
+    assert!(row_text(&bottom, 29).contains(crate::tr!("update ready")));
+    assert!(!row_text(&bottom, 28).contains(crate::tr!("update ready")));
     assert!(state.hits.tabs.is_empty());
     assert!(state.hits.new_tab.is_empty());
     assert!(state.hits.tab_scroll_left.is_empty());
@@ -45,7 +45,7 @@ fn navigate_update_status_uses_released_desktop_and_mobile_placement() {
         deadline: std::time::Instant::now(),
     });
     let top = state.compose(106, 30).expect("top-tab update shell");
-    assert!(row_text(&top, 29).contains("update ready"));
+    assert!(row_text(&top, 29).contains(crate::tr!("update ready")));
 
     let mobile = state.compose(44, 30).expect("mobile update shell");
     let mobile_text = mobile
@@ -53,7 +53,7 @@ fn navigate_update_status_uses_released_desktop_and_mobile_placement() {
         .iter()
         .map(|cell| cell.symbol.as_str())
         .collect::<String>();
-    assert!(mobile_text.contains("update ready"));
+    assert!(mobile_text.contains(crate::tr!("update ready")));
 }
 
 #[test]
@@ -95,7 +95,7 @@ fn mobile_switcher_can_activate_an_online_saved_machine() {
         .iter()
         .map(|cell| cell.symbol.as_str())
         .collect::<String>();
-    assert!(text.contains("machines"));
+    assert!(text.contains(crate::tr!("machines")));
     assert!(text.contains("Build"));
     let machine = state
         .hits
@@ -158,7 +158,7 @@ fn mobile_switcher_can_activate_an_online_saved_machine() {
         .iter()
         .map(|cell| cell.symbol.as_str())
         .collect::<String>();
-    assert!(text.contains("reconnecting"), "frame: {text}");
+    assert!(text.contains(crate::tr!("reconnecting")), "frame: {text}");
     assert!(text.contains("network lost"), "frame: {text}");
 }
 
@@ -219,9 +219,9 @@ fn mobile_header_and_switcher_render_released_sections_and_stable_targets() {
         .map(|cell| cell.symbol.as_str())
         .collect::<String>();
     assert!(header_text.contains("client-shell"));
-    assert!(header_text.contains("tab 1"));
-    assert!(header_text.contains("blocked"));
-    assert!(header_text.contains("switch"));
+    assert!(header_text.contains(crate::trf!("tab {label}", label = "1").as_str()));
+    assert!(header_text.contains(crate::tr!("blocked")));
+    assert!(header_text.contains(crate::tr!("switch")));
     assert_eq!(state.hits.mobile_switch, Rect::new(34, 0, 10, 2));
 
     let click = |rect: Rect| {
@@ -251,16 +251,16 @@ fn mobile_header_and_switcher_render_released_sections_and_stable_targets() {
         "switcher must clear the pane surface"
     );
     for expected in [
-        "switch",
-        "close",
-        "agents",
-        "spaces",
-        "+ new workspace",
-        "tabs",
-        "+ new tab",
-        "menu",
-        "settings",
-        "detach",
+        crate::tr!("switch"),
+        crate::tr!("close"),
+        crate::tr!("agents"),
+        crate::tr!("spaces"),
+        crate::tr!("  + new workspace"),
+        crate::tr!("tabs"),
+        crate::tr!("  + new tab"),
+        crate::tr!("menu"),
+        crate::tr!("settings"),
+        crate::tr!("detach"),
     ] {
         assert!(switcher_text.contains(expected), "missing {expected}");
     }

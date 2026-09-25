@@ -28,7 +28,7 @@ impl ClientShellState {
                     )
                 {
                     self.receive_endpoint_unavailable(
-                        "Select an available workspace and press Enter before renaming or closing it"
+                        crate::tr!("Select an available workspace and press Enter before renaming or closing it")
                             .into(),
                     );
                     outcome.repaint = true;
@@ -192,9 +192,9 @@ impl ClientShellState {
                         .then(|| candidate.command_id.clone())
                 });
                 let Some(command_id) = command_id else {
-                    self.set_endpoint_error(
-                        "custom command is not available on this endpoint; reload configuration",
-                    );
+                    self.set_endpoint_error(crate::tr!(
+                        "custom command is not available on this endpoint; reload configuration"
+                    ));
                     outcome.repaint = true;
                     return;
                 };
@@ -351,7 +351,8 @@ impl ClientShellState {
     ) -> bool {
         if !self.endpoint_is_online(&self.active_endpoint_id) {
             let label = self.active_endpoint_label().to_owned();
-            outcome.repaint |= self.receive_endpoint_unavailable(format!("{label} is not ready"));
+            outcome.repaint |= self
+                .receive_endpoint_unavailable(crate::trf!("{label} is not ready", label = label));
             return false;
         }
         let method_name = crate::api::api_method_name(&method).to_owned();
@@ -359,9 +360,10 @@ impl ClientShellState {
             outcome.repaint |= self.push_endpoint_notice(
                 ClientEndpointNoticeKind::Unsupported,
                 method_name.clone(),
-                "Action unavailable",
-                format!(
-                    "This server does not support {method_name} yet. Update and restart it to enable this action."
+                crate::tr!("Action unavailable"),
+                crate::trf!(
+                    "This server does not support {method_name} yet. Update and restart it to enable this action.",
+                    method_name = method_name
                 ),
             );
             return false;
@@ -409,7 +411,7 @@ impl ClientShellState {
         self.push_endpoint_notice(
             ClientEndpointNoticeKind::Rejected,
             "paste_rejected",
-            "Paste rejected",
+            crate::tr!("Paste rejected"),
             message,
         )
     }
@@ -418,7 +420,7 @@ impl ClientShellState {
         self.push_endpoint_notice(
             ClientEndpointNoticeKind::Unavailable,
             message.clone(),
-            "Endpoint unavailable",
+            crate::tr!("Endpoint unavailable"),
             message,
         )
     }
@@ -455,8 +457,10 @@ impl ClientShellState {
             request_id,
             Err(ClientShellEndpointError {
                 code: Some("endpoint_cancelled".into()),
-                message: "This server action was interrupted. Check its state before retrying."
-                    .into(),
+                message: crate::tr!(
+                    "This server action was interrupted. Check its state before retrying."
+                )
+                .into(),
             }),
         );
         debug_assert!(
@@ -504,25 +508,28 @@ impl ClientShellState {
                     "endpoint_timeout" => (
                         ClientEndpointNoticeKind::Timeout,
                         pending.method_name.clone(),
-                        "Server timed out",
-                        format!("This server did not respond to {}.", pending.method_name),
+                        crate::tr!("Server timed out"),
+                        crate::trf!(
+                            "This server did not respond to {method_name}.",
+                            method_name = pending.method_name
+                        ),
                     ),
                     "endpoint_cancelled" => (
                         ClientEndpointNoticeKind::Unavailable,
                         "cancelled".to_owned(),
-                        "Action interrupted",
+                        crate::tr!("Action interrupted"),
                         error.message.clone(),
                     ),
                     "server_unavailable" => (
                         ClientEndpointNoticeKind::Unavailable,
                         "server".to_owned(),
-                        "Server unavailable",
+                        crate::tr!("Server unavailable"),
                         error.message.clone(),
                     ),
                     _ => (
                         ClientEndpointNoticeKind::Rejected,
                         format!("{}:{code}", pending.method_name),
-                        "Action rejected",
+                        crate::tr!("Action rejected"),
                         error.message.clone(),
                     ),
                 };
@@ -611,7 +618,10 @@ impl ClientShellState {
                         (false, Vec::new())
                     }
                     Ok(_) => {
-                        self.set_endpoint_error("endpoint returned an unexpected selection result");
+                        self.set_endpoint_error(
+                            crate::tr!("endpoint returned an unexpected selection result")
+                                .to_owned(),
+                        );
                         (true, Vec::new())
                     }
                     Err(_) => (true, Vec::new()),
@@ -669,7 +679,9 @@ impl ClientShellState {
                         (false, replay_action(replay))
                     }
                     Ok(_) => {
-                        self.set_endpoint_error("endpoint returned an unexpected link result");
+                        self.set_endpoint_error(
+                            crate::tr!("endpoint returned an unexpected link result").to_owned(),
+                        );
                         (true, replay_action(replay))
                     }
                     Err(error)
@@ -707,9 +719,9 @@ impl ClientShellState {
                     ),
                     Ok(crate::api::schema::ResponseResult::PaneCopyMotion { .. }) => (false, false),
                     Ok(_) => {
-                        self.set_endpoint_error(
-                            "endpoint returned an unexpected copy-motion result",
-                        );
+                        self.set_endpoint_error(crate::tr!(
+                            "endpoint returned an unexpected copy-motion result"
+                        ));
                         (true, false)
                     }
                     Err(_) => (true, false),
@@ -763,9 +775,9 @@ impl ClientShellState {
                     }
                     Ok(_) => {
                         self.cancel_deferred_copy_after_search(generation);
-                        self.set_endpoint_error(
-                            "endpoint returned an unexpected copy-search result",
-                        );
+                        self.set_endpoint_error(crate::tr!(
+                            "endpoint returned an unexpected copy-search result"
+                        ));
                         (true, false)
                     }
                     Err(_) => {
@@ -780,9 +792,9 @@ impl ClientShellState {
                 let repaint = match result {
                     Ok(crate::api::schema::ResponseResult::ConfigReload { .. }) => false,
                     Ok(_) => {
-                        self.set_endpoint_error(
-                            "endpoint returned an unexpected config reload result",
-                        );
+                        self.set_endpoint_error(crate::tr!(
+                            "endpoint returned an unexpected config reload result"
+                        ));
                         true
                     }
                     Err(_) => true,

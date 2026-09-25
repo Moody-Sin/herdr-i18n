@@ -343,7 +343,7 @@ impl ClientShellState {
             .map(crate::workspace::derive_label_from_cwd)
             .unwrap_or_else(|| "workspace".to_owned());
         self.overlay = Some(ClientShellOverlay::Rename(ClientRenameOverlay {
-            title: "new workspace",
+            title: crate::tr!("new workspace"),
             input: TextEditor::new(&suggested_name, true),
             target: ClientRenameTarget::NewWorkspace {
                 source_workspace_id,
@@ -368,7 +368,7 @@ impl ClientShellState {
             return;
         };
         self.overlay = Some(ClientShellOverlay::Rename(ClientRenameOverlay {
-            title: "rename workspace",
+            title: crate::tr!("rename workspace"),
             input: TextEditor::new(&workspace.label, false),
             target: ClientRenameTarget::Workspace { workspace_id },
         }));
@@ -389,7 +389,7 @@ impl ClientShellState {
             + 1)
         .to_string();
         self.overlay = Some(ClientShellOverlay::Rename(ClientRenameOverlay {
-            title: "new tab",
+            title: crate::tr!("new tab"),
             input: TextEditor::new(&default_name, true),
             target: ClientRenameTarget::NewTab {
                 workspace_id,
@@ -409,7 +409,7 @@ impl ClientShellState {
             return;
         };
         self.overlay = Some(ClientShellOverlay::Rename(ClientRenameOverlay {
-            title: "rename tab",
+            title: crate::tr!("rename tab"),
             input: TextEditor::new(&tab.label, false),
             target: ClientRenameTarget::Tab {
                 tab_id: tab.tab_id.clone(),
@@ -430,7 +430,7 @@ impl ClientShellState {
             return;
         };
         self.overlay = Some(ClientShellOverlay::Rename(ClientRenameOverlay {
-            title: "rename pane",
+            title: crate::tr!("rename pane"),
             input: TextEditor::new(
                 pane.label.as_deref().unwrap_or_default(),
                 pane.label.is_none(),
@@ -1038,12 +1038,16 @@ impl ClientShellState {
             })
             .sum::<usize>();
         let panes = if pane_count == 1 {
-            "1 pane".to_owned()
+            crate::tr!("1 pane").to_owned()
         } else {
-            format!("{pane_count} panes")
+            crate::trf!("{pane_count} panes", pane_count = pane_count)
         };
         let scope = if closes_group {
-            format!("{} workspaces, {panes}", group.len())
+            crate::trf!(
+                "{count} workspaces, {panes}",
+                count = group.len(),
+                panes = panes
+            )
         } else {
             panes
         };
@@ -1051,9 +1055,9 @@ impl ClientShellState {
             ClientConfirmCloseOverlay {
                 workspace_id,
                 title: if closes_group {
-                    "Close worktree group?".to_owned()
+                    crate::tr!("Close worktree group?").to_owned()
                 } else {
-                    "Close workspace?".to_owned()
+                    crate::tr!("Close workspace?").to_owned()
                 },
                 detail: format!("{} — {scope}", workspace.label),
             },

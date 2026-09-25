@@ -31,7 +31,7 @@ pub(super) fn run_workspace_command(args: &[String]) -> std::io::Result<i32> {
 
 fn workspace_list(args: &[String]) -> std::io::Result<i32> {
     if !args.is_empty() {
-        eprintln!("usage: herdr workspace list");
+        eprintln!("{}", crate::tr!("usage: herdr workspace list"));
         return Ok(2);
     }
 
@@ -49,7 +49,10 @@ fn workspace_create(args: &[String]) -> std::io::Result<i32> {
         match args[index].as_str() {
             "--cwd" => {
                 let Some(value) = args.get(index + 1) else {
-                    eprintln!("missing value for --cwd");
+                    eprintln!(
+                        "{}",
+                        crate::trf!("missing value for {flag}", flag = "--cwd")
+                    );
                     return Ok(2);
                 };
                 cwd = Some(value.clone());
@@ -57,7 +60,10 @@ fn workspace_create(args: &[String]) -> std::io::Result<i32> {
             }
             "--label" => {
                 let Some(value) = args.get(index + 1) else {
-                    eprintln!("missing value for --label");
+                    eprintln!(
+                        "{}",
+                        crate::trf!("missing value for {flag}", flag = "--label")
+                    );
                     return Ok(2);
                 };
                 label = Some(value.clone());
@@ -73,7 +79,10 @@ fn workspace_create(args: &[String]) -> std::io::Result<i32> {
             }
             "--env" => {
                 let Some(value) = args.get(index + 1) else {
-                    eprintln!("missing value for --env");
+                    eprintln!(
+                        "{}",
+                        crate::trf!("missing value for {flag}", flag = "--env")
+                    );
                     return Ok(2);
                 };
                 let (key, value) = match super::parse_env_assignment(value) {
@@ -87,7 +96,10 @@ fn workspace_create(args: &[String]) -> std::io::Result<i32> {
                 index += 2;
             }
             other => {
-                eprintln!("unknown option: {other}");
+                eprintln!(
+                    "{}",
+                    crate::trf!("unknown option: {option}", option = other)
+                );
                 return Ok(2);
             }
         }
@@ -104,11 +116,17 @@ fn workspace_create(args: &[String]) -> std::io::Result<i32> {
 
 fn workspace_get(args: &[String]) -> std::io::Result<i32> {
     let Some(raw_workspace_id) = args.first() else {
-        eprintln!("usage: herdr workspace get <workspace_id>");
+        eprintln!(
+            "{}",
+            crate::tr!("usage: herdr workspace get <workspace_id>")
+        );
         return Ok(2);
     };
     if args.len() != 1 {
-        eprintln!("usage: herdr workspace get <workspace_id>");
+        eprintln!(
+            "{}",
+            crate::tr!("usage: herdr workspace get <workspace_id>")
+        );
         return Ok(2);
     }
 
@@ -117,11 +135,17 @@ fn workspace_get(args: &[String]) -> std::io::Result<i32> {
 
 fn workspace_focus(args: &[String]) -> std::io::Result<i32> {
     let Some(raw_workspace_id) = args.first() else {
-        eprintln!("usage: herdr workspace focus <workspace_id>");
+        eprintln!(
+            "{}",
+            crate::tr!("usage: herdr workspace focus <workspace_id>")
+        );
         return Ok(2);
     };
     if args.len() != 1 {
-        eprintln!("usage: herdr workspace focus <workspace_id>");
+        eprintln!(
+            "{}",
+            crate::tr!("usage: herdr workspace focus <workspace_id>")
+        );
         return Ok(2);
     }
 
@@ -130,7 +154,10 @@ fn workspace_focus(args: &[String]) -> std::io::Result<i32> {
 
 fn workspace_rename(args: &[String]) -> std::io::Result<i32> {
     if args.len() < 2 {
-        eprintln!("usage: herdr workspace rename <workspace_id> <label>");
+        eprintln!(
+            "{}",
+            crate::tr!("usage: herdr workspace rename <workspace_id> <label>")
+        );
         return Ok(2);
     }
 
@@ -142,7 +169,7 @@ fn workspace_rename(args: &[String]) -> std::io::Result<i32> {
 
 fn workspace_report_metadata(args: &[String]) -> std::io::Result<i32> {
     let Some(raw_workspace_id) = args.first() else {
-        eprintln!("usage: herdr workspace report-metadata <workspace_id> --source ID [--token NAME=VALUE] [--clear-token NAME] [--seq N] [--ttl-ms N]");
+        eprintln!("{}", crate::tr!("usage: herdr workspace report-metadata <workspace_id> --source ID [--token NAME=VALUE] [--clear-token NAME] [--seq N] [--ttl-ms N]"));
         return Ok(2);
     };
     let workspace_id = super::normalize_workspace_id(raw_workspace_id);
@@ -155,7 +182,10 @@ fn workspace_report_metadata(args: &[String]) -> std::io::Result<i32> {
         match args[index].as_str() {
             "--source" => {
                 let Some(value) = args.get(index + 1) else {
-                    eprintln!("missing value for --source");
+                    eprintln!(
+                        "{}",
+                        crate::trf!("missing value for {flag}", flag = "--source")
+                    );
                     return Ok(2);
                 };
                 source = Some(value.clone());
@@ -163,7 +193,10 @@ fn workspace_report_metadata(args: &[String]) -> std::io::Result<i32> {
             }
             "--token" => {
                 let Some(value) = args.get(index + 1) else {
-                    eprintln!("missing value for --token");
+                    eprintln!(
+                        "{}",
+                        crate::trf!("missing value for {flag}", flag = "--token")
+                    );
                     return Ok(2);
                 };
                 let (key, value) = match super::parse_token_assignment(value) {
@@ -178,7 +211,10 @@ fn workspace_report_metadata(args: &[String]) -> std::io::Result<i32> {
             }
             "--clear-token" => {
                 let Some(key) = args.get(index + 1) else {
-                    eprintln!("missing value for --clear-token");
+                    eprintln!(
+                        "{}",
+                        crate::trf!("missing value for {flag}", flag = "--clear-token")
+                    );
                     return Ok(2);
                 };
                 tokens.insert(key.clone(), None);
@@ -186,7 +222,10 @@ fn workspace_report_metadata(args: &[String]) -> std::io::Result<i32> {
             }
             "--seq" => {
                 let Some(value) = args.get(index + 1) else {
-                    eprintln!("missing value for --seq");
+                    eprintln!(
+                        "{}",
+                        crate::trf!("missing value for {flag}", flag = "--seq")
+                    );
                     return Ok(2);
                 };
                 seq = Some(super::parse_u64_flag("--seq", value)?);
@@ -194,20 +233,26 @@ fn workspace_report_metadata(args: &[String]) -> std::io::Result<i32> {
             }
             "--ttl-ms" => {
                 let Some(value) = args.get(index + 1) else {
-                    eprintln!("missing value for --ttl-ms");
+                    eprintln!(
+                        "{}",
+                        crate::trf!("missing value for {flag}", flag = "--ttl-ms")
+                    );
                     return Ok(2);
                 };
                 ttl_ms = Some(super::parse_u64_flag("--ttl-ms", value)?);
                 index += 2;
             }
             other => {
-                eprintln!("unknown option: {other}");
+                eprintln!(
+                    "{}",
+                    crate::trf!("unknown option: {option}", option = other)
+                );
                 return Ok(2);
             }
         }
     }
     let Some(source) = source.filter(|source| !source.trim().is_empty()) else {
-        eprintln!("missing required --source");
+        eprintln!("{}", crate::tr!("missing required --source"));
         return Ok(2);
     };
     if tokens.is_empty() {
@@ -230,7 +275,10 @@ fn workspace_close(args: &[String]) -> std::io::Result<i32> {
         [workspace_id] => (workspace_id, false),
         [workspace_id, flag] if flag == "--group" => (workspace_id, true),
         _ => {
-            eprintln!("usage: herdr workspace close <workspace_id> [--group]");
+            eprintln!(
+                "{}",
+                crate::tr!("usage: herdr workspace close <workspace_id> [--group]")
+            );
             return Ok(2);
         }
     };
@@ -242,7 +290,7 @@ fn workspace_close(args: &[String]) -> std::io::Result<i32> {
 }
 
 fn print_workspace_help() {
-    eprintln!("herdr workspace commands:");
+    eprintln!("{}", crate::tr!("Herdr workspace commands:"));
     eprintln!("  herdr workspace list");
     eprintln!("  herdr workspace create [--cwd PATH] [--label TEXT] [--env KEY=VALUE] [--focus] [--no-focus]");
     eprintln!("  herdr workspace get <workspace_id>");

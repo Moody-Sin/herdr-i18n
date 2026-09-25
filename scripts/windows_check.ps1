@@ -43,5 +43,6 @@ if ($Mode -eq "lint") {
     return
 }
 
+Invoke-Checked python @("scripts/check_localization.py")
 Invoke-Checked just @("test")
 Invoke-Checked cargo @("build", "--locked")

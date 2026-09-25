@@ -43,6 +43,7 @@ ci filter='all()': lint
 ci-tests filter='all()':
     cargo nextest run --locked -E "{{filter}}" --status-level fail --final-status-level slow --failure-output final --success-output never
     just maintenance-test
+    just localization-check
     just ui-hot-path-architecture-test
     just integration-assets-test
 
@@ -96,6 +97,10 @@ integration-assets-test:
     bun test src/integration/assets/herdr-agent-state.test.ts
     bun test src/integration/assets/opencode/herdr-agent-state.test.ts
     bun test src/integration/assets/opencode/herdr-tui-session.test.ts
+
+# Validate translated messages and named placeholders
+localization-check:
+    {{python}} scripts/check_localization.py
 
 # Regenerate the C API bindings with bindgen-cli 0.72.1
 libghostty-bindings *clang_args:

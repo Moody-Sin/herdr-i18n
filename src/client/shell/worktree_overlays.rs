@@ -12,7 +12,7 @@ pub(super) fn render_worktree_create_overlay(
         inner.x,
         inner.y,
         inner.width,
-        "new worktree",
+        crate::tr!("new worktree"),
         Style::default()
             .fg(p.text)
             .bg(p.panel_bg)
@@ -23,7 +23,7 @@ pub(super) fn render_worktree_create_overlay(
         inner.x,
         inner.y + 2,
         inner.width,
-        " branch",
+        crate::tr!(" branch"),
         Style::default().fg(p.overlay0).bg(p.panel_bg),
     );
     let input = Rect::new(inner.x, inner.y + 3, inner.width, 1);
@@ -39,7 +39,7 @@ pub(super) fn render_worktree_create_overlay(
         inner.x,
         inner.y + 5,
         inner.width,
-        " checkout",
+        crate::tr!(" checkout"),
         Style::default().fg(p.overlay0).bg(p.panel_bg),
     );
     put_text(
@@ -56,7 +56,7 @@ pub(super) fn render_worktree_create_overlay(
             inner.x,
             inner.y + 8,
             inner.width,
-            " creating…",
+            crate::tr!(" creating…"),
             Style::default().fg(p.accent).bg(p.panel_bg),
         );
     } else if let Some(error) = create.error.as_deref() {
@@ -76,7 +76,7 @@ pub(super) fn render_worktree_create_overlay(
     button(
         b,
         *primary,
-        " ↵ create and open ",
+        crate::tr!(" ↵ create and open "),
         Style::default()
             .fg(contrast(p))
             .bg(p.accent)
@@ -85,7 +85,7 @@ pub(super) fn render_worktree_create_overlay(
     button(
         b,
         *cancel,
-        " esc cancel ",
+        crate::tr!(" esc cancel "),
         Style::default()
             .fg(p.text)
             .bg(p.surface0)
@@ -119,7 +119,7 @@ pub(super) fn render_worktree_open_overlay(
         inner.x,
         inner.y,
         inner.width,
-        "open worktree",
+        crate::tr!("open worktree"),
         Style::default()
             .fg(p.text)
             .bg(p.panel_bg)
@@ -137,7 +137,7 @@ pub(super) fn render_worktree_open_overlay(
         } else if !open.query.is_empty() {
             format!(" / {}", open.query)
         } else {
-            " / filter worktrees".to_owned()
+            crate::tr!(" / filter worktrees").to_owned()
         },
         Style::default()
             .fg(if open.search_focused {
@@ -148,9 +148,14 @@ pub(super) fn render_worktree_open_overlay(
             .bg(p.panel_bg),
     );
     let count = if filtered.len() == open.entries.len() {
-        format!("{} checkouts", open.entries.len())
+        crate::trf!("{count} checkouts", count = open.entries.len())
     } else {
-        format!("{}/{} checkouts", filtered.len(), open.entries.len())
+        format!(
+            "{}/{} {}",
+            filtered.len(),
+            open.entries.len(),
+            crate::tr!("checkouts")
+        )
     };
     let cursor = if open.search_focused {
         text_editor::render(
@@ -245,7 +250,7 @@ pub(super) fn render_worktree_open_overlay(
             body.x,
             body.y,
             body.width,
-            " no matching worktrees",
+            crate::tr!(" no matching worktrees"),
             Style::default().fg(p.overlay0).bg(p.panel_bg),
         );
     }
@@ -255,7 +260,7 @@ pub(super) fn render_worktree_open_overlay(
             inner.x,
             inner.bottom() - 3,
             inner.width,
-            " opening…",
+            crate::tr!(" opening…"),
             Style::default().fg(p.accent).bg(p.panel_bg),
         );
     } else if let Some(error) = open.error.as_deref() {
@@ -275,7 +280,7 @@ pub(super) fn render_worktree_open_overlay(
     button(
         b,
         *primary,
-        " ↵ open ",
+        crate::tr!(" ↵ open "),
         Style::default()
             .fg(contrast(p))
             .bg(p.accent)
@@ -284,7 +289,7 @@ pub(super) fn render_worktree_open_overlay(
     button(
         b,
         *cancel,
-        " esc cancel ",
+        crate::tr!(" esc cancel "),
         Style::default()
             .fg(p.text)
             .bg(p.surface0)
@@ -317,7 +322,7 @@ pub(super) fn render_worktree_remove_overlay(
         inner.x,
         inner.y,
         inner.width,
-        " delete worktree checkout?",
+        crate::tr!(" delete worktree checkout?"),
         Style::default()
             .fg(p.red)
             .bg(p.panel_bg)
@@ -328,7 +333,7 @@ pub(super) fn render_worktree_remove_overlay(
         inner.x,
         inner.y + 1,
         inner.width,
-        " This removes the checkout folder:",
+        crate::tr!(" This removes the checkout folder:"),
         Style::default().fg(p.text).bg(p.panel_bg),
     );
     put_text(
@@ -344,7 +349,7 @@ pub(super) fn render_worktree_remove_overlay(
         inner.x,
         inner.y + 3,
         inner.width,
-        " The branch is not deleted. The Herdr workspace will close.",
+        crate::tr!(" The branch is not deleted. The Herdr workspace will close."),
         Style::default().fg(p.text).bg(p.panel_bg),
     );
     if remove.force_confirmation {
@@ -353,7 +358,7 @@ pub(super) fn render_worktree_remove_overlay(
             inner.x,
             inner.y + 4,
             inner.width,
-            " Dirty or untracked files will be permanently deleted.",
+            crate::tr!(" Dirty or untracked files will be permanently deleted."),
             Style::default().fg(p.red).bg(p.panel_bg),
         );
     }
@@ -363,7 +368,7 @@ pub(super) fn render_worktree_remove_overlay(
             inner.x,
             inner.y + 5,
             inner.width,
-            " removing…",
+            crate::tr!(" removing…"),
             Style::default().fg(p.accent).bg(p.panel_bg),
         );
     } else if let Some(error) = remove.error.as_deref() {
@@ -384,9 +389,9 @@ pub(super) fn render_worktree_remove_overlay(
         b,
         *primary,
         if remove.force_confirmation {
-            " ↵ delete anyway "
+            crate::tr!(" ↵ delete anyway ")
         } else {
-            " ↵ remove "
+            crate::tr!(" ↵ remove ")
         },
         Style::default()
             .fg(contrast(p))
@@ -396,7 +401,7 @@ pub(super) fn render_worktree_remove_overlay(
     button(
         b,
         *cancel,
-        " esc cancel ",
+        crate::tr!(" esc cancel "),
         Style::default()
             .fg(p.text)
             .bg(p.surface0)

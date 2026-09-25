@@ -135,7 +135,7 @@ impl ClientShellState {
         };
         if !self.navigation_target_valid(&target) {
             self.receive_endpoint_unavailable(
-                "Workspace is no longer available; select a connected workspace".into(),
+                crate::tr!("Workspace is no longer available; select a connected workspace").into(),
             );
             outcome.repaint = true;
             return;

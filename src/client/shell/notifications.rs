@@ -72,20 +72,8 @@ pub(super) fn render_mobile_notification_banner(
     palette: &Palette,
 ) -> Rect {
     let event = &notification.event;
-    let title = match event.kind {
-        SemanticNotificationKind::NeedsAttention => event
-            .title
-            .strip_suffix(" needs attention")
-            .map(|agent| format!("{agent} waiting"))
-            .unwrap_or_else(|| event.title.clone()),
-        SemanticNotificationKind::Finished => event
-            .title
-            .strip_suffix(" finished")
-            .map(|agent| format!("{agent} done"))
-            .unwrap_or_else(|| event.title.clone()),
-        SemanticNotificationKind::UpdateInstalled => "update ready".to_owned(),
-        SemanticNotificationKind::Custom => event.title.clone(),
-    };
+    let title = localized_notification_title(event);
+    let body = localized_notification_body(event);
     let dot_color = match event.kind {
         SemanticNotificationKind::NeedsAttention => palette.red,
         SemanticNotificationKind::Finished => palette.blue,
@@ -97,11 +85,49 @@ pub(super) fn render_mobile_notification_banner(
         buffer,
         area,
         &title,
-        event.body.as_deref(),
+        body.as_deref(),
         dot_color,
         offset_for_warning,
         palette,
     )
+}
+
+pub(super) fn localized_notification_title(
+    event: &crate::protocol::SemanticNotification,
+) -> String {
+    use crate::protocol::SemanticNotificationKind;
+    match event.kind {
+        SemanticNotificationKind::NeedsAttention => event
+            .title
+            .strip_suffix(" needs attention")
+            .map(|agent| crate::trf!("{agent} needs attention", agent = agent))
+            .unwrap_or_else(|| event.title.clone()),
+        SemanticNotificationKind::Finished => event
+            .title
+            .strip_suffix(" finished")
+            .map(|agent| crate::trf!("{agent} finished", agent = agent))
+            .unwrap_or_else(|| event.title.clone()),
+        SemanticNotificationKind::UpdateInstalled => event
+            .title
+            .strip_prefix("Herdr v")
+            .and_then(|title| title.strip_suffix(" available"))
+            .map(|version| crate::trf!("Herdr v{version} available", version = version))
+            .unwrap_or_else(|| crate::tr!("update ready").to_owned()),
+        SemanticNotificationKind::Custom => event.title.clone(),
+    }
+}
+
+pub(super) fn localized_notification_body(
+    event: &crate::protocol::SemanticNotification,
+) -> Option<String> {
+    if event.kind == crate::protocol::SemanticNotificationKind::UpdateInstalled {
+        event
+            .body
+            .as_deref()
+            .map(|body| crate::i18n::text_ref(body).into_owned())
+    } else {
+        event.body.clone()
+    }
 }
 
 pub(super) fn render_notification_card(
@@ -193,11 +219,13 @@ pub(super) fn render_visible_notification(
             palette.accent
         }
     };
+    let title = localized_notification_title(event);
+    let body = localized_notification_body(event).unwrap_or_default();
     render_notification_card(
         buffer,
         area,
-        &event.title,
-        event.body.as_deref().unwrap_or_default(),
+        &title,
+        &body,
         event.position.unwrap_or(default_position),
         top_offset,
         dot_color,
@@ -247,7 +275,7 @@ mod tests {
             .iter()
             .map(|cell| cell.symbol())
             .collect::<String>();
-        assert!(text.contains("pi waiting"));
+        assert!(text.contains(crate::trf!("{agent} needs attention", agent = "pi").as_str()));
         assert!(text.contains("workspace · tab 1"));
         assert!(buffer.content[18 * 44..19 * 44]
             .iter()
@@ -280,7 +308,7 @@ mod tests {
         assert!(state
             .visible_endpoint_notice
             .as_ref()
-            .is_some_and(|notice| notice.body.contains("Local is unavailable")));
+            .is_some_and(|notice| notice.body.contains("本地当前不可用")));
         assert!(outcome.repaint);
     }
 
@@ -378,7 +406,8 @@ mod tests {
         let (effects, _) = state.tick_notifications(now + COMPLETION_RECHECK_INTERVAL);
         assert!(matches!(
             effects.as_slice(),
-            [ClientShellNotificationEffect::Terminal { title, .. }] if title == "agent finished"
+            [ClientShellNotificationEffect::Terminal { title, .. }]
+                if title == crate::trf!("{agent} finished", agent = "agent")
         ));
         assert!(state.pending_notifications.is_empty());
     }

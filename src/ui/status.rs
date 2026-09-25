@@ -5,6 +5,7 @@ use ratatui::{
     text::{Line, Span},
     widgets::{Block, Borders, Clear, Paragraph, Widget},
 };
+use unicode_width::UnicodeWidthStr;
 
 use super::widgets::panel_contrast_fg;
 use crate::{
@@ -22,7 +23,10 @@ pub(crate) fn copy_feedback_rect(
         return Rect::default();
     }
 
-    let content_width = feedback.message.len() as u16 + 4;
+    let message = crate::i18n::text_ref(&feedback.message);
+    let content_width = u16::try_from(UnicodeWidthStr::width(message.as_ref()))
+        .unwrap_or(u16::MAX)
+        .saturating_add(4);
     let width = content_width.min(area.width);
     let height = 3u16.min(area.height);
     let x = match position {
@@ -72,11 +76,12 @@ pub(crate) fn render_copy_feedback_buffer(
         return feedback_area;
     }
 
+    let message = crate::i18n::text_ref(&feedback.message);
     let text = Line::from(vec![
         Span::styled("●", Style::default().fg(palette.green).bg(palette.panel_bg)),
         Span::raw(" "),
         Span::styled(
-            &feedback.message,
+            message.as_ref(),
             Style::default()
                 .fg(palette.text)
                 .bg(palette.panel_bg)
@@ -107,7 +112,9 @@ pub(crate) fn render_config_diagnostic_buffer(
         .enumerate()
     {
         let text = format!(" {line} ");
-        let width = (text.len() as u16).min(area.width);
+        let width = u16::try_from(UnicodeWidthStr::width(text.as_str()))
+            .unwrap_or(u16::MAX)
+            .min(area.width);
         let diagnostic_area = Rect::new(
             area.x + area.width.saturating_sub(width),
             area.y + row as u16,

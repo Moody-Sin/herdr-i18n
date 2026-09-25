@@ -207,7 +207,7 @@ impl ClientShellConfig {
     ) -> Result<(), String> {
         let mut keybinds = match self.keybinding_source {
             ClientShellKeybindingSource::Endpoint => crate::config::keybindings_from_profile_toml(
-                profile.ok_or("endpoint did not publish its keybindings")?,
+                profile.ok_or(crate::tr!("endpoint did not publish its keybindings"))?,
             )?,
             ClientShellKeybindingSource::RemoteLocal => return Ok(()),
             ClientShellKeybindingSource::Local => {

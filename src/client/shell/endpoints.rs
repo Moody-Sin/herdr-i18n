@@ -420,7 +420,9 @@ impl ClientShellState {
         self.endpoints
             .iter()
             .find(|endpoint| &endpoint.endpoint_id == endpoint_id)
-            .map_or("Unknown endpoint", |endpoint| endpoint.label.as_str())
+            .map_or(crate::tr!("Unknown endpoint"), |endpoint| {
+                endpoint.label.as_str()
+            })
     }
 
     pub(crate) fn active_endpoint_label(&self) -> &str {
@@ -678,18 +680,18 @@ pub(super) fn endpoint_status_presentation(
     palette: &Palette,
 ) -> (&'static str, &'static str, ratatui::style::Color) {
     match status {
-        ClientEndpointStatus::Connecting => ("◐", "connecting", palette.yellow),
-        ClientEndpointStatus::Online => ("●", "online", palette.green),
-        ClientEndpointStatus::Reconnecting => ("◐", "reconnecting", palette.yellow),
-        ClientEndpointStatus::Attention => ("!", "attention", palette.red),
-        ClientEndpointStatus::Disabled => ("·", "disabled", palette.overlay0),
+        ClientEndpointStatus::Connecting => ("◐", crate::tr!("connecting"), palette.yellow),
+        ClientEndpointStatus::Online => ("●", crate::tr!("online"), palette.green),
+        ClientEndpointStatus::Reconnecting => ("◐", crate::tr!("reconnecting"), palette.yellow),
+        ClientEndpointStatus::Attention => ("!", crate::tr!("attention"), palette.red),
+        ClientEndpointStatus::Disabled => ("·", crate::tr!("disabled"), palette.overlay0),
     }
 }
 
 pub(super) fn local_endpoint() -> ClientShellEndpoint {
     ClientShellEndpoint {
         endpoint_id: ClientEndpointId::Local,
-        label: "Local".into(),
+        label: crate::tr!("Local").into(),
         status: ClientEndpointStatus::Online,
         snapshot: None,
         snapshot_generation: None,
