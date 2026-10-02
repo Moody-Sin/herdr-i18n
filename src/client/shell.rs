@@ -3,8 +3,9 @@ use std::collections::{HashMap, HashSet, VecDeque};
 mod actions;
 mod agent_sidebar;
 mod aggregate_navigation;
+mod machine_diagnostics;
 mod workspace_navigation;
-use workspace_navigation::WorkspaceNavigationTarget;
+use workspace_navigation::{PendingWorkspaceHighlight, WorkspaceNavigationTarget};
 mod composition;
 mod config;
 mod context_menu;
@@ -210,6 +211,8 @@ fn status_priority(status: crate::api::schema::AgentStatus) -> u8 {
     }
 }
 
+/// Canonical status key. This is also an API token key, so it stays in English
+/// and must never be shown directly; use [`status_label`] for display.
 fn status_text(status: crate::api::schema::AgentStatus) -> &'static str {
     use crate::api::schema::AgentStatus;
     match status {
@@ -218,6 +221,17 @@ fn status_text(status: crate::api::schema::AgentStatus) -> &'static str {
         AgentStatus::Done => "done",
         AgentStatus::Idle => "idle",
         AgentStatus::Unknown => "unknown",
+    }
+}
+
+/// Localized status text for display.
+pub(super) fn status_label(status: crate::api::schema::AgentStatus) -> &'static str {
+    use crate::api::schema::AgentStatus;
+    match status {
+        AgentStatus::Working => crate::tr!("working"),
+        AgentStatus::Blocked => crate::tr!("blocked"),
+        AgentStatus::Done => crate::tr!("done"),
+        AgentStatus::Idle | AgentStatus::Unknown => crate::tr!("idle"),
     }
 }
 

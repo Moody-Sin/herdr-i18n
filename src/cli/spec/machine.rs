@@ -11,6 +11,17 @@ pub(super) fn command() -> Command {
                 .arg(json_flag()),
         )
         .subcommand(
+            Command::new("status")
+                .about("Check saved machines without prompting for authentication")
+                .arg(Arg::new("machine").value_name("LABEL_OR_ID"))
+                .arg(json_flag()),
+        )
+        .subcommand(
+            Command::new("reconnect")
+                .about("Authenticate a saved machine in this terminal and verify connectivity")
+                .arg(Arg::new("machine").value_name("LABEL_OR_ID").required(true)),
+        )
+        .subcommand(
             Command::new("add")
                 .about(crate::tr!(
                     "Prepare the remote Herdr server and save an SSH machine"
@@ -22,12 +33,12 @@ pub(super) fn command() -> Command {
                         .help_heading("参数"),
                 )
                 .arg(
-                    option("label", "LABEL")
-                        .required(true)
-                        .help(crate::tr!("Set the machine label shown in the sidebar")),
+                    option("label", "LABEL").help(crate::tr!(
+                        "Set the machine label shown in the sidebar (defaults to the SSH host, or host/session)"
+                    )),
                 )
                 .arg(option("remote-session", "NAME").help(crate::tr!(
-                    "Set the explicit Herdr session on the remote machine"
+                    "Select a session explicitly (default without an interactive terminal)"
                 ))),
         )
         .subcommand(

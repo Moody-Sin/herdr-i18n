@@ -132,10 +132,7 @@ fn tab_bar_renders_endpoint_status_ellipses_and_clamps_to_useful_scroll() {
     state.set_snapshot(Box::new(projected));
     state.set_pane_surface(surface());
     let frame = state.compose(106, 20).expect("status and overflow tabs");
-    let top = frame.cells[..frame.width as usize]
-        .iter()
-        .map(|cell| cell.symbol.as_str())
-        .collect::<String>();
+    let top = frame_row_text(&frame, 0);
     assert!(top.contains("ZOOM · host"));
     assert!(top.contains('…'));
 
@@ -157,10 +154,7 @@ fn tab_bar_renders_endpoint_status_ellipses_and_clamps_to_useful_scroll() {
 
     state.compose(45, 20).expect("narrow tabs win over status");
     let narrow = state.compose(45, 20).expect("narrow tab frame");
-    let top = narrow.cells[..narrow.width as usize]
-        .iter()
-        .map(|cell| cell.symbol.as_str())
-        .collect::<String>();
+    let top = frame_row_text(&narrow, 0);
     assert!(!top.contains("ZOOM · host"));
 }
 
@@ -222,16 +216,7 @@ detach = "prefix+x"
     assert!(prefix.requests.is_empty());
     assert!(prefix.repaint);
     let frame = state.compose(106, 20).expect("prefix frame");
-    let text = frame
-        .cells
-        .chunks(frame.width as usize)
-        .map(|row| {
-            row.iter()
-                .map(|cell| cell.symbol.as_str())
-                .collect::<String>()
-        })
-        .collect::<Vec<_>>()
-        .join("\n");
+    let text = frame_text(&frame);
     assert!(text.contains(crate::tr!(" PREFIX ")), "frame: {text:?}");
     assert!(text.contains("ctrl+a"), "frame: {text:?}");
 
@@ -282,7 +267,7 @@ command = "local-only"
     .unwrap();
     let remote_local = ClientShellConfig::from_config(&local)
         .with_keybinding_source(ClientShellKeybindingSource::RemoteLocal);
-    assert_eq!(remote_local.keybinds.prefix.0, KeyCode::Char('a'));
+    assert_eq!(remote_local.keybinds.prefix[0].0, KeyCode::Char('a'));
     assert!(remote_local.keybinds.keybinds.custom_commands.is_empty());
     assert_eq!(
         remote_local.keybinds.keybinds.new_tab.label().as_deref(),
@@ -377,7 +362,7 @@ new_tab = "prefix+n"
         });
     state.set_snapshot(Box::new(projection));
 
-    assert_eq!(state.config.keybinds.prefix.0, KeyCode::Char('x'));
+    assert_eq!(state.config.keybinds.prefix[0].0, KeyCode::Char('x'));
     assert_eq!(
         state.config.keybinds.keybinds.new_tab.label().as_deref(),
         Some("prefix+n")
@@ -515,7 +500,13 @@ fn unavailable_endpoint_method_is_disabled_without_disconnect() {
         .expect("unsupported action notice");
     assert_eq!(notice.key.kind, ClientEndpointNoticeKind::Unsupported);
     assert_eq!(notice.key.code, "workspace.focus");
-    assert!(notice.body.contains("This server"));
+    assert!(notice.body.contains(
+        crate::trf!(
+            "This server does not support {method_name} yet. Update and restart it to enable this action.",
+            method_name = "workspace.focus"
+        )
+        .as_str()
+    ));
     assert!(state.endpoint_error.is_none());
 
     let mut repeated = ClientShellInput::default();
@@ -691,7 +682,9 @@ fn custom_binding_missing_from_endpoint_manifest_is_not_forwarded() {
     assert!(state
         .endpoint_error
         .as_deref()
-        .is_some_and(|error| error.contains("not available")));
+        .is_some_and(|error| error.contains(crate::tr!(
+            "custom command is not available on this endpoint; reload configuration"
+        ))));
 }
 
 #[test]
@@ -715,16 +708,7 @@ fn help_overlay_restores_released_search_scroll_and_custom_binding_behavior() {
         &mut open,
     );
     let initial = state.compose(106, 30).expect("help overlay");
-    let text = initial
-        .cells
-        .chunks(initial.width as usize)
-        .map(|row| {
-            row.iter()
-                .map(|cell| cell.symbol.as_str())
-                .collect::<String>()
-        })
-        .collect::<Vec<_>>()
-        .join("\n");
+    let text = frame_text(&initial);
     assert!(text.contains(crate::tr!("global")));
     assert!(state.hits.help_max_scroll > 0);
     assert_ne!(state.hits.help_scrollbar, Rect::default());
@@ -732,16 +716,7 @@ fn help_overlay_restores_released_search_scroll_and_custom_binding_behavior() {
     state.handle_input_bytes(b"/");
     state.handle_input_bytes(b"plugin");
     let custom = state.compose(106, 30).expect("custom help search");
-    let text = custom
-        .cells
-        .chunks(custom.width as usize)
-        .map(|row| {
-            row.iter()
-                .map(|cell| cell.symbol.as_str())
-                .collect::<String>()
-        })
-        .collect::<Vec<_>>()
-        .join("\n");
+    let text = frame_text(&custom);
     assert!(text.contains(crate::tr!("custom")));
     assert!(text.contains("run plugin action"));
     state.handle_input_bytes(b"\x1b");
@@ -749,16 +724,7 @@ fn help_overlay_restores_released_search_scroll_and_custom_binding_behavior() {
     state.handle_input_bytes(b"/");
     state.handle_input_bytes(b"does-not-exist");
     let empty = state.compose(106, 30).expect("empty help search");
-    let text = empty
-        .cells
-        .chunks(empty.width as usize)
-        .map(|row| {
-            row.iter()
-                .map(|cell| cell.symbol.as_str())
-                .collect::<String>()
-        })
-        .collect::<Vec<_>>()
-        .join("\n");
+    let text = frame_text(&empty);
     assert!(text.contains(crate::tr!(" no matching keybinds")));
 
     state.handle_input_bytes(b"\x1b");

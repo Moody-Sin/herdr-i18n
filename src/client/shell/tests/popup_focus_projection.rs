@@ -83,7 +83,6 @@ fn modal_paste_target_requires_a_focused_editable_client_field() {
         selected: None,
         scroll: 0,
         filter: None,
-        expanded_workspaces: HashSet::new(),
     }));
     assert!(!state.modal_paste_target_active());
     if let Some(ClientShellOverlay::Navigator(navigator)) = state.overlay.as_mut() {
@@ -156,16 +155,7 @@ fn desktop_composition_keeps_shell_outside_origin_relative_surface() {
     state.set_pane_surface(surface());
 
     let frame = state.compose(106, 20).expect("composed frame");
-    let text = frame
-        .cells
-        .chunks(frame.width as usize)
-        .map(|row| {
-            row.iter()
-                .map(|cell| cell.symbol.as_str())
-                .collect::<String>()
-        })
-        .collect::<Vec<_>>()
-        .join("\n");
+    let text = frame_text(&frame);
     assert!(text.contains(crate::tr!(" spaces")));
     assert!(text.contains("client-shell"));
     assert!(text.contains("main"));
@@ -189,16 +179,7 @@ fn client_composes_popup_terminal_content_inside_client_owned_chrome() {
     assert_eq!(popup.rect.height, 5);
     assert_eq!(popup.inner_rect.width, 9);
     assert_eq!(popup.inner_rect.height, 3);
-    let text = frame
-        .cells
-        .chunks(frame.width as usize)
-        .map(|row| {
-            row.iter()
-                .map(|cell| cell.symbol.as_str())
-                .collect::<String>()
-        })
-        .collect::<Vec<_>>()
-        .join("\n");
+    let text = frame_text(&frame);
     assert!(text.contains("popup tit"));
     assert!(text.contains("popup-liv"));
     assert_eq!(
@@ -882,6 +863,25 @@ fn pane_scrollbar_track_and_thumb_use_stable_endpoint_scroll_requests() {
         })]);
     assert!(release.actions.is_empty());
     assert!(state.chrome_drag.is_none());
+}
+
+#[test]
+fn clear_pane_binding_targets_the_focused_endpoint_pane() {
+    let mut state = ClientShellState::new(ClientShellConfig::from_config(&Config::default()));
+    state.set_snapshot(Box::new(snapshot()));
+    state.set_pane_surface(surface());
+    let mut input = ClientShellInput::default();
+    state.record_binding(
+        crate::input::KeybindMatch::Action(crate::input::KeybindAction::ClearPane),
+        &mut input,
+    );
+    assert!(input.requests.is_empty());
+    assert!(matches!(
+        &input.actions[..],
+        [ClientShellAction::Endpoint { request, .. }]
+            if matches!(&request.method, crate::api::schema::Method::PaneClear(target)
+                if target.pane_id == "pane_1")
+    ));
 }
 
 #[test]

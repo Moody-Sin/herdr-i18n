@@ -63,13 +63,13 @@ fn indexed_range_prefix(bindings: &[IndexedKeybind]) -> Option<&str> {
 
 pub(crate) fn keybind_help_groups(
     keybinds: &Keybinds,
-    prefix: (crossterm::event::KeyCode, crossterm::event::KeyModifiers),
+    prefixes: &[crate::config::KeyCombo],
 ) -> Vec<KeybindHelpGroup> {
     let mut groups = vec![
         (
             crate::tr!("global"),
             vec![
-                entry(crate::config::format_key_combo(prefix), "prefix mode"),
+                entry(crate::config::format_prefix_combos(prefixes), "prefix mode"),
                 entry(binding_label(&keybinds.help), "keybinds"),
                 entry(binding_label(&keybinds.settings), "settings"),
                 entry(binding_label(&keybinds.detach), "detach"),
@@ -160,6 +160,7 @@ pub(crate) fn keybind_help_groups(
                 entry(binding_label(&keybinds.close_pane), "close pane"),
                 entry(binding_label(&keybinds.rename_pane), "rename pane"),
                 entry(binding_label(&keybinds.edit_scrollback), "edit scrollback"),
+                entry(binding_label(&keybinds.clear_pane), "clear pane"),
                 entry(binding_label(&keybinds.copy_mode), "copy mode"),
                 entry(binding_label(&keybinds.zoom), "zoom pane"),
                 entry(binding_label(&keybinds.resize_mode), "resize mode"),
@@ -242,15 +243,23 @@ pub(crate) fn filter_keybind_help_groups(
 mod tests {
     use super::*;
 
+    // Built directly rather than through `entry` so the filter is tested
+    // independently of the localized catalog.
     fn groups() -> Vec<KeybindHelpGroup> {
         vec![
             (
                 "workspaces / tabs",
-                vec![entry("w", "workspace navigation"), entry("c", "new tab")],
+                vec![
+                    ("w".to_owned(), Cow::Borrowed("workspace navigation")),
+                    ("c".to_owned(), Cow::Borrowed("new tab")),
+                ],
             ),
             (
                 "panes",
-                vec![entry("v", "split vertical"), entry("x", "close pane")],
+                vec![
+                    ("v".to_owned(), Cow::Borrowed("split vertical")),
+                    ("x".to_owned(), Cow::Borrowed("close pane")),
+                ],
             ),
         ]
     }
@@ -265,5 +274,19 @@ mod tests {
         assert_eq!(filtered.len(), 1);
         assert_eq!(filtered[0].1[0].1, "close pane");
         assert!(filter_keybind_help_groups(groups(), "panes").is_empty());
+    }
+
+    #[test]
+    fn help_lists_every_configured_prefix() {
+        let groups = keybind_help_groups(
+            &Keybinds::default(),
+            &[
+                (KeyCode::Char(' '), KeyModifiers::CONTROL),
+                (KeyCode::Char('s'), KeyModifiers::CONTROL),
+            ],
+        );
+        let global = &groups[0].1;
+        assert_eq!(global[0].0, "ctrl+space / ctrl+s");
+        assert_eq!(global[0].1, crate::tr!("prefix mode"));
     }
 }

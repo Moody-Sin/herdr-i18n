@@ -9,6 +9,9 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 CATALOG = ROOT / "src" / "i18n" / "zh-CN.json"
 MESSAGE_CALL = re.compile(r'crate::trf?!\(\s*"((?:\\.|[^"\\])*)"')
+# `entry(key, "label")` in keybind_help localizes its label without ever
+# mentioning `crate::tr!`, so it needs its own pattern to stay covered.
+HELP_ENTRY_LABEL = re.compile(r'\bentry\(\s*(?:[^()]|\([^()]*\))+,\s*"((?:\\.|[^"\\])*)"\s*\)')
 PLACEHOLDER = re.compile(r"\{([a-zA-Z_][a-zA-Z0-9_]*)\}")
 NAMED_ARGUMENT = re.compile(r"\b([a-zA-Z_][a-zA-Z0-9_]*)\s*=")
 
@@ -87,6 +90,10 @@ def check() -> list[str]:
                     f"{path.relative_to(ROOT)}: placeholders differ for {key!r} "
                     f"(source={sorted(source_args)}, zh-CN={sorted(translated_args)})"
                 )
+        for match in HELP_ENTRY_LABEL.finditer(source):
+            key = json.loads(f'"{match.group(1)}"')
+            if key not in catalog:
+                errors.append(f"{path.relative_to(ROOT)}: missing zh-CN text for {key!r}")
     return errors
 
 

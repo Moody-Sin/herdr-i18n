@@ -228,11 +228,7 @@ fn client_owned_sidebar_dividers_resize_live() {
     assert!(resize.repaint);
     assert!(resize.resize);
     let waiting_frame = state.compose(106, 30).expect("waiting for resized surface");
-    let waiting_text: String = waiting_frame
-        .cells
-        .iter()
-        .map(|cell| cell.symbol.as_str())
-        .collect();
+    let waiting_text: String = frame_text(&waiting_frame);
     assert!(
         waiting_text.contains(crate::tr!(" spaces")),
         "local sidebar must keep spaces while resizing: {waiting_text}"
@@ -268,11 +264,7 @@ fn client_owned_sidebar_dividers_resize_live() {
 
     state.set_pane_surface(surface());
     let recovered_frame = state.compose(106, 30).expect("resized sidebar");
-    let recovered_text: String = recovered_frame
-        .cells
-        .iter()
-        .map(|cell| cell.symbol.as_str())
-        .collect();
+    let recovered_text: String = frame_text(&recovered_frame);
     assert!(recovered_text.contains(crate::tr!(" spaces")));
     assert!(recovered_text.contains("LIVE"));
     assert!(!state.hits.panes.is_empty());
@@ -394,16 +386,7 @@ fn global_menu_opens_from_sidebar_and_routes_client_actions() {
     })]);
     assert!(open.repaint);
     let menu = state.compose(106, 30).expect("global menu");
-    let text = menu
-        .cells
-        .chunks(menu.width as usize)
-        .map(|row| {
-            row.iter()
-                .map(|cell| cell.symbol.as_str())
-                .collect::<String>()
-        })
-        .collect::<Vec<_>>()
-        .join("\n");
+    let text = frame_text(&menu);
     assert!(text.contains(crate::tr!("settings")));
     assert!(text.contains(crate::tr!("keybinds")));
     assert!(text.contains(crate::tr!("reload config")));
@@ -439,16 +422,7 @@ fn new_tab_overlay_owns_text_cursor_and_submits_public_api_request() {
     );
     assert!(open.actions.is_empty());
     let frame = state.compose(106, 20).expect("new tab overlay");
-    let text = frame
-        .cells
-        .chunks(frame.width as usize)
-        .map(|row| {
-            row.iter()
-                .map(|cell| cell.symbol.as_str())
-                .collect::<String>()
-        })
-        .collect::<Vec<_>>()
-        .join("\n");
+    let text = frame_text(&frame);
     assert!(text.contains(crate::tr!("new tab")));
     assert!(text.contains(crate::tr!(" ↵ save ")));
     let restored = frame.to_ratatui_buffer().expect("overlay frame");
@@ -474,7 +448,7 @@ fn new_tab_overlay_owns_text_cursor_and_submits_public_api_request() {
 }
 
 #[test]
-fn close_confirmation_error_becomes_client_owned_overlay_and_stable_group_close() {
+fn close_confirmation_error_becomes_client_owned_overlay_and_stable_workspace_close() {
     let mut state = ClientShellState::new(ClientShellConfig::from_config(&Config::default()));
     state.set_snapshot(Box::new(snapshot()));
     state.set_pane_surface(surface());
@@ -500,16 +474,7 @@ fn close_confirmation_error_becomes_client_owned_overlay_and_stable_group_close(
             .0
     );
     let frame = state.compose(106, 20).expect("confirmation overlay");
-    let text = frame
-        .cells
-        .chunks(frame.width as usize)
-        .map(|row| {
-            row.iter()
-                .map(|cell| cell.symbol.as_str())
-                .collect::<String>()
-        })
-        .collect::<Vec<_>>()
-        .join("\n");
+    let text = frame_text(&frame);
     assert!(text.contains(crate::tr!("Close workspace?")));
     assert!(text.contains(crate::tr!("1 pane")));
 
@@ -520,6 +485,6 @@ fn close_confirmation_error_becomes_client_owned_overlay_and_stable_group_close(
     assert!(matches!(
         &request.method,
         crate::api::schema::Method::WorkspaceClose(params)
-            if params.workspace_id == "ws_1" && params.close_group
+            if params.workspace_id == "ws_1" && !params.close_group
     ));
 }

@@ -13,16 +13,8 @@ fn navigate_update_status_uses_released_desktop_and_mobile_placement() {
     state.mode = ClientShellMode::Navigate;
 
     let bottom = state.compose(106, 30).expect("bottom-tab update shell");
-    let row_text = |frame: &FrameData, row: u16| {
-        let width = usize::from(frame.width);
-        let start = usize::from(row) * width;
-        frame.cells[start..start + width]
-            .iter()
-            .map(|cell| cell.symbol.as_str())
-            .collect::<String>()
-    };
-    assert!(row_text(&bottom, 29).contains(crate::tr!("update ready")));
-    assert!(!row_text(&bottom, 28).contains(crate::tr!("update ready")));
+    assert!(frame_row_text(&bottom, 29).contains(crate::tr!("update ready")));
+    assert!(!frame_row_text(&bottom, 28).contains(crate::tr!("update ready")));
     assert!(state.hits.tabs.is_empty());
     assert!(state.hits.new_tab.is_empty());
     assert!(state.hits.tab_scroll_left.is_empty());
@@ -45,14 +37,10 @@ fn navigate_update_status_uses_released_desktop_and_mobile_placement() {
         deadline: std::time::Instant::now(),
     });
     let top = state.compose(106, 30).expect("top-tab update shell");
-    assert!(row_text(&top, 29).contains(crate::tr!("update ready")));
+    assert!(frame_row_text(&top, 29).contains(crate::tr!("update ready")));
 
     let mobile = state.compose(44, 30).expect("mobile update shell");
-    let mobile_text = mobile
-        .cells
-        .iter()
-        .map(|cell| cell.symbol.as_str())
-        .collect::<String>();
+    let mobile_text = frame_text(&mobile);
     assert!(mobile_text.contains(crate::tr!("update ready")));
 }
 
@@ -90,11 +78,7 @@ fn mobile_switcher_can_activate_an_online_saved_machine() {
     state.mode = ClientShellMode::Navigate;
 
     let frame = state.compose(44, 30).expect("mobile machine switcher");
-    let text = frame
-        .cells
-        .iter()
-        .map(|cell| cell.symbol.as_str())
-        .collect::<String>();
+    let text = frame_text(&frame);
     assert!(text.contains(crate::tr!("machines")));
     assert!(text.contains("Build"));
     let machine = state
@@ -153,11 +137,7 @@ fn mobile_switcher_can_activate_an_online_saved_machine() {
     state.receive_endpoint_unavailable("network lost".into());
     state.mode = ClientShellMode::Navigate;
     let stale = state.compose(44, 30).expect("stale mobile switcher");
-    let text = stale
-        .cells
-        .iter()
-        .map(|cell| cell.symbol.as_str())
-        .collect::<String>();
+    let text = frame_text(&stale);
     assert!(text.contains(crate::tr!("reconnecting")), "frame: {text}");
     assert!(text.contains("network lost"), "frame: {text}");
 }
@@ -213,11 +193,7 @@ fn mobile_header_and_switcher_render_released_sections_and_stable_targets() {
     state.set_pane_surface(projected_surface);
 
     let header = state.compose(44, 20).expect("mobile header");
-    let header_text = header
-        .cells
-        .iter()
-        .map(|cell| cell.symbol.as_str())
-        .collect::<String>();
+    let header_text = frame_text(&header);
     assert!(header_text.contains("client-shell"));
     assert!(header_text.contains(crate::trf!("tab {label}", label = "1").as_str()));
     assert!(header_text.contains(crate::tr!("blocked")));
@@ -236,16 +212,7 @@ fn mobile_header_and_switcher_render_released_sections_and_stable_targets() {
     assert!(opened.repaint);
     assert_eq!(state.mode, ClientShellMode::Navigate);
     let switcher = state.compose(44, 20).expect("mobile switcher");
-    let switcher_text = switcher
-        .cells
-        .chunks(switcher.width as usize)
-        .map(|row| {
-            row.iter()
-                .map(|cell| cell.symbol.as_str())
-                .collect::<String>()
-        })
-        .collect::<Vec<_>>()
-        .join("\n");
+    let switcher_text = frame_text(&switcher);
     assert!(
         !switcher_text.contains('X'),
         "switcher must clear the pane surface"
@@ -390,17 +357,12 @@ fn mobile_background_workspace_uses_its_own_active_tab_status() {
     state.mode = ClientShellMode::Navigate;
     state.navigate_workspace_id = state.navigation_target(&ClientEndpointId::Local, "ws_2");
     let frame = state.compose(44, 20).expect("mobile switcher");
-    let text = frame
-        .cells
-        .chunks(frame.width as usize)
-        .map(|row| {
-            row.iter()
-                .map(|cell| cell.symbol.as_str())
-                .collect::<String>()
-        })
-        .collect::<Vec<_>>()
-        .join("\n");
-    assert!(text.contains("feature · tab two · 2/2"), "{text}");
+    let text = frame_text(&frame);
+    let active_tab = crate::trf!("tab {label}", label = "two");
+    assert!(
+        text.contains(&format!("feature · {active_tab} · 2/2")),
+        "{text}"
+    );
     assert!(text.contains("2 · logs"), "{text}");
     assert!(!text.contains("7 · logs"), "{text}");
 }

@@ -19,16 +19,7 @@ fn endpoint_product_announcement_is_client_rendered_modal_and_dismissed_by_ident
     state.set_pane_surface(surface_with_popup());
 
     let frame = state.compose(106, 30).expect("announcement frame");
-    let text = frame
-        .cells
-        .chunks(frame.width as usize)
-        .map(|row| {
-            row.iter()
-                .map(|cell| cell.symbol.as_str())
-                .collect::<String>()
-        })
-        .collect::<Vec<_>>()
-        .join("\n");
+    let text = frame_text(&frame);
     assert!(text.contains("A client-owned announcement"));
     assert!(text.contains(&format!("{} · v0.8.2", crate::tr!("product announcement"))));
     assert!(!state.hits.product_announcement_scrollbar.is_empty());
@@ -302,16 +293,7 @@ fn startup_onboarding_is_client_rendered_and_modal() {
     state.set_pane_surface(surface());
 
     let frame = state.compose(106, 20).expect("onboarding frame");
-    let text = frame
-        .cells
-        .chunks(frame.width as usize)
-        .map(|row| {
-            row.iter()
-                .map(|cell| cell.symbol.as_str())
-                .collect::<String>()
-        })
-        .collect::<Vec<_>>()
-        .join("\n");
+    let text = frame_text(&frame);
     assert!(text.contains(crate::tr!("  terminal workspace manager for coding agents")));
     assert!(text.contains(crate::tr!("  this is a mouse-first terminal.")));
     assert!(text.contains("ctrl+b 进入前缀模式"));
@@ -352,6 +334,23 @@ fn startup_onboarding_is_client_rendered_and_modal() {
     assert!(popup_input.requests.is_empty());
     let popup_paste = state.handle_raw_events(vec![RawInputEvent::Paste("secret".into())]);
     assert!(popup_paste.requests.is_empty());
+}
+
+#[test]
+fn startup_onboarding_shows_configured_prefix() {
+    let mut config = Config::default();
+    config.keys.prefix = crate::config::BindingConfig::one("ctrl+shift+b");
+    let config = ClientShellConfig::from_config(&config).with_startup_onboarding(true);
+    let mut state = ClientShellState::new(config);
+    state.set_snapshot(Box::new(snapshot()));
+    state.set_pane_surface(surface());
+
+    let frame = state.compose(70, 20).expect("onboarding frame");
+    let text = frame_text(&frame);
+    assert!(text.contains("ctrl+shift+b"));
+    assert!(text.contains(crate::tr!(" enters prefix mode · ")));
+    assert!(text.contains(crate::tr!(" shows keybinds and settings")));
+    assert!(!text.contains("ctrl+b"));
 }
 
 #[test]
@@ -513,16 +512,7 @@ fn startup_config_diagnostics_are_client_rendered_and_persist_until_replaced() {
     state.set_pane_surface(surface());
 
     let frame = state.compose(106, 20).expect("diagnostic frame");
-    let text = frame
-        .cells
-        .chunks(frame.width as usize)
-        .map(|row| {
-            row.iter()
-                .map(|cell| cell.symbol.as_str())
-                .collect::<String>()
-        })
-        .collect::<Vec<_>>()
-        .join("\n");
+    let text = frame_text(&frame);
     assert!(text.contains("client: local config warning"));
     assert!(text.contains("endpoint: endpoint config warning"));
 
@@ -684,39 +674,36 @@ fn update_ready_menu_opens_client_owned_release_notes_and_dismisses_by_version()
     state.sidebar_collapsed = false;
     state.mode = ClientShellMode::Navigate;
     let navigate = state.compose(106, 30).expect("navigate update status");
-    let navigate_text = navigate
-        .cells
-        .iter()
-        .map(|cell| cell.symbol.as_str())
-        .collect::<String>();
+    let navigate_text = frame_text(&navigate);
     assert!(navigate_text.contains(crate::tr!("update ready")));
     state.mode = ClientShellMode::Prefix;
     let prefix = state
         .compose(106, 30)
         .expect("prefix without update status");
-    let prefix_text = prefix
-        .cells
-        .iter()
-        .map(|cell| cell.symbol.as_str())
-        .collect::<String>();
+    let prefix_text = frame_text(&prefix);
     assert!(!prefix_text.contains(crate::tr!("update ready")));
     state.mode = ClientShellMode::Navigate;
 
     state.toggle_global_menu();
     let menu = state.compose(106, 30).expect("update menu");
-    let text = menu
-        .cells
-        .chunks(menu.width as usize)
-        .map(|row| {
-            row.iter()
-                .map(|cell| cell.symbol.as_str())
-                .collect::<String>()
-        })
-        .collect::<Vec<_>>()
-        .join("\n");
+    let text = frame_text(&menu);
     assert!(text.contains(format!("● {}", crate::tr!("update ready")).as_str()));
     let update_row = state.hits.global_menu_rows[3].0;
-    assert_eq!(update_row.width, 16);
+    // The menu is as wide as its longest localized item plus its badge.
+    let menu_snapshot = state.snapshot.as_deref().expect("snapshot");
+    let expected_menu_width = super::global_menu::global_menu_items(menu_snapshot)
+        .iter()
+        .map(|(label, action)| {
+            unicode_width::UnicodeWidthStr::width(*label) as u16
+                + u16::from(super::global_menu::global_menu_item_has_badge(
+                    menu_snapshot,
+                    *action,
+                )) * 2
+        })
+        .max()
+        .unwrap_or(8)
+        .saturating_add(4);
+    assert_eq!(update_row.width, expected_menu_width - 2);
     let menu_buffer = menu.to_ratatui_buffer().expect("menu buffer");
     assert_eq!(
         menu_buffer[(update_row.x + 1, update_row.y)].fg,
@@ -728,22 +715,9 @@ fn update_ready_menu_opens_client_owned_release_notes_and_dismisses_by_version()
     );
     state.activate_global_menu_item(3, &mut ClientShellInput::default());
     let notes = state.compose(106, 30).expect("release notes");
-    let bottom_row_start = usize::from(notes.width) * usize::from(notes.height - 1);
-    let bottom_row = notes.cells[bottom_row_start..]
-        .iter()
-        .map(|cell| cell.symbol.as_str())
-        .collect::<String>();
+    let bottom_row = frame_row_text(&notes, notes.height - 1);
     assert!(!bottom_row.contains("NAVIGATE"));
-    let text = notes
-        .cells
-        .chunks(notes.width as usize)
-        .map(|row| {
-            row.iter()
-                .map(|cell| cell.symbol.as_str())
-                .collect::<String>()
-        })
-        .collect::<Vec<_>>()
-        .join("\n");
+    let text = frame_text(&notes);
     assert!(text.contains("v0.8.3"));
     assert!(text.contains(crate::tr!("update ready")));
     assert!(text.contains("先分离，运行 herdr update"));
@@ -879,11 +853,7 @@ fn update_ready_menu_opens_client_owned_release_notes_and_dismisses_by_version()
     assert_eq!(state.hits.global_launcher.width, 6);
     state.toggle_global_menu();
     let installed = state.compose(106, 30).expect("installed menu");
-    let installed_text = installed
-        .cells
-        .iter()
-        .map(|cell| cell.symbol.as_str())
-        .collect::<String>();
+    let installed_text = frame_text(&installed);
     assert!(installed_text.contains(crate::tr!("what's new")));
     assert!(!installed_text.contains(format!("● {}", crate::tr!("what's new")).as_str()));
 }
@@ -1030,30 +1000,18 @@ fn outdated_integration_badges_launcher_settings_and_settings_tab() {
     state.set_pane_surface(surface());
     let shell = state.compose(106, 30).expect("integration attention shell");
     assert_eq!(state.hits.global_launcher.width, 8);
-    let shell_text = shell
-        .cells
-        .iter()
-        .map(|cell| cell.symbol.as_str())
-        .collect::<String>();
+    let shell_text = frame_text(&shell);
     assert!(shell_text.contains(format!("● {}", crate::tr!("menu")).as_str()));
 
     state.toggle_global_menu();
     let menu = state.compose(106, 30).expect("integration attention menu");
-    let menu_text = menu
-        .cells
-        .iter()
-        .map(|cell| cell.symbol.as_str())
-        .collect::<String>();
+    let menu_text = frame_text(&menu);
     assert!(menu_text.contains(format!("● {}", crate::tr!("settings")).as_str()));
     assert!(!menu_text.contains(crate::tr!("update ready")));
 
     state.activate_global_menu_item(0, &mut ClientShellInput::default());
     let settings = state.compose(106, 30).expect("settings integration badge");
-    let settings_text = settings
-        .cells
-        .iter()
-        .map(|cell| cell.symbol.as_str())
-        .collect::<String>();
+    let settings_text = frame_text(&settings);
     assert!(settings_text.contains(format!("● {}", crate::tr!("integrations")).as_str()));
     let integrations_tab = state
         .hits
@@ -1092,11 +1050,7 @@ fn combined_update_and_integration_attention_preserves_both_badges() {
 
     state.toggle_global_menu();
     let menu = state.compose(106, 30).expect("combined attention menu");
-    let text = menu
-        .cells
-        .iter()
-        .map(|cell| cell.symbol.as_str())
-        .collect::<String>();
+    let text = frame_text(&menu);
     let settings = text
         .find(format!("● {}", crate::tr!("settings")).as_str())
         .expect("settings badge");
@@ -1108,11 +1062,7 @@ fn combined_update_and_integration_attention_preserves_both_badges() {
     state.overlay = None;
     state.mode = ClientShellMode::Navigate;
     let navigate = state.compose(106, 30).expect("combined attention navigate");
-    let navigate_text = navigate
-        .cells
-        .iter()
-        .map(|cell| cell.symbol.as_str())
-        .collect::<String>();
+    let navigate_text = frame_text(&navigate);
     assert!(navigate_text.contains(crate::tr!("update ready")));
 }
 
@@ -1132,11 +1082,7 @@ fn current_release_notes_use_whats_new_without_attention_badge() {
     assert_eq!(state.hits.global_launcher.width, 6);
     state.toggle_global_menu();
     let menu = state.compose(106, 30).expect("what's new menu");
-    let text = menu
-        .cells
-        .iter()
-        .map(|cell| cell.symbol.as_str())
-        .collect::<String>();
+    let text = frame_text(&menu);
     assert!(text.contains(crate::tr!("what's new")));
 }
 
@@ -1225,16 +1171,7 @@ fn client_settings_preview_restore_and_endpoint_integrations_are_owned_by_overla
             .0
     );
     let frame = state.compose(106, 30).expect("loaded integrations");
-    let text = frame
-        .cells
-        .chunks(frame.width as usize)
-        .map(|row| {
-            row.iter()
-                .map(|cell| cell.symbol.as_str())
-                .collect::<String>()
-        })
-        .collect::<Vec<_>>()
-        .join("\n");
+    let text = frame_text(&frame);
     assert!(text.contains(crate::tr!("update available")));
     assert!(text.contains(crate::tr!("not found")));
     assert!(!text.contains("pane labels"));

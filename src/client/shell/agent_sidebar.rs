@@ -374,11 +374,9 @@ pub(super) fn render_agent_row(
 }
 
 fn put_text(buffer: &mut Buffer, x: u16, y: u16, width: u16, text: &str, style: Style) {
-    for (offset, character) in text.chars().take(width as usize).enumerate() {
-        if let Some(cell) = buffer.cell_mut((x + offset as u16, y)) {
-            cell.set_char(character).set_style(style);
-        }
-    }
+    // Delegate so double-width glyphs advance by their display width instead of
+    // one cell; writing them char-by-char overlaps the following cell.
+    super::render::put_text(buffer, x, y, width, text, style);
 }
 
 fn display_width(text: &str) -> usize {
@@ -386,11 +384,5 @@ fn display_width(text: &str) -> usize {
 }
 
 fn sidebar_status_text(status: crate::api::schema::AgentStatus) -> &'static str {
-    use crate::api::schema::AgentStatus;
-    match status {
-        AgentStatus::Blocked => crate::tr!("blocked"),
-        AgentStatus::Done => crate::tr!("done"),
-        AgentStatus::Working => crate::tr!("working"),
-        AgentStatus::Idle | AgentStatus::Unknown => crate::tr!("idle"),
-    }
+    super::status_label(status)
 }

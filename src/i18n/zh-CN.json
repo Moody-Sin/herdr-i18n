@@ -591,5 +591,16 @@
   "endpoint returned an unexpected integration list result": "连接返回了意外的集成列表结果",
   "endpoint returned an unexpected integration result": "连接返回了意外的集成结果",
   "endpoint returned an unexpected word-selection result": "连接返回了意外的词语选择结果",
-  "endpoint returned an unexpected worktree result": "连接返回了意外的 worktree 结果"
+  "endpoint returned an unexpected worktree result": "连接返回了意外的 worktree 结果",
+  "usage: herdr machine add <ssh-target> [--label <label>] [--remote-session <name>]": "用法：herdr machine add <ssh-target> [--label <label>] [--remote-session <name>]",
+  " / search agents and terminals": " / 搜索代理和终端",
+  "terminal": "终端",
+  "terminals": "终端",
+  " ↑↓/j/k rows · ←→ workspace · / search · a/b/w/i/d filter · enter open · esc close": " ↑↓/j/k 行 · ←→ 工作区 · / 搜索 · a/b/w/i/d 筛选 · Enter 打开 · Esc 关闭",
+  "Set the machine label shown in the sidebar (defaults to the SSH host, or host/session)": "设置侧边栏显示的机器标签（默认为 SSH 主机，或 主机/会话）",
+  "Select a session explicitly (default without an interactive terminal)": "显式选择会话（非交互式终端下的默认行为）",
+  " switch": " 切换",
+  "shell": "Shell",
+  "close pane": "关闭窗格",
+  "clear pane": "清空窗格"
 }

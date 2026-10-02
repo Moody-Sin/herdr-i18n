@@ -7,10 +7,10 @@ pub(crate) const LOCALIZED_BUILD: bool = true;
 static ZH_CN: OnceLock<Result<Catalog, serde_json::Error>> = OnceLock::new();
 
 fn catalog() -> Option<&'static Catalog> {
-    match ZH_CN.get_or_init(|| serde_json::from_str(include_str!("i18n/zh-CN.json"))) {
-        Ok(catalog) => Some(catalog),
-        Err(_) => None,
-    }
+    ZH_CN
+        .get_or_init(|| serde_json::from_str(include_str!("i18n/zh-CN.json")))
+        .as_ref()
+        .ok()
 }
 
 pub(crate) fn initialize() {

@@ -168,7 +168,7 @@ fn render_header_button(
         );
     }
     let label_y = if area.height > 1 { area.y + 1 } else { area.y };
-    let label = "switch";
+    let label = crate::tr!("switch");
     let label_width = display_width(label);
     put_text(
         buffer,
@@ -419,7 +419,7 @@ pub(super) fn render_mobile_switcher(
         area.x,
         area.y,
         close.x.saturating_sub(area.x),
-        " switch",
+        crate::tr!(" switch"),
         Style::default()
             .fg(palette.text)
             .bg(palette.panel_bg)
@@ -685,13 +685,7 @@ fn mobile_items(
                     .iter()
                     .find(|(key, _)| key == status_key)
                     .map(|(_, label)| label.clone())
-                    .unwrap_or_else(|| {
-                        if agent.agent_status == crate::api::schema::AgentStatus::Unknown {
-                            crate::tr!("idle").to_owned()
-                        } else {
-                            status_key.to_owned()
-                        }
-                    }),
+                    .unwrap_or_else(|| status_label(agent.agent_status).to_owned()),
             );
             detail.push(agent_label.to_owned());
             if endpoint.stale() {
@@ -780,7 +774,13 @@ fn mobile_items(
                     palette.surface0
                 }
             } else if endpoint.endpoint_id == active_endpoint_id && workspace.focused {
-                palette.surface_dim
+                if selected_workspace_id.is_some()
+                    && palette.surface0 == ratatui::style::Color::Reset
+                {
+                    palette.panel_bg
+                } else {
+                    palette.surface_dim
+                }
             } else {
                 palette.panel_bg
             };
@@ -969,6 +969,7 @@ impl ClientShellState {
             {
                 self.mobile_switcher_scroll = 0;
                 self.reveal_mobile_workspace = false;
+                self.pending_workspace_highlight = None;
                 self.mode = ClientShellMode::Navigate;
                 self.navigate_workspace_id = self.focused_navigation_target();
                 outcome.repaint = true;

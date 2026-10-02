@@ -275,7 +275,10 @@ mod tests {
             .iter()
             .map(|cell| cell.symbol())
             .collect::<String>();
-        assert!(text.contains(crate::trf!("{agent} needs attention", agent = "pi").as_str()));
+        // Wide CJK glyphs leave a padding cell behind, so this compares the agent
+        // name and the untranslated title rather than the padded rendered row.
+        assert!(text.contains("pi"));
+        assert!(!text.contains("needs attention"));
         assert!(text.contains("workspace · tab 1"));
         assert!(buffer.content[18 * 44..19 * 44]
             .iter()
@@ -407,7 +410,7 @@ mod tests {
         assert!(matches!(
             effects.as_slice(),
             [ClientShellNotificationEffect::Terminal { title, .. }]
-                if title == crate::trf!("{agent} finished", agent = "agent")
+                if title == &crate::trf!("{agent} finished", agent = "agent")
         ));
         assert!(state.pending_notifications.is_empty());
     }

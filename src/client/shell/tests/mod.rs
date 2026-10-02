@@ -134,37 +134,73 @@ fn surface() -> PaneSurfaceFrame {
     }
 }
 
-fn frame_rows(frame: &FrameData) -> Vec<String> {
+/// Rows of `frame` as text, paired with the frame column of each character.
+///
+/// ratatui resets the cell after a double-width symbol, so a naive join turns
+/// `要关闭` into `要 关 闭`; those padding cells are dropped here so localized
+/// text compares as written. The column map keeps lookups on real columns.
+fn frame_row_cells(frame: &FrameData) -> Vec<(String, Vec<u16>)> {
     frame
         .cells
         .chunks(frame.width as usize)
-        .map(|row| row.iter().map(|cell| cell.symbol.as_str()).collect())
+        .map(|row| {
+            let mut text = String::new();
+            let mut columns = Vec::new();
+            let mut padding = false;
+            for (column, cell) in row.iter().enumerate() {
+                if padding {
+                    padding = false;
+                    continue;
+                }
+                padding = unicode_width::UnicodeWidthStr::width(cell.symbol.as_str()) > 1;
+                text.push_str(&cell.symbol);
+                columns.push(column as u16);
+            }
+            (text, columns)
+        })
         .collect()
+}
+
+fn frame_rows(frame: &FrameData) -> Vec<String> {
+    frame_row_cells(frame)
+        .into_iter()
+        .map(|(text, _)| text)
+        .collect()
+}
+
+/// One frame row as text, with wide-character padding removed.
+fn frame_row_text(frame: &FrameData, row: u16) -> String {
+    frame_rows(frame)
+        .get(usize::from(row))
+        .cloned()
+        .unwrap_or_default()
+}
+
+/// Whole frame as newline-joined rows with wide-character padding removed.
+fn frame_text(frame: &FrameData) -> String {
+    frame_rows(frame).join("\n")
 }
 
 /// Absolute cell position of `needle` inside `area`, for style assertions.
 fn cell_symbol_position(frame: &FrameData, area: Rect, needle: &str) -> (u16, u16) {
-    let rows = frame_rows(frame);
+    let rows = frame_row_cells(frame);
     for y in area.y..area.bottom().min(frame.height) {
-        let row = &rows[y as usize];
-        let slice = row
+        let (text, columns) = &rows[y as usize];
+        let first = columns
+            .iter()
+            .position(|column| *column >= area.x)
+            .unwrap_or(columns.len());
+        let slice = text
             .chars()
-            .skip(area.x as usize)
+            .skip(first)
             .take(area.width as usize)
             .collect::<String>();
         if let Some(byte) = slice.find(needle) {
-            let column = slice[..byte].chars().count() as u16 + area.x;
-            return (column, y);
+            return (columns[first + slice[..byte].chars().count()], y);
         }
     }
     let visible = (area.y..area.bottom().min(frame.height))
-        .map(|y| {
-            rows[y as usize]
-                .chars()
-                .skip(area.x as usize)
-                .take(area.width as usize)
-                .collect::<String>()
-        })
+        .map(|y| rows[y as usize].0.clone())
         .collect::<Vec<_>>();
     panic!("symbol {needle:?} not found in {area:?}: {visible:?}");
 }
@@ -183,6 +219,7 @@ fn pane_scroll_result(
             focused: true,
             cwd: None,
             foreground_cwd: None,
+            restore_error: None,
             label: None,
             agent: None,
             title: None,
@@ -246,6 +283,7 @@ fn surface_with_popup() -> PaneSurfaceFrame {
 
 mod agents_worktrees_notifications;
 mod chrome_context;
+mod close_tab;
 mod copy;
 mod endpoint_requests;
 mod endpoints;
