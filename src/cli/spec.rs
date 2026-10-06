@@ -181,7 +181,7 @@ fn channel_command() -> Command {
 }
 
 fn server_command() -> Command {
-    Command::new("server")
+    let command = Command::new("server")
         .about(crate::tr!("Run or control the headless server"))
         .subcommand(Command::new("stop").about(crate::tr!("Stop the running server")))
         .subcommand(
@@ -199,7 +199,12 @@ fn server_command() -> Command {
         )
         .subcommand(Command::new("reload-agent-manifests").about(crate::tr!(
             "Reload local agent detection manifest overrides"
-        )))
+        )));
+    #[cfg(windows)]
+    let command = command.arg(flag("allow-unelevated-clients").help(crate::tr!(
+        "Allow ordinary same-account clients to control this elevated server"
+    )));
+    command
 }
 
 fn api_command() -> Command {
@@ -853,6 +858,17 @@ fn plugin_command() -> Command {
             Command::new("uninstall")
                 .about(crate::tr!("Uninstall a plugin"))
                 .arg(required("plugin", "PLUGIN")),
+        )
+        .subcommand(
+            Command::new("update")
+                .about(crate::tr!("Update GitHub-installed plugins"))
+                .arg(Arg::new("plugins").value_name("PLUGIN").num_args(0..))
+                .arg(
+                    Arg::new("yes")
+                        .short('y')
+                        .long("yes")
+                        .action(ArgAction::SetTrue),
+                ),
         )
         .subcommand(
             Command::new("link")

@@ -188,10 +188,10 @@ mod windows {
                 .accepting
                 .lock()
                 .unwrap_or_else(|poisoned| poisoned.into_inner());
-            // Pane shutdown terminates the child immediately after this returns. An Enter
-            // already queued must finish flushing, even if the async task cannot run.
+            // Give a queued Enter the same grace as process termination. A blocked
+            // pipe writer must not prevent teardown from terminating the child.
             if let Some(completion) = accepting.enter_completion.take() {
-                let _ = completion.recv();
+                let _ = completion.recv_timeout(Duration::from_millis(250));
             }
             accepting.accepting = false;
             drop(accepting);
@@ -226,10 +226,10 @@ mod windows {
                 enter_completion: None,
             }));
 
-            std::thread::spawn(move || {
+            crate::thread_spawn::spawn_named("herdr-pty-writer", move || {
                 run_writer(&mut writer, write_rx);
                 debug!(pane_id, "windows pty writer thread exiting");
-            });
+            })?;
 
             {
                 let write_tx = write_tx.clone();
@@ -243,7 +243,7 @@ mod windows {
             {
                 let write_tx = write_tx.clone();
                 let response_order = Arc::clone(&response_order);
-                std::thread::spawn(move || {
+                crate::thread_spawn::spawn_named("herdr-pty-reader", move || {
                     let mut buf = [0u8; 8192];
                     loop {
                         match reader.read(&mut buf) {
@@ -269,12 +269,12 @@ mod windows {
                         on_reader_exit();
                     }
                     debug!(pane_id, "windows pty reader thread exiting");
-                });
+                })?;
             }
 
             {
                 let write_tx = write_tx.clone();
-                std::thread::spawn(move || {
+                crate::thread_spawn::spawn_named("herdr-pty-control", move || {
                     for command in control_rx {
                         match command {
                             PtyIoControlCommand::Resize(request) => {
@@ -297,7 +297,7 @@ mod windows {
                         }
                     }
                     debug!(pane_id, "windows pty control thread exiting");
-                });
+                })?;
             }
 
             Ok(PtyIoActorHandle {
@@ -725,8 +725,8 @@ mod windows {
         }
 
         #[test]
-        fn shutdown_waits_for_queued_enter_and_releases_when_writer_finishes_or_disconnects() {
-            for outcome in ["flushed", "failed", "disconnected"] {
+        fn shutdown_gives_queued_enter_a_bounded_grace() {
+            for outcome in ["flushed", "failed", "disconnected", "stalled"] {
                 let runtime = test_runtime();
                 let accepting = input_acceptance(true);
                 let (data_tx, _data_rx) = mpsc::channel(1);
@@ -755,6 +755,21 @@ mod windows {
                     handle.shutdown();
                     shutdown_done_tx.send(()).unwrap();
                 });
+                if outcome == "stalled" {
+                    // Keep the queued Enter and its completion sender alive until
+                    // shutdown returns, as a blocked pipe writer would do.
+                    let result = shutdown_done_rx.recv_timeout(Duration::from_secs(2));
+                    drop(command);
+                    shutdown.join().unwrap();
+                    assert!(result.is_ok(), "stalled Enter cannot prevent teardown");
+                    assert!(matches!(
+                        control_rx.try_recv(),
+                        Ok(PtyIoControlCommand::Shutdown)
+                    ));
+                    assert!(!accepting.lock().unwrap().accepting);
+                    assert!(runtime.block_on(input_task).unwrap().is_err());
+                    continue;
+                }
                 let deadline = Instant::now() + Duration::from_secs(2);
                 while accepting.try_lock().is_ok() {
                     assert!(Instant::now() < deadline, "shutdown takes acceptance lock");
