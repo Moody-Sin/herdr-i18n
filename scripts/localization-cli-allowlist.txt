@@ -1,0 +1,23 @@
+# CLI literals that the localization checker should not require in the zh-CN
+# catalog.
+#
+# This file is for strings that are *not user-visible interface text* but still
+# look like prose to the checker's heuristic. Two categories belong here:
+#
+#   1. Internal invariant assertions. `unreachable!("...")` and
+#      `expect("...")` messages describe a bug in Herdr itself. They are read by
+#      a developer in a panic report, not by a user, and translating them would
+#      make bug reports harder to search.
+#
+#   2. Machine-readable values. A literal that is matched, compared, or written
+#      into structured output (JSON keys, protocol codes, status tokens) must
+#      stay stable in English even though it reads like a sentence.
+#
+# Do NOT add user-facing text here. If a user can read the string in a terminal,
+# a help page, or an error message, it belongs in `src/i18n/zh-CN.json` and must
+# be wrapped in `crate::tr!` or `crate::trf!`.
+#
+# One literal per line, exactly as it appears in the Rust source.
+
+subcommand checked immediately before mutable lookup
+validated machine add option

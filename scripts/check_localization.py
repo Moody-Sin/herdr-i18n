@@ -8,12 +8,121 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 CATALOG = ROOT / "src" / "i18n" / "zh-CN.json"
+SRC = ROOT / "src"
 MESSAGE_CALL = re.compile(r'crate::trf?!\(\s*"((?:\\.|[^"\\])*)"')
-# `entry(key, "label")` in keybind_help localizes its label without ever
-# mentioning `crate::tr!`, so it needs its own pattern to stay covered.
-HELP_ENTRY_LABEL = re.compile(r'\bentry\(\s*(?:[^()]|\([^()]*\))+,\s*"((?:\\.|[^"\\])*)"\s*\)')
 PLACEHOLDER = re.compile(r"\{([a-zA-Z_][a-zA-Z0-9_]*)\}")
 NAMED_ARGUMENT = re.compile(r"\b([a-zA-Z_][a-zA-Z0-9_]*)\s*=")
+
+# `entry(key, "label")` in keybind_help.rs localizes its label through
+# `crate::i18n::text`, so the label never appears next to `crate::tr!` and the
+# message-call scan above cannot see it. The first argument is frequently a call
+# such as `binding_label(&keybinds.split_horizontal)` or `format!(...)`, so the
+# arguments must be split with balanced-delimiter scanning rather than a regex:
+# a nested-paren regex silently skips most of the table.
+ENTRY_CALL = re.compile(r"\bentry\(")
+# Literals in the CLI layer that are deliberately not translated: command
+# syntax, machine-readable keys, and identifiers are part of the interface.
+UNTRANSLATED_CLI_ALLOWLIST = ROOT / "scripts" / "localization-cli-allowlist.txt"
+CLI_PROSE = re.compile(r"[a-z]+ [a-z]+")
+CLI_NOT_PROSE = re.compile(
+    r"^(?:[a-z0-9_.-]+/)+"  # paths
+    r"|^--?[a-z]"  # flags
+    r"|^\{.*\}$"  # pure placeholder
+    r"|^[a-z0-9_]+$"  # identifier
+    r"|^[A-Z_]+$"  # constant
+    r"|^\s*herdr "  # indented command syntax, kept in English by design
+)
+# `usage: herdr ...` lines keep their command syntax in English but the
+# `usage: ` label is translated, so they must still be flagged when unwrapped.
+# Excluding them here previously hid 51 usage lines that had no catalog entry.
+USAGE_PREFIX = "usage: "
+STRING = re.compile(r'"((?:\\.|[^"\\])*)"')
+
+
+def balanced_arguments(source: str, open_index: int) -> list[str] | None:
+    """Split the argument list whose opening `(` is at ``open_index``."""
+    depth = 0
+    in_string = False
+    escaped = False
+    start = open_index + 1
+    arguments: list[str] = []
+    index = open_index
+    while index < len(source):
+        char = source[index]
+        if in_string:
+            if escaped:
+                escaped = False
+            elif char == "\\":
+                escaped = True
+            elif char == '"':
+                in_string = False
+            index += 1
+            continue
+        if char == '"':
+            in_string = True
+        elif char in "([{":
+            depth += 1
+        elif char in ")]}":
+            depth -= 1
+            if depth == 0:
+                arguments.append(source[start:index])
+                return arguments
+        elif char == "," and depth == 1:
+            arguments.append(source[start:index])
+            start = index + 1
+        index += 1
+    return None
+
+
+def literal_spans(source: str) -> list[tuple[int, int]]:
+    """Character ranges of every string literal passed to tr!/trf!.
+
+    The untranslated-CLI scan must ignore exactly these literals. They are
+    collected as spans rather than by inspecting the source line, because a
+    formatted call routinely puts its literal on the following line:
+
+        eprintln!(
+            "{}",
+            crate::trf!("live handoff complete; server log: {log}", log = log)
+        );
+
+    A line-based check would report that literal as untranslated even though it
+    is localized, and a line-based allowlist would then hide real gaps.
+    """
+    spans: list[tuple[int, int]] = []
+    for match in MESSAGE_CALL.finditer(source):
+        spans.append((match.start(1), match.end(1)))
+    for match in ENTRY_CALL.finditer(source):
+        arguments = balanced_arguments(source, match.end() - 1)
+        if not arguments or len(arguments) < 2:
+            continue
+        raw = string_literal(arguments[1])
+        if raw is None:
+            continue
+        # locate the literal inside the original source after the call opens
+        offset = source.find(raw, match.end())
+        if offset != -1:
+            spans.append((offset + 1, offset + len(raw) - 1))
+    return spans
+
+
+def string_literal(expression: str) -> str | None:
+    """Return the raw literal if ``expression`` is exactly one string literal."""
+    expression = expression.strip()
+    if not expression.startswith('"'):
+        return None
+    index = 1
+    escaped = False
+    while index < len(expression):
+        char = expression[index]
+        if escaped:
+            escaped = False
+        elif char == "\\":
+            escaped = True
+        elif char == '"':
+            return expression[: index + 1]
+        index += 1
+    return None
 
 
 def macro_arguments(source: str, position: int) -> str:
@@ -64,36 +173,153 @@ def load_catalog() -> dict[str, str]:
     return catalog
 
 
-def check() -> list[str]:
-    errors: list[str] = []
-    catalog = load_catalog()
-    for path in (ROOT / "src").rglob("*.rs"):
+def load_allowlist() -> set[str]:
+    if not UNTRANSLATED_CLI_ALLOWLIST.exists():
+        return set()
+    entries: set[str] = set()
+    for line in UNTRANSLATED_CLI_ALLOWLIST.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if not line or line.startswith("#"):
+            continue
+        entries.add(line)
+    return entries
+
+
+def iter_sources():
+    for path in SRC.rglob("*.rs"):
         if "tests" in path.parts:
             continue
-        source = path.read_text(encoding="utf-8")
+        yield path, path.read_text(encoding="utf-8")
+
+
+def check_catalog_keys(catalog: dict[str, str], errors: list[str]) -> None:
+    for path, source in iter_sources():
+        relative = path.relative_to(ROOT)
+
         for match in MESSAGE_CALL.finditer(source):
             key = json.loads(f'"{match.group(1)}"')
             source_args = set(PLACEHOLDER.findall(key))
             if "trf" in match.group(0):
-                provided_args = set(NAMED_ARGUMENT.findall(macro_arguments(source, match.end())))
-                if source_args != provided_args:
+                provided = set(NAMED_ARGUMENT.findall(macro_arguments(source, match.end())))
+                if source_args != provided:
                     errors.append(
-                        f"{path.relative_to(ROOT)}: arguments differ for {key!r} "
-                        f"(message={sorted(source_args)}, call={sorted(provided_args)})"
+                        f"{relative}: arguments differ for {key!r} "
+                        f"(message={sorted(source_args)}, call={sorted(provided)})"
                     )
             if key not in catalog:
-                errors.append(f"{path.relative_to(ROOT)}: missing zh-CN text for {key!r}")
+                errors.append(f"{relative}: missing zh-CN text for {key!r}")
                 continue
             translated_args = set(PLACEHOLDER.findall(catalog[key]))
             if source_args != translated_args:
                 errors.append(
-                    f"{path.relative_to(ROOT)}: placeholders differ for {key!r} "
+                    f"{relative}: placeholders differ for {key!r} "
                     f"(source={sorted(source_args)}, zh-CN={sorted(translated_args)})"
                 )
-        for match in HELP_ENTRY_LABEL.finditer(source):
-            key = json.loads(f'"{match.group(1)}"')
+
+        for match in ENTRY_CALL.finditer(source):
+            arguments = balanced_arguments(source, match.end() - 1)
+            if not arguments or len(arguments) < 2:
+                continue
+            raw = string_literal(arguments[1])
+            if raw is None:
+                continue
+            key = json.loads(raw)
             if key not in catalog:
-                errors.append(f"{path.relative_to(ROOT)}: missing zh-CN text for {key!r}")
+                errors.append(f"{relative}: missing zh-CN text for {key!r}")
+
+
+def test_region_start(source: str) -> int:
+    """Offset where the trailing `#[cfg(test)]` region begins, or len(source).
+
+    Unit tests assert against literal English messages, so the untranslated-CLI
+    scan must not treat them as user-visible gaps. Catalog-key scanning still
+    covers them, because a test that calls `crate::tr!` needs a real entry.
+    """
+    match = re.search(r"^#\[cfg\(test\)\]", source, re.MULTILINE)
+    return match.start() if match else len(source)
+
+
+def check_untranslated_cli(catalog: dict[str, str], errors: list[str]) -> None:
+    allowlist = load_allowlist()
+    cli_root = SRC / "cli"
+    for path in sorted(cli_root.rglob("*.rs")):
+        if "tests" in path.parts:
+            continue
+        relative = path.relative_to(ROOT)
+        source = path.read_text(encoding="utf-8")
+        localized = literal_spans(source)
+        tests_start = test_region_start(source)
+        line_starts = [0]
+        for index, char in enumerate(source):
+            if char == "\n":
+                line_starts.append(index + 1)
+
+        def line_of(offset: int) -> int:
+            low, high = 0, len(line_starts) - 1
+            while low < high:
+                middle = (low + high + 1) // 2
+                if line_starts[middle] <= offset:
+                    low = middle
+                else:
+                    high = middle - 1
+            return low + 1
+
+        for match in STRING.finditer(source):
+            start, end = match.start(1), match.end(1)
+            if start >= tests_start:
+                continue
+            if any(span_start <= start and end <= span_end for span_start, span_end in localized):
+                continue
+            value = match.group(1)
+            if CLI_NOT_PROSE.match(value) or not CLI_PROSE.search(value):
+                continue
+            if value in allowlist or value in catalog:
+                continue
+            if value.startswith(USAGE_PREFIX):
+                errors.append(
+                    f"{relative}:{line_of(start)}: untranslated usage text {value!r} "
+                    f"(wrap it in crate::tr!, or list it in "
+                    f"{UNTRANSLATED_CLI_ALLOWLIST.relative_to(ROOT)})"
+                )
+                continue
+            errors.append(
+                f"{relative}:{line_of(start)}: untranslated CLI text {value!r} "
+                f"(wrap it in crate::tr!, or list it in "
+                f"{UNTRANSLATED_CLI_ALLOWLIST.relative_to(ROOT)})"
+            )
+
+
+def check_stale_entries(catalog: dict[str, str], errors: list[str]) -> None:
+    """Report catalog entries no source literal can ever produce.
+
+    Upstream string changes leave the old entry behind. Nothing fails when that
+    happens, so the catalog grows with dead keys and reviewers cannot tell
+    which entries are live. A key is live when some literal in `src/` matches it
+    exactly, because `text_ref` also looks keys up at runtime.
+    """
+    literals: set[str] = set()
+    for path, source in iter_sources():
+        for match in STRING.finditer(source):
+            try:
+                literals.add(json.loads(f'"{match.group(1)}"'))
+            except json.JSONDecodeError:
+                continue
+
+    for key in sorted(catalog):
+        if key in literals:
+            continue
+        errors.append(
+            f"catalog: stale entry {key!r} has no matching literal in src/ "
+            f"(remove it, or restore the text it translates)"
+        )
+
+
+def check() -> list[str]:
+    errors: list[str] = []
+    catalog = load_catalog()
+    check_catalog_keys(catalog, errors)
+    check_untranslated_cli(catalog, errors)
+    check_stale_entries(catalog, errors)
     return errors
 
 
