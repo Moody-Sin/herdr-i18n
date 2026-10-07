@@ -4,4 +4,18 @@ set -euo pipefail
 repo_root="$(git rev-parse --show-toplevel)"
 cd "$repo_root"
 
-python3 scripts/conventional_commits.py --message-file "$1"
+# Upstream simplified this hook to a bare `python3` because the maintainer runs
+# Unix. On a native Windows checkout `python3` resolves to the Microsoft Store
+# app-execution alias, which is not a real interpreter: it exits non-zero, so a
+# bare `python3` would reject every commit. Pick the first interpreter that
+# actually runs, matching the `python`/`python3` split the justfile already uses.
+for candidate in python3 python; do
+    if command -v "$candidate" >/dev/null 2>&1 && "$candidate" -c "" 2>/dev/null; then
+        "$candidate" scripts/conventional_commits.py --message-file "$1"
+        exit $?
+    fi
+done
+
+echo "error: commit-msg hook needs a working Python 3 interpreter on PATH" >&2
+echo "checked: python3, python" >&2
+exit 1
