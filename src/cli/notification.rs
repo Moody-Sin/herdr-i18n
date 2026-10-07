@@ -25,7 +25,10 @@ fn notification_show(args: &[String]) -> std::io::Result<i32> {
         Ok(params) => params,
         Err(NotificationShowArgError::Usage) => {
             eprintln!(
-                "usage: herdr notification show <title> [--body TEXT] [--position top-left|top-right|bottom-left|bottom-right] [--sound none|done|request]"
+                "{}",
+                crate::tr!(
+                    "usage: herdr notification show <title> [--body TEXT] [--position top-left|top-right|bottom-left|bottom-right] [--sound none|done|request]"
+                )
             );
             return Ok(2);
         }
@@ -66,7 +69,7 @@ fn parse_notification_show_args(
             "--body" => {
                 let Some(value) = args.get(index + 1) else {
                     return Err(NotificationShowArgError::Message(
-                        "missing value for --body".into(),
+                        crate::tr!("missing value for --body").into(),
                     ));
                 };
                 body = Some(value.clone());
@@ -75,7 +78,7 @@ fn parse_notification_show_args(
             "--position" => {
                 let Some(value) = args.get(index + 1) else {
                     return Err(NotificationShowArgError::Message(
-                        "missing value for --position".into(),
+                        crate::tr!("missing value for --position").into(),
                     ));
                 };
                 position = Some(parse_toast_position(value)?);
@@ -84,15 +87,16 @@ fn parse_notification_show_args(
             "--sound" => {
                 let Some(value) = args.get(index + 1) else {
                     return Err(NotificationShowArgError::Message(
-                        "missing value for --sound".into(),
+                        crate::tr!("missing value for --sound").into(),
                     ));
                 };
                 sound = parse_notification_sound(value)?;
                 index += 2;
             }
             other => {
-                return Err(NotificationShowArgError::Message(format!(
-                    "unknown option: {other}"
+                return Err(NotificationShowArgError::Message(crate::trf!(
+                    "unknown option: {other}",
+                    other = other
                 )));
             }
         }
@@ -112,8 +116,9 @@ fn parse_toast_position(value: &str) -> Result<ToastHerdrPosition, NotificationS
         "top-right" => Ok(ToastHerdrPosition::TopRight),
         "bottom-left" => Ok(ToastHerdrPosition::BottomLeft),
         "bottom-right" => Ok(ToastHerdrPosition::BottomRight),
-        _ => Err(NotificationShowArgError::Message(format!(
-            "invalid position: {value} (expected top-left, top-right, bottom-left, or bottom-right)"
+        _ => Err(NotificationShowArgError::Message(crate::trf!(
+            "invalid position: {value} (expected top-left, top-right, bottom-left, or bottom-right)",
+            value = value
         ))),
     }
 }
@@ -125,14 +130,15 @@ fn parse_notification_sound(
         "none" => Ok(NotificationShowSound::None),
         "done" => Ok(NotificationShowSound::Done),
         "request" => Ok(NotificationShowSound::Request),
-        _ => Err(NotificationShowArgError::Message(format!(
-            "invalid sound: {value} (expected none, done, or request)"
+        _ => Err(NotificationShowArgError::Message(crate::trf!(
+            "invalid sound: {value} (expected none, done, or request)",
+            value = value
         ))),
     }
 }
 
 fn print_notification_help() {
-    eprintln!("herdr notification commands:");
+    eprintln!("{}", crate::tr!("Herdr notification commands:"));
     eprintln!(
         "  herdr notification show <title> [--body TEXT] [--position top-left|top-right|bottom-left|bottom-right] [--sound none|done|request]"
     );
@@ -179,8 +185,10 @@ mod tests {
         assert_eq!(
             error,
             NotificationShowArgError::Message(
-                "invalid position: top-center (expected top-left, top-right, bottom-left, or bottom-right)"
-                    .into()
+                crate::trf!(
+                    "invalid position: {value} (expected top-left, top-right, bottom-left, or bottom-right)",
+                    value = "top-center"
+                )
             )
         );
     }
@@ -199,9 +207,10 @@ mod tests {
 
         assert_eq!(
             error,
-            NotificationShowArgError::Message(
-                "invalid sound: loud (expected none, done, or request)".into()
-            )
+            NotificationShowArgError::Message(crate::trf!(
+                "invalid sound: {value} (expected none, done, or request)",
+                value = "loud"
+            ))
         );
     }
 }

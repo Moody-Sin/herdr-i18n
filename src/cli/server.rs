@@ -31,7 +31,7 @@ pub(super) fn run_server_command(args: &[String]) -> std::io::Result<Option<i32>
 
 fn server_stop(args: &[String]) -> std::io::Result<i32> {
     if !args.is_empty() {
-        eprintln!("usage: herdr server stop");
+        eprintln!("{}", crate::tr!("usage: herdr server stop"));
         return Ok(2);
     }
 
@@ -50,7 +50,7 @@ fn server_stop(args: &[String]) -> std::io::Result<i32> {
 
 fn server_reload_config(args: &[String]) -> std::io::Result<i32> {
     if !args.is_empty() {
-        eprintln!("usage: herdr server reload-config");
+        eprintln!("{}", crate::tr!("usage: herdr server reload-config"));
         return Ok(2);
     }
 
@@ -65,7 +65,10 @@ fn server_agent_manifests(args: &[String]) -> std::io::Result<i32> {
         [] => false,
         [flag] if flag == "--json" => true,
         _ => {
-            eprintln!("usage: herdr server agent-manifests [--json]");
+            eprintln!(
+                "{}",
+                crate::tr!("usage: herdr server agent-manifests [--json]")
+            );
             return Ok(2);
         }
     };
@@ -84,7 +87,10 @@ fn server_agent_manifests(args: &[String]) -> std::io::Result<i32> {
 
 fn server_reload_agent_manifests(args: &[String]) -> std::io::Result<i32> {
     if !args.is_empty() {
-        eprintln!("usage: herdr server reload-agent-manifests");
+        eprintln!(
+            "{}",
+            crate::tr!("usage: herdr server reload-agent-manifests")
+        );
         return Ok(2);
     }
 
@@ -99,7 +105,10 @@ fn server_update_agent_manifests(args: &[String]) -> std::io::Result<i32> {
         [] => false,
         [flag] if flag == "--json" => true,
         _ => {
-            eprintln!("usage: herdr server update-agent-manifests [--json]");
+            eprintln!(
+                "{}",
+                crate::tr!("usage: herdr server update-agent-manifests [--json]")
+            );
             return Ok(2);
         }
     };
@@ -112,7 +121,13 @@ fn server_update_agent_manifests(args: &[String]) -> std::io::Result<i32> {
             if json {
                 return super::print_response(&agent_manifest_update_error_response(&err));
             }
-            eprintln!("failed to update agent detection manifests: {err}");
+            eprintln!(
+                "{}",
+                crate::trf!(
+                    "failed to update agent detection manifests: {err}",
+                    err = err
+                )
+            );
             return Ok(1);
         }
     };
@@ -162,10 +177,16 @@ fn print_agent_manifest_status(response: &serde_json::Value) {
     let last_check = result["last_check_unix"]
         .as_u64()
         .map(|value| value.to_string())
-        .unwrap_or_else(|| "never".to_string());
-    let last_result = result["last_result"].as_str().unwrap_or("not checked");
-    println!("last check: {last_check}");
-    println!("result: {last_result}");
+        .unwrap_or_else(|| crate::tr!("never").to_string());
+    let last_result = result["last_result"]
+        .as_str()
+        .map(crate::i18n::text_ref)
+        .unwrap_or(std::borrow::Cow::Borrowed(crate::tr!("not checked")));
+    println!(
+        "{}",
+        crate::trf!("last check: {last_check}", last_check = last_check)
+    );
+    println!("{}: {last_result}", crate::tr!("result"));
     println!();
 
     let Some(manifests) = result["manifests"].as_array() else {
@@ -178,7 +199,8 @@ fn print_agent_manifest_status(response: &serde_json::Value) {
         let remote_version = manifest["cached_remote_version"].as_str().unwrap_or("-");
         let remote_result = manifest["remote_update_result"]
             .as_str()
-            .unwrap_or("not checked");
+            .map(crate::i18n::text_ref)
+            .unwrap_or(std::borrow::Cow::Borrowed(crate::tr!("not checked")));
         let local_override_shadowing_remote = manifest["local_override_shadowing_remote"]
             .as_bool()
             .unwrap_or(false);
@@ -195,7 +217,10 @@ fn print_agent_manifest_status(response: &serde_json::Value) {
         if let Some(error) = manifest["remote_update_error"].as_str() {
             println!("  {error}");
         } else if local_override_shadowing_remote {
-            println!("  local override shadows cached remote rules");
+            println!(
+                "{}",
+                crate::tr!("  local override shadows cached remote rules")
+            );
         } else if let Some(warning) = manifest["warning"].as_str() {
             println!("  {warning}");
         }
@@ -205,7 +230,10 @@ fn print_agent_manifest_status(response: &serde_json::Value) {
 fn server_live_handoff(args: &[String]) -> std::io::Result<i32> {
     let Some(params) = parse_live_handoff_params(args) else {
         eprintln!(
-            "usage: herdr server live-handoff [--import-exe <path>] [--expected-protocol <n>] [--expected-version <version>]"
+            "{}",
+            crate::tr!(
+                "usage: herdr server live-handoff [--import-exe <path>] [--expected-protocol <n>] [--expected-version <version>]"
+            )
         );
         return Ok(2);
     };
@@ -227,10 +255,13 @@ fn server_live_handoff(args: &[String]) -> std::io::Result<i32> {
     }
 
     eprintln!(
-        "live handoff complete; server log: {}",
-        crate::session::data_dir()
-            .join("herdr-server.log")
-            .display()
+        "{}",
+        crate::trf!(
+            "live handoff complete; server log: {log}",
+            log = crate::session::data_dir()
+                .join("herdr-server.log")
+                .display()
+        )
     );
     Ok(0)
 }
@@ -262,7 +293,7 @@ fn parse_live_handoff_params(args: &[String]) -> Option<ServerLiveHandoffParams>
 }
 
 fn print_server_help() {
-    eprintln!("herdr server commands:");
+    eprintln!("{}", crate::tr!("Herdr server commands:"));
     eprintln!("  herdr server                run as headless server");
     #[cfg(windows)]
     eprintln!("  herdr server --allow-unelevated-clients  allow ordinary same-account clients to control an elevated server");

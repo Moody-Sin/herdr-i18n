@@ -23,7 +23,7 @@ pub(super) fn run_completion_command(args: &[String]) -> std::io::Result<i32> {
     }
 
     let Some(shell) = parse_shell(shell) else {
-        eprintln!("unknown shell: {shell}");
+        eprintln!("{}", crate::trf!("unknown shell: {shell}", shell = shell));
         print_completion_help();
         return Ok(2);
     };
@@ -83,7 +83,13 @@ fn parse_shell(shell: &str) -> Option<Shell> {
 }
 
 fn print_completion_help() {
-    eprintln!("usage: herdr completion <{}>", supported_shells_usage());
+    eprintln!(
+        "{}",
+        crate::trf!(
+            "usage: herdr completion <{shells}>",
+            shells = supported_shells_usage()
+        )
+    );
 }
 
 #[cfg(test)]

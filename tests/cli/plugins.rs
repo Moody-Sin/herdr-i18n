@@ -993,7 +993,9 @@ fn plugin_install_usage_errors_include_options_without_installing() {
         );
         assert_eq!(output.status.code(), Some(2), "{args:?}");
         let stderr = String::from_utf8_lossy(&output.stderr);
-        assert!(stderr.contains("usage: herdr plugin install"), "{stderr}");
+        // The usage label is localized; the command syntax itself is not, so
+        // assert on the syntax to keep this test locale-independent.
+        assert!(stderr.contains("herdr plugin install"), "{stderr}");
         assert!(stderr.contains("[--ref REF] [--yes|-y]"), "{stderr}");
         assert!(!config_home.join("herdr-dev/plugins").exists());
         assert!(!config_home.join("herdr-dev/plugins.json").exists());

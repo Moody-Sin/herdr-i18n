@@ -120,7 +120,10 @@ fn status(args: &[String]) -> std::io::Result<i32> {
         } else if !arg.starts_with('-') && selector.is_none() {
             selector = Some(arg.as_str());
         } else {
-            eprintln!("usage: herdr machine status [<label-or-id>] [--json]");
+            eprintln!(
+                "{}",
+                crate::tr!("usage: herdr machine status [<label-or-id>] [--json]")
+            );
             return Ok(2);
         }
     }
@@ -146,7 +149,7 @@ fn status(args: &[String]) -> std::io::Result<i32> {
                     Err(error) => {
                         let message = error.to_string();
                         let status = if crate::remote::ssh_error_requires_authentication(&message) {
-                            "auth required"
+                            crate::tr!("auth required")
                         } else {
                             "error"
                         };
@@ -184,7 +187,10 @@ fn status(args: &[String]) -> std::io::Result<i32> {
 fn reconnect(args: &[String]) -> std::io::Result<i32> {
     use std::io::IsTerminal;
     let [selector] = args else {
-        eprintln!("usage: herdr machine reconnect <label-or-id>");
+        eprintln!(
+            "{}",
+            crate::tr!("usage: herdr machine reconnect <label-or-id>")
+        );
         return Ok(2);
     };
     let catalog = load_catalog()?;
@@ -196,18 +202,24 @@ fn reconnect(args: &[String]) -> std::io::Result<i32> {
         }
     };
     if !std::io::stdin().is_terminal() {
-        eprintln!("reconnect requires an interactive terminal; use herdr machine status for noninteractive checks");
+        eprintln!("{}", crate::tr!("reconnect requires an interactive terminal; use herdr machine status for noninteractive checks"));
         return Ok(2);
     }
     let mut authentication = crate::remote::ssh_authentication_command(&profile.target)?;
     if !authentication.command.status()?.success() {
-        eprintln!("SSH authentication failed; the saved machine was not changed.");
+        eprintln!(
+            "{}",
+            crate::tr!("SSH authentication failed; the saved machine was not changed.")
+        );
         return Ok(1);
     }
     crate::remote::check_saved_ssh(&profile.target, &profile.session)?;
     println!(
-        "Machine {} is reachable. Open Herdr clients retry within 30 seconds.",
-        profile.id
+        "{}",
+        crate::trf!(
+            "Machine {id} is reachable. Open Herdr clients retry within 30 seconds.",
+            id = profile.id
+        )
     );
     Ok(0)
 }
@@ -294,13 +306,16 @@ fn default_label(target: &str, session: &str) -> String {
 
 fn check_default_label(catalog: &EndpointCatalog, label: &str) -> Result<(), String> {
     if label.len() > MAX_LABEL_BYTES {
-        return Err(format!(
-            "default machine name '{label}' is longer than {MAX_LABEL_BYTES} bytes; pass --label to choose a name"
+        return Err(crate::trf!(
+            "default machine name '{label}' is longer than {max} bytes; pass --label to choose a name",
+            label = label,
+            max = MAX_LABEL_BYTES
         ));
     }
     if catalog.ssh.iter().any(|profile| profile.label == label) {
-        return Err(format!(
-            "a machine named '{label}' already exists; pass --label to choose another name"
+        return Err(crate::trf!(
+            "a machine named '{label}' already exists; pass --label to choose another name",
+            label = label
         ));
     }
     Ok(())
@@ -441,7 +456,7 @@ fn select_remote_session(sessions: &[String], target: &str) -> std::io::Result<S
     }
     Err(std::io::Error::new(
         std::io::ErrorKind::Interrupted,
-        "remote session selection cancelled",
+        crate::tr!("remote session selection cancelled"),
     ))
 }
 
@@ -471,7 +486,11 @@ fn render_remote_session_picker(
         execute!(output, cursor::MoveUp((sessions.len() + 2) as u16))?;
     }
     execute!(output, terminal::Clear(terminal::ClearType::CurrentLine))?;
-    write!(output, "Running sessions on {target}:\r\n")?;
+    write!(
+        output,
+        "{}",
+        crate::trf!("Running sessions on {target}:\r\n", target = target)
+    )?;
     for (index, session) in sessions.iter().enumerate() {
         execute!(output, terminal::Clear(terminal::ClearType::CurrentLine))?;
         if index == selected {
@@ -484,7 +503,11 @@ fn render_remote_session_picker(
         }
     }
     execute!(output, terminal::Clear(terminal::ClearType::CurrentLine))?;
-    write!(output, "↑/↓ select · Enter confirm · Esc cancel\r\n")?;
+    write!(
+        output,
+        "{}",
+        crate::tr!("↑/↓ select · Enter confirm · Esc cancel\r\n")
+    )?;
     output.flush()
 }
 

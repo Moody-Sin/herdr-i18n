@@ -31,9 +31,10 @@ pub(super) fn response(request_id: &str, socket_path: &Path) -> ErrorResponse {
         id: request_id.to_string(),
         error: ErrorBody {
             code: "server_not_running".into(),
-            message: format!(
-                "no herdr server is running at {}; run `{attach_command}` to start or attach it",
-                socket_path.display()
+            message: crate::trf!(
+                "no herdr server is running at {socket}; run `{attach_command}` to start or attach it",
+                socket = socket_path.display(),
+                attach_command = attach_command
             ),
         },
     }

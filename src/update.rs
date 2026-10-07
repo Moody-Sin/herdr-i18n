@@ -1908,7 +1908,10 @@ pub(crate) fn update_install_instruction(install_command: &str) -> String {
         NIX_UPDATE_COMMAND => {
             "detach, update through Nix, then run Herdr again to reconnect".to_string()
         }
-        command => format!("detach, run `{command}`, then run Herdr again to reconnect"),
+        command => crate::trf!(
+            "detach, run `{command}`, then run Herdr again to reconnect",
+            command = command
+        ),
     }
 }
 

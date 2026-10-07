@@ -378,7 +378,9 @@ fn agent_command() -> Command {
                 .about(crate::tr!("Send key presses to an agent"))
                 .arg(required("target", "TARGET"))
                 .arg(required("key", "KEY").num_args(1..))
-                .after_help("Use esc as the canonical Escape key name; escape is also accepted."),
+                .after_help(crate::tr!(
+                    "Use esc as the canonical Escape key name; escape is also accepted."
+                )),
         )
         .subcommand(
             Command::new("prompt")
@@ -402,9 +404,9 @@ fn agent_command() -> Command {
                         .requires("wait")
                         .help(crate::tr!("Fail after this many milliseconds")),
                 )
-                .after_help(
-                    "If the agent is already blocked, submission is rejected with agent_blocked before any input is sent. When an accepted submission starts from another non-working state, --wait requires an observed working or blocked state within 5000ms; otherwise it returns agent_prompt_stalled. A caller timeout that expires first returns timeout. It then matches idle, done, or blocked by default, or any exact --until state. It does not track turns: if the agent is already working, that active turn's completion may match.",
-                ),
+                .after_help(crate::tr!(
+                    "If the agent is already blocked, submission is rejected with agent_blocked before any input is sent. When an accepted submission starts from another non-working state, --wait requires an observed working or blocked state within 5000ms; otherwise it returns agent_prompt_stalled. A caller timeout that expires first returns timeout. It then matches idle, done, or blocked by default, or any exact --until state. It does not track turns: if the agent is already working, that active turn's completion may match."
+                )),
         )
         .subcommand(
             Command::new("rename")
@@ -432,9 +434,9 @@ fn agent_command() -> Command {
                         .help(crate::tr!("State to match; repeat for more than one state")),
                 )
                 .arg(option("timeout", "MS").help(crate::tr!("Fail after this many milliseconds")))
-                .after_help(
-                    "Without --until, matches idle, done, or blocked. Use --until unknown explicitly when needed. Without --timeout, waits indefinitely.",
-                ),
+                .after_help(crate::tr!(
+                    "Without --until, matches idle, done, or blocked. Use --until unknown explicitly when needed. Without --timeout, waits indefinitely."
+                )),
         )
         .subcommand(
             Command::new("attach")
@@ -472,9 +474,9 @@ fn agent_command() -> Command {
                         .last(true)
                         .help_heading("参数"),
                 )
-                .after_help(
-                    "The pane must be at its interactive shell prompt. Success means the expected agent was detected in the same terminal and is ready for input.\n\nnext: herdr agent prompt <TARGET> <TEXT> --wait",
-                ),
+                .after_help(crate::tr!(
+                    "The pane must be at its interactive shell prompt. Success means the expected agent was detected in the same terminal and is ready for input.\n\nnext: herdr agent prompt <TARGET> <TEXT> --wait"
+                )),
         )
         .subcommand(
             Command::new("explain")
@@ -634,16 +636,18 @@ fn pane_command() -> Command {
                 .about(crate::tr!("Send literal text to a pane"))
                 .arg(required("pane_id", "PANE_ID"))
                 .arg(required("text", "TEXT"))
-                .after_help(
-                    "next: herdr pane run <PANE_ID> <COMMAND> sends text and Enter in one call",
-                ),
+                .after_help(crate::tr!(
+                    "next: herdr pane run <PANE_ID> <COMMAND> sends text and Enter in one call"
+                )),
         )
         .subcommand(
             Command::new("send-keys")
                 .about(crate::tr!("Send key presses to a pane"))
                 .arg(required("pane_id", "PANE_ID"))
                 .arg(required("key", "KEY").num_args(1..))
-                .after_help("Use esc as the canonical Escape key name; escape is also accepted."),
+                .after_help(crate::tr!(
+                    "Use esc as the canonical Escape key name; escape is also accepted."
+                )),
         )
         .subcommand(
             Command::new("wait-output")
@@ -670,9 +674,9 @@ fn pane_command() -> Command {
                         .args(["match", "regex"])
                         .required(true),
                 )
-                .after_help(
-                    "The selected snapshot is searched immediately, including existing output, then polled. Without --timeout, this waits indefinitely.",
-                ),
+                .after_help(crate::tr!(
+                    "The selected snapshot is searched immediately, including existing output, then polled. Without --timeout, this waits indefinitely."
+                )),
         )
         .subcommand(
             Command::new("run")
@@ -718,7 +722,9 @@ fn resume_argv_arg() -> Arg {
         .value_name("RESUME_ARG")
         .num_args(0..)
         .last(true)
-        .help("Command that resumes this session after a Herdr restart; starts with a plain command name")
+        .help(crate::tr!(
+            "Command that resumes this session after a Herdr restart; starts with a plain command name"
+        ))
 }
 
 fn release_agent_command() -> Command {
@@ -1432,19 +1438,17 @@ mod tests {
     fn next_step_hints_render_without_replacing_existing_after_help() {
         let agent_start = long_help(&["agent", "start"]);
         assert!(
-            agent_start.contains("The pane must be at its interactive shell prompt."),
+            agent_start.contains(crate::tr!(
+                "The pane must be at its interactive shell prompt. Success means the expected agent was detected in the same terminal and is ready for input.\n\nnext: herdr agent prompt <TARGET> <TEXT> --wait"
+            )),
             "agent start dropped its existing after_help: {agent_start}"
-        );
-        assert!(
-            agent_start.contains("next: herdr agent prompt <TARGET> <TEXT> --wait"),
-            "agent start is missing its next-step hint: {agent_start}"
         );
 
         let pane_send_text = long_help(&["pane", "send-text"]);
         assert!(
-            pane_send_text.contains(
+            pane_send_text.contains(crate::tr!(
                 "next: herdr pane run <PANE_ID> <COMMAND> sends text and Enter in one call"
-            ),
+            )),
             "pane send-text is missing its next-step hint: {pane_send_text}"
         );
     }

@@ -7,7 +7,7 @@ pub(super) struct ProtocolMismatchReported;
 
 impl fmt::Display for ProtocolMismatchReported {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.write_str("protocol mismatch was already reported")
+        f.write_str(crate::tr!("protocol mismatch was already reported"))
     }
 }
 
@@ -24,12 +24,17 @@ pub(super) fn mismatch_response(
     }
 
     let message = if client_protocol > server_protocol {
-        format!(
-            "client protocol {client_protocol} is newer than server protocol {server_protocol}; restart the Herdr server before using this command. {restart_guidance}"
+        crate::trf!(
+            "client protocol {client_protocol} is newer than server protocol {server_protocol}; restart the Herdr server before using this command. {restart_guidance}",
+            client_protocol = client_protocol,
+            server_protocol = server_protocol,
+            restart_guidance = restart_guidance
         )
     } else {
-        format!(
-            "client protocol {client_protocol} is older than server protocol {server_protocol}; upgrade the Herdr client before using this command"
+        crate::trf!(
+            "client protocol {client_protocol} is older than server protocol {server_protocol}; upgrade the Herdr client before using this command",
+            client_protocol = client_protocol,
+            server_protocol = server_protocol
         )
     };
 
@@ -72,15 +77,12 @@ mod tests {
 
         assert_eq!(response.id, "cli:agent:wait");
         assert_eq!(response.error.code, "protocol_mismatch");
-        assert!(response.error.message.contains(&format!(
-            "client protocol {}",
-            crate::protocol::PROTOCOL_VERSION
+        assert!(response.error.message.contains(&crate::trf!(
+            "client protocol {client_protocol} is newer than server protocol {server_protocol}; restart the Herdr server before using this command. {restart_guidance}",
+            client_protocol = crate::protocol::PROTOCOL_VERSION,
+            server_protocol = crate::protocol::PROTOCOL_VERSION - 1,
+            restart_guidance = "Run the session stop command, then restart."
         )));
-        assert!(response.error.message.contains(&format!(
-            "server protocol {}",
-            crate::protocol::PROTOCOL_VERSION - 1
-        )));
-        assert!(response.error.message.contains("restart"));
     }
 
     #[test]
@@ -92,11 +94,11 @@ mod tests {
         )
         .unwrap();
 
-        assert!(response
-            .error
-            .message
-            .contains("older than server protocol"));
-        assert!(response.error.message.contains("upgrade the Herdr client"));
+        assert!(response.error.message.contains(&crate::trf!(
+            "client protocol {client_protocol} is older than server protocol {server_protocol}; upgrade the Herdr client before using this command",
+            client_protocol = crate::protocol::PROTOCOL_VERSION,
+            server_protocol = crate::protocol::PROTOCOL_VERSION + 1
+        )));
         assert!(!response.error.message.contains("unused restart guidance"));
     }
 

@@ -256,7 +256,7 @@ fn workspace_report_metadata(args: &[String]) -> std::io::Result<i32> {
         return Ok(2);
     };
     if tokens.is_empty() {
-        eprintln!("missing token to set or clear");
+        eprintln!("{}", crate::tr!("missing token to set or clear"));
         return Ok(2);
     }
     super::send_ok_request(Method::WorkspaceReportMetadata(

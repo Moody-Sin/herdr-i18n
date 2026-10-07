@@ -15,8 +15,13 @@ use crate::api::schema::{
 use crate::popup_size::PopupSize;
 
 const PLUGIN_BUILD_OUTPUT_MAX_BYTES: usize = 64 * 1024;
-const PLUGIN_INSTALL_USAGE: &str =
-    "usage: herdr plugin install [--ref REF] [--yes|-y] <owner>/<repo>[/subdir...]";
+
+/// Localized install usage line. Command syntax stays in English; the `usage:`
+/// prefix is translated, matching the other CLI usage lines.
+fn plugin_install_usage() -> String {
+    crate::tr!("usage: herdr plugin install [--ref REF] [--yes|-y] <owner>/<repo>[/subdir...]")
+        .to_owned()
+}
 
 pub(super) fn run_plugin_command(args: &[String]) -> std::io::Result<i32> {
     let Some(subcommand) = args.first().map(|arg| arg.as_str()) else {
@@ -184,7 +189,9 @@ fn parse_plugin_install_args(args: &[String]) -> Result<PluginInstallArgs, Strin
     while index < args.len() {
         match args[index].as_str() {
             "--ref" => {
-                let value = args.get(index + 1).ok_or("missing value for --ref")?;
+                let value = args
+                    .get(index + 1)
+                    .ok_or_else(|| crate::tr!("missing value for --ref"))?;
                 requested_ref = Some(value.clone());
                 index += 2;
             }
@@ -193,7 +200,7 @@ fn parse_plugin_install_args(args: &[String]) -> Result<PluginInstallArgs, Strin
                 index += 1;
             }
             other if other.starts_with('-') || source_arg.is_some() => {
-                return Err(format!("unknown option: {other}"));
+                return Err(crate::trf!("unknown option: {other}", other = other));
             }
             other => {
                 source_arg = Some(other);
@@ -201,7 +208,10 @@ fn parse_plugin_install_args(args: &[String]) -> Result<PluginInstallArgs, Strin
             }
         }
     }
-    let source = GithubPluginSource::parse(source_arg.ok_or(PLUGIN_INSTALL_USAGE)?)?;
+    let Some(source_arg) = source_arg else {
+        return Err(plugin_install_usage());
+    };
+    let source = GithubPluginSource::parse(source_arg)?;
     Ok(PluginInstallArgs {
         source,
         requested_ref,
@@ -381,9 +391,10 @@ fn install_github_plugin(
         let preview_plugin = load_cli_plugin_manifest(&manifest_root, enabled)?;
         if let Some(plugin) = updating_plugin {
             if preview_plugin.plugin_id != plugin.plugin_id {
-                return Err(io::Error::other(format!(
-                    "update source now contains plugin {}, expected {}",
-                    preview_plugin.plugin_id, plugin.plugin_id
+                return Err(io::Error::other(crate::trf!(
+                    "update source now contains plugin {actual}, expected {expected}",
+                    actual = preview_plugin.plugin_id,
+                    expected = plugin.plugin_id
                 )));
             }
         }
@@ -438,9 +449,14 @@ fn install_github_plugin(
             preview_plugin.manifest_path = relocated_plugin.manifest_path;
             preview_plugin.plugin_root = relocated_plugin.plugin_root;
             run_plugin_build_commands(&preview_plugin, &final_manifest_root).map_err(|err| {
-                io::Error::other(format!(
-                    "{err}\n\nPlugin was not {}.",
-                    if updating { "updated" } else { "installed" }
+                io::Error::other(crate::trf!(
+                    "{err}\n\nPlugin was not {action}.",
+                    err = err,
+                    action = if updating {
+                        crate::tr!("updated")
+                    } else {
+                        crate::tr!("installed")
+                    }
                 ))
             })?;
             let mut plugin = load_cli_plugin_manifest(&final_manifest_root, enabled)?;
@@ -611,15 +627,29 @@ fn plugin_uninstall(args: &[String]) -> std::io::Result<i32> {
 fn plugin_set_enabled(args: &[String], enabled: bool) -> std::io::Result<i32> {
     let Some(plugin_id) = args.first() else {
         eprintln!(
-            "usage: herdr plugin {} <plugin_id>",
-            if enabled { "enable" } else { "disable" }
+            "{}",
+            crate::trf!(
+                "usage: herdr plugin {action} <plugin_id>",
+                action = if enabled {
+                    crate::tr!("enable")
+                } else {
+                    crate::tr!("disable")
+                }
+            )
         );
         return Ok(2);
     };
     if args.len() != 1 {
         eprintln!(
-            "usage: herdr plugin {} <plugin_id>",
-            if enabled { "enable" } else { "disable" }
+            "{}",
+            crate::trf!(
+                "usage: herdr plugin {action} <plugin_id>",
+                action = if enabled {
+                    crate::tr!("enable")
+                } else {
+                    crate::tr!("disable")
+                }
+            )
         );
         return Ok(2);
     }
@@ -1021,7 +1051,7 @@ fn normalize_plugin_path_arg(value: &str) -> std::io::Result<String> {
         }
         return Err(std::io::Error::new(
             std::io::ErrorKind::InvalidInput,
-            "remote plugin paths must be absolute",
+            crate::tr!("remote plugin paths must be absolute"),
         ));
     }
     let path = crate::worktree::expand_tilde_path(value);
@@ -1047,11 +1077,13 @@ impl GithubPluginSource {
             || value.starts_with("git@")
             || value.contains(':')
         {
-            return Err("plugin install v1 accepts only owner/repo[/subdir] shorthand".into());
+            return Err(
+                crate::tr!("plugin install v1 accepts only owner/repo[/subdir] shorthand").into(),
+            );
         }
         let parts = value.split('/').collect::<Vec<_>>();
         if parts.len() < 2 {
-            return Err(PLUGIN_INSTALL_USAGE.into());
+            return Err(plugin_install_usage());
         }
         let owner = parts[0];
         let repo = parts[1];
@@ -1078,15 +1110,14 @@ impl GithubPluginSource {
     }
 
     fn from_installed(plugin: &InstalledPluginInfo) -> std::io::Result<Self> {
-        let owner = plugin
-            .source
-            .owner
-            .clone()
-            .ok_or_else(|| io::Error::other("installed GitHub plugin has no source owner"))?;
-        let repo =
-            plugin.source.repo.clone().ok_or_else(|| {
-                io::Error::other("installed GitHub plugin has no source repository")
-            })?;
+        let owner = plugin.source.owner.clone().ok_or_else(|| {
+            io::Error::other(crate::tr!("installed GitHub plugin has no source owner"))
+        })?;
+        let repo = plugin.source.repo.clone().ok_or_else(|| {
+            io::Error::other(crate::tr!(
+                "installed GitHub plugin has no source repository"
+            ))
+        })?;
         Ok(Self {
             owner,
             repo,
@@ -1136,9 +1167,9 @@ fn ensure_replacement_allowed(
         return Ok(());
     };
     if existing.source.kind != PluginSourceKind::Github {
-        return Err(std::io::Error::other(format!(
-            "plugin {} is already linked from a local path; uninstall/unlink it before installing from GitHub",
-            plugin.plugin_id
+        return Err(std::io::Error::other(crate::trf!(
+            "plugin {plugin_id} is already linked from a local path; uninstall/unlink it before installing from GitHub",
+            plugin_id = plugin.plugin_id
         )));
     }
     Ok(())
@@ -1151,9 +1182,9 @@ fn ensure_update_target_unchanged(
     if current.is_some_and(|current| same_update_target(expected, current)) {
         return Ok(());
     }
-    Err(io::Error::other(format!(
-        "plugin {} changed while its update was in progress; retry the update",
-        expected.plugin_id
+    Err(io::Error::other(crate::trf!(
+        "plugin {plugin_id} changed while its update was in progress; retry the update",
+        plugin_id = expected.plugin_id
     )))
 }
 
@@ -1163,17 +1194,26 @@ fn same_update_target(expected: &InstalledPluginInfo, current: &InstalledPluginI
 
 fn validate_github_segment(label: &str, value: &str) -> Result<(), String> {
     if value.is_empty() {
-        return Err(format!("GitHub {label} must not be empty"));
+        return Err(crate::trf!(
+            "GitHub {label} must not be empty",
+            label = label
+        ));
     }
     if value == "." || value == ".." {
-        return Err(format!("GitHub {label} is invalid: {value}"));
+        return Err(crate::trf!(
+            "GitHub {label} is invalid: {value}",
+            label = label,
+            value = value
+        ));
     }
     if !value
         .chars()
         .all(|ch| ch.is_ascii_alphanumeric() || matches!(ch, '-' | '_' | '.'))
     {
-        return Err(format!(
-            "GitHub {label} contains invalid characters: {value}"
+        return Err(crate::trf!(
+            "GitHub {label} contains invalid characters: {value}",
+            label = label,
+            value = value
         ));
     }
     Ok(())
@@ -1181,10 +1221,16 @@ fn validate_github_segment(label: &str, value: &str) -> Result<(), String> {
 
 fn validate_subdir_segment(value: &str) -> Result<(), String> {
     if value.is_empty() || value == "." || value == ".." {
-        return Err(format!("invalid plugin subdir segment: {value}"));
+        return Err(crate::trf!(
+            "invalid plugin subdir segment: {value}",
+            value = value
+        ));
     }
     if value.contains('\\') || value.contains('\0') {
-        return Err(format!("invalid plugin subdir segment: {value}"));
+        return Err(crate::trf!(
+            "invalid plugin subdir segment: {value}",
+            value = value
+        ));
     }
     Ok(())
 }
@@ -1302,9 +1348,9 @@ fn persist_updated_plugin(
     if updated {
         Ok(())
     } else {
-        Err(io::Error::other(format!(
-            "plugin {} changed while its update was in progress; retry the update",
-            expected.plugin_id
+        Err(io::Error::other(crate::trf!(
+            "plugin {plugin_id} changed while its update was in progress; retry the update",
+            plugin_id = expected.plugin_id
         )))
     }
 }
@@ -1379,7 +1425,9 @@ fn plugin_list_from_response(
     let parsed: SuccessResponse =
         serde_json::from_value(response).map_err(std::io::Error::other)?;
     let ResponseResult::PluginList { mut plugins } = parsed.result else {
-        return Err(std::io::Error::other("expected plugin_list response"));
+        return Err(std::io::Error::other(crate::tr!(
+            "expected plugin_list response"
+        )));
     };
     plugins.sort_by(|a, b| a.plugin_id.cmp(&b.plugin_id));
     Ok(plugins)
@@ -1686,9 +1734,9 @@ fn ensure_manifest_unchanged_after_build(
     if before == after {
         return Ok(());
     }
-    Err(io::Error::other(
-        "plugin build changed herdr-plugin.toml after install preview; aborting install",
-    ))
+    Err(io::Error::other(crate::tr!(
+        "plugin build changed herdr-plugin.toml after install preview; aborting install"
+    )))
 }
 
 fn run_plugin_build_command(
@@ -1705,7 +1753,7 @@ fn run_plugin_build_command(
             kind: PluginBuildFailureKind::Start {
                 error: io::Error::new(
                     io::ErrorKind::InvalidInput,
-                    "build command must not be empty",
+                    crate::tr!("build command must not be empty"),
                 ),
             },
         }));
@@ -1814,14 +1862,25 @@ enum PluginBuildFailureKind {
 
 impl fmt::Display for PluginBuildFailure {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        writeln!(f, "error: plugin build failed")?;
+        writeln!(f, "{}", crate::tr!("error: plugin build failed"))?;
         write_build_context(f, &self.context)?;
         match &self.kind {
             PluginBuildFailureKind::Start { error } => {
-                writeln!(f, "  error: failed to start: {error}")?;
+                writeln!(
+                    f,
+                    "{}",
+                    crate::trf!("  error: failed to start: {error}", error = error)
+                )?;
             }
             PluginBuildFailureKind::Wait { error } => {
-                writeln!(f, "  error: failed to wait for command: {error}")?;
+                writeln!(
+                    f,
+                    "{}",
+                    crate::trf!(
+                        "  error: failed to wait for command: {error}",
+                        error = error
+                    )
+                )?;
             }
             PluginBuildFailureKind::Exit {
                 status,
@@ -1861,7 +1920,12 @@ fn write_output_section(
     if output.truncated {
         writeln!(
             f,
-            "{label}: showing last {PLUGIN_BUILD_OUTPUT_MAX_BYTES} bytes; earlier output omitted"
+            "{}",
+            crate::trf!(
+                "{label}: showing last {bytes} bytes; earlier output omitted",
+                label = label,
+                bytes = PLUGIN_BUILD_OUTPUT_MAX_BYTES
+            )
         )?;
     } else {
         writeln!(f, "{label}:")?;
@@ -2136,16 +2200,24 @@ mod tests {
 
     #[test]
     fn plugin_install_args_reject_invalid_syntax() {
+        // Compare against the localized text rather than the English literal,
+        // because these messages are translated in this build.
         for (args, expected_error) in [
-            (vec![], PLUGIN_INSTALL_USAGE),
-            (vec!["--yes"], PLUGIN_INSTALL_USAGE),
-            (vec!["owner/repo", "--ref"], "missing value for --ref"),
-            (vec!["--unknown", "owner/repo"], "unknown option: --unknown"),
+            (vec![], plugin_install_usage()),
+            (vec!["--yes"], plugin_install_usage()),
+            (
+                vec!["owner/repo", "--ref"],
+                crate::tr!("missing value for --ref").to_owned(),
+            ),
+            (
+                vec!["--unknown", "owner/repo"],
+                crate::trf!("unknown option: {other}", other = "--unknown"),
+            ),
             (
                 vec!["owner/repo", "extra/repo"],
-                "unknown option: extra/repo",
+                crate::trf!("unknown option: {other}", other = "extra/repo"),
             ),
-            (vec!["owner"], PLUGIN_INSTALL_USAGE),
+            (vec!["owner"], plugin_install_usage()),
         ] {
             let args = args.into_iter().map(String::from).collect::<Vec<_>>();
             assert_eq!(

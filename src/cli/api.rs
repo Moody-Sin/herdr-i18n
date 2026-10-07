@@ -32,17 +32,17 @@ fn api_schema(args: &[String]) -> std::io::Result<i32> {
         }
         [flag, path] if flag == "--output" => {
             write_schema_file(std::path::Path::new(path))?;
-            println!("wrote API schema to {path}");
+            println!("{}", crate::trf!("wrote API schema to {path}", path = path));
         }
         [flag] if flag == "--output" => {
-            eprintln!("missing value for --output");
+            eprintln!("{}", crate::tr!("missing value for --output"));
             return Ok(2);
         }
         [flag] if matches!(flag.as_str(), "help" | "--help" | "-h") => {
             print_api_schema_help();
         }
         [other] if other.starts_with('-') => {
-            eprintln!("unknown option: {other}");
+            eprintln!("{}", crate::trf!("unknown option: {other}", other = other));
             return Ok(2);
         }
         _ => {
@@ -55,7 +55,7 @@ fn api_schema(args: &[String]) -> std::io::Result<i32> {
 
 fn api_snapshot(args: &[String]) -> std::io::Result<i32> {
     if !args.is_empty() {
-        eprintln!("usage: herdr api snapshot");
+        eprintln!("{}", crate::tr!("usage: herdr api snapshot"));
         return Ok(2);
     }
 
@@ -74,36 +74,42 @@ fn schema_summary_text() -> std::io::Result<String> {
     let protocol = value
         .get("protocol")
         .and_then(serde_json::Value::as_u64)
-        .ok_or_else(|| std::io::Error::other("API schema is missing protocol"))?;
+        .ok_or_else(|| std::io::Error::other(crate::tr!("API schema is missing protocol")))?;
     let schema_version = value
         .get("schema_version")
         .and_then(serde_json::Value::as_u64)
-        .ok_or_else(|| std::io::Error::other("API schema is missing schema_version"))?;
+        .ok_or_else(|| std::io::Error::other(crate::tr!("API schema is missing schema_version")))?;
     let mut schemas: Vec<&str> = value
         .get("schemas")
         .and_then(serde_json::Value::as_object)
-        .ok_or_else(|| std::io::Error::other("API schema is missing schemas"))?
+        .ok_or_else(|| std::io::Error::other(crate::tr!("API schema is missing schemas")))?
         .keys()
         .map(String::as_str)
         .collect();
     schemas.sort();
 
     Ok(format!(
-        "Herdr API schema\nprotocol: {}\nschema_version: {}\nschemas: {}\n\nUse `herdr api schema --json` to print the full schema.\nUse `herdr api schema --output PATH` to write it to a file.\n",
+        "{}\nprotocol: {}\nschema_version: {}\nschemas: {}\n\n{}\n{}\n",
+        crate::tr!("Herdr API schema"),
         protocol,
         schema_version,
-        schemas.join(", ")
+        schemas.join(", "),
+        crate::tr!("Use `herdr api schema --json` to print the full schema."),
+        crate::tr!("Use `herdr api schema --output PATH` to write it to a file."),
     ))
 }
 
 fn print_api_help() {
-    eprintln!("herdr api commands:");
+    eprintln!("{}", crate::tr!("Herdr api commands:"));
     eprintln!("  herdr api snapshot");
     eprintln!("  herdr api schema [--json | --output PATH]");
 }
 
 fn print_api_schema_help() {
-    eprintln!("usage: herdr api schema [--json | --output PATH]");
+    eprintln!(
+        "{}",
+        crate::tr!("usage: herdr api schema [--json | --output PATH]")
+    );
 }
 
 #[cfg(test)]
@@ -111,8 +117,10 @@ mod tests {
     #[test]
     fn schema_summary_text_stays_human_sized() {
         let text = super::schema_summary_text().unwrap();
-        assert!(text.contains("Herdr API schema"));
-        assert!(text.contains("Use `herdr api schema --json`"));
+        assert!(text.contains(crate::tr!("Herdr API schema")));
+        assert!(text.contains(crate::tr!(
+            "Use `herdr api schema --json` to print the full schema."
+        )));
         assert!(text.len() < 400);
     }
 }

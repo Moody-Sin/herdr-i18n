@@ -167,7 +167,10 @@ fn print_server_status_body(server: &ServerRuntimeStatus, indent: &str) {
             println!("{indent}socket: {}", super::target::socket_label());
         }
         ServerRuntimeStatus::NotRunning => {
-            println!("{indent}status: not running");
+            println!(
+                "{}",
+                crate::trf!("{indent}status: not running", indent = indent)
+            );
             println!("{indent}socket: {}", super::target::socket_label());
         }
     }
@@ -401,7 +404,7 @@ fn current_exe_label() -> String {
 }
 
 fn print_status_help() {
-    eprintln!("herdr status commands:");
+    eprintln!("{}", crate::tr!("Herdr status commands:"));
     eprintln!("  herdr status [--json]         show local client and running server status");
     eprintln!("  herdr status server [--json]  show running server status");
     eprintln!("  herdr status client [--json]  show local client binary status");

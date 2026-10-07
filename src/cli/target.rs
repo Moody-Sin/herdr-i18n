@@ -92,7 +92,7 @@ pub(super) fn api_client() -> io::Result<ApiClient> {
         let bridge = target
             .bridge
             .as_ref()
-            .ok_or_else(|| io::Error::other("machine bridge unavailable"))?;
+            .ok_or_else(|| io::Error::other(crate::tr!("machine bridge unavailable")))?;
         Ok(ApiClient::for_target(ConnectionTarget::SocketPath(
             bridge.socket_path().to_owned(),
         )))
@@ -167,7 +167,11 @@ pub(super) fn remote_error(error: io::Error) -> io::Error {
 
 pub(super) fn restart_guidance() -> String {
     TARGET.with(|target| match target.borrow().as_ref() {
-        Some(target) => format!("Update Herdr and restart the server on machine '{}' (session {}). Stopping the server exits its pane processes.", target.profile.label, target.profile.session),
+        Some(target) => crate::trf!(
+            "Update Herdr and restart the server on machine '{label}' (session {session}). Stopping the server exits its pane processes.",
+            label = target.profile.label,
+            session = target.profile.session
+        ),
         None => crate::session::active_restart_after_update_guidance(),
     })
 }
@@ -224,7 +228,7 @@ fn parse_machine_prefix(args: &[String]) -> Result<Option<(String, Vec<String>)>
                 index += 1;
                 args.get(index)
                     .cloned()
-                    .ok_or("missing value for --machine")?
+                    .ok_or_else(|| crate::tr!("missing value for --machine"))?
             };
             if value.trim().is_empty() || value.starts_with('-') {
                 return Err("--machine requires a saved machine label or profile ID".into());
@@ -250,7 +254,7 @@ fn parse_machine_prefix(args: &[String]) -> Result<Option<(String, Vec<String>)>
         return Err("--machine cannot be combined with other launch options; it uses the saved machine's session".into());
     }
     if index >= args.len() || args[index] == "--" {
-        return Err("usage: herdr --machine <label-or-id> <command>".into());
+        return Err(crate::tr!("usage: herdr --machine <label-or-id> <command>").into());
     }
     let mut cleaned = vec![args[0].clone()];
     cleaned.extend_from_slice(&args[index..]);
@@ -268,18 +272,25 @@ pub(super) fn resolve_machine<'a>(
         profile
     } else {
         let mut matches = profiles.iter().filter(|profile| profile.label == selector);
-        let profile = matches
-            .next()
-            .ok_or_else(|| format!("unknown machine '{selector}'; use `herdr machine list`"))?;
+        let profile = matches.next().ok_or_else(|| {
+            crate::trf!(
+                "unknown machine '{selector}'; use `herdr machine list`",
+                selector = selector
+            )
+        })?;
         if matches.next().is_some() {
-            return Err(format!(
-                "machine label '{selector}' is ambiguous; use its profile ID"
+            return Err(crate::trf!(
+                "machine label '{selector}' is ambiguous; use its profile ID",
+                selector = selector
             ));
         }
         profile
     };
     if !profile.enabled {
-        return Err(format!("machine '{selector}' is disabled"));
+        return Err(crate::trf!(
+            "machine '{selector}' is disabled",
+            selector = selector
+        ));
     }
     Ok(profile)
 }
@@ -311,7 +322,11 @@ fn validate_machine_command(args: &[String]) -> Result<(), String> {
     if supported {
         Ok(())
     } else {
-        Err(format!("`{command} {subcommand}` is not an API-backed machine command; --machine does not run local management commands or attach a TUI"))
+        Err(crate::trf!(
+            "`{command} {subcommand}` is not an API-backed machine command; --machine does not run local management commands or attach a TUI",
+            command = command,
+            subcommand = subcommand
+        ))
     }
 }
 
