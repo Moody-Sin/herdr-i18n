@@ -23,6 +23,12 @@
 
 ---
 
+> **本仓库是简体中文汉化复刻版。** 界面在上游 herdr 基础上翻译为简体中文。
+> 这是一个本地集成复刻仓库，不是上游项目，也不会向上游提交 PR。
+> 与上游的差异及同步方式见[与上游的关系](#与上游的关系)。
+
+---
+
 https://github.com/user-attachments/assets/043ec09f-4bdd-41d5-aee0-8fda6b83e267
 
 **智能体复用器，住在你的终端里。**
@@ -79,6 +85,44 @@ cargo build --release
 just test        # 单元测试
 just check       # 格式检查、测试和维护性检查
 ```
+
+### 本地化
+
+界面文案通过 `crate::tr!` / `crate::trf!` 查找 `src/i18n/zh-CN.json`。英文原文就是
+消息键，缺失译文时会回退显示英文而不会报错。`just localization-check` 会检查每个
+`tr!`/`trf!` 键都有译文、中英占位符一致，以及 CLI 文案要么已本地化、要么显式登记在
+`scripts/localization-cli-allowlist.txt` 中。
+
+新增界面文案时，请用 `tr!` 包裹并同步添加 `src/i18n/zh-CN.json` 条目。命令语法行
+（如 `herdr pane split ...`）有意保留英文，只翻译说明文字和标签。
+
+### 同步上游
+
+本复刻仓库跟随上游 `master`。同步步骤：
+
+```bash
+git fetch origin
+git merge origin/master
+just localization-check   # 为上游新增的界面文案补充译文
+just check
+```
+
+`just localization-check` 会报告仍需翻译的上游新文案，通过即表示同步完成。
+
+## 与上游的关系
+
+本仓库是 [herdrdev/herdr](https://github.com/herdrdev/herdr) 的汉化复刻版。
+
+与上游的差异：
+
+- 简体中文界面文案，存放于 `src/i18n/zh-CN.json`。
+- 禁用自更新和自动版本检查（`src/i18n.rs::LOCALIZED_BUILD`），因为安装上游二进制会
+  覆盖汉化构建。升级方式是同步上游并从源码重新构建。
+- 本地化检查已接入 `just ci-tests`。
+
+应用逻辑、终端引擎、API 与发布工具链均与上游一致。本仓库不向上游提交修复或功能，
+上游改动仅通过合并引入。当上游修改某条文案时，旧文案的目录条目会变为无用，新文案
+需要补充译文；这两种情况都会被 `just localization-check` 指出。
 
 ## 许可证
 

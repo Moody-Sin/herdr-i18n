@@ -24,6 +24,14 @@
 
 ---
 
+> **this is a simplified chinese localization fork.** the interface is translated to
+> simplified chinese on top of upstream herdr. it is a local integration fork, not an
+> upstream project, and it does not send pull requests upstream. see
+> [relationship to upstream](#relationship-to-upstream) for what differs and how the
+> fork tracks upstream.
+
+---
+
 https://github.com/user-attachments/assets/043ec09f-4bdd-41d5-aee0-8fda6b83e267
 
 **the runtime your coding agents live on.**
@@ -79,6 +87,51 @@ cargo build --release
 just test        # unit tests
 just check       # formatting, tests, and maintenance checks
 ```
+
+### localization
+
+user-facing text is looked up through `crate::tr!` / `crate::trf!` against
+`src/i18n/zh-CN.json`. the english source string is the catalog key, and a missing
+entry falls back to english rather than failing. `just localization-check` verifies
+that every `tr!`/`trf!` key has an entry, that placeholders match between the english
+and chinese text, and that CLI text is either localized or explicitly listed in
+`scripts/localization-cli-allowlist.txt`.
+
+when adding interface text, wrap it in `tr!` and add the chinese entry to
+`src/i18n/zh-CN.json`. command syntax lines (`herdr pane split ...`) stay in english
+on purpose; only prose and labels are translated.
+
+### syncing upstream
+
+this fork tracks upstream `master`. to sync:
+
+```bash
+git fetch origin
+git merge origin/master
+just localization-check   # add entries for new upstream interface text
+just check
+```
+
+`just localization-check` reports new upstream text that still needs a translation,
+so a sync is complete once it passes.
+
+## relationship to upstream
+
+this repository is a localized fork of [herdrdev/herdr](https://github.com/herdrdev/herdr).
+
+the differences from upstream are:
+
+- simplified chinese interface text, stored in `src/i18n/zh-CN.json`.
+- self-update and automatic version checks are disabled (`src/i18n.rs::LOCALIZED_BUILD`),
+  because installing an upstream binary would overwrite the localized build. update by
+  syncing upstream and rebuilding from source instead.
+- the localization check is wired into `just ci-tests`.
+
+all application logic, the terminal engine, the API, and the release tooling are
+unchanged from upstream. fixes and features are not sent upstream from this fork;
+upstream work is taken in through merges only. when upstream changes a string, the
+catalog entry for the old text becomes unused and the new text needs a translation;
+`just localization-check` surfaces both cases.
 
 ## license
 
