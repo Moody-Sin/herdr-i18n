@@ -3,9 +3,9 @@
 Terminal based agent runtime for coding agents.
 
 ## i18n
-
-当前本地仓库为复刻仓库专门集成与维护 i18n 简体中文，不推送 PR 与上游无关。
-i18n 集成需考虑方便后续维护，同时改造根 README.md 体现该仓库改动与阐明和上游的关系。
+当前为复刻仓库，专门维护 i18n 简体中文全量集成，不推送 PR 且与上游无关。
+改造根 README.md 体现该仓库的改动与阐明和上游的关系。
+后续所有改动都全程使用简体中文。
 
 ## Scope and Audience
 
