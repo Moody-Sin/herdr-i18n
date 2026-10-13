@@ -207,12 +207,18 @@ fn dead_server_cli_reports_one_session_aware_json_line() {
         let response: serde_json::Value = serde_json::from_str(lines[0]).unwrap();
         assert_eq!(response["id"], "cli:workspace:create");
         assert_eq!(response["error"]["code"], "server_not_running");
-        assert_eq!(
-            response["error"]["message"],
-            format!(
-                "no herdr server is running at {}; run `{attach_command}` to start or attach it",
-                socket_path.display()
-            )
+        let expected_en = format!(
+            "no herdr server is running at {}; run `{attach_command}` to start or attach it",
+            socket_path.display()
+        );
+        let expected_zh = format!(
+            "{} 上没有正在运行的 herdr 服务器；运行 `{attach_command}` 来启动或连接",
+            socket_path.display()
+        );
+        let message = response["error"]["message"].as_str().unwrap();
+        assert!(
+            message == expected_en || message == expected_zh,
+            "expected {expected_en:?} or {expected_zh:?}, got {message:?}"
         );
     }
 
@@ -293,8 +299,12 @@ fn integration_commands_run_locally_when_server_is_missing() {
         .unwrap();
     assert_eq!(integration_status.status.code(), Some(0));
     let status_stdout = String::from_utf8_lossy(&integration_status.stdout);
-    assert!(status_stdout.contains("pi: current (v9)"));
-    assert!(status_stdout.contains("claude: not installed"));
+    assert!(
+        status_stdout.contains("pi: current (v9)") || status_stdout.contains("pi: 当前版本（v9）")
+    );
+    assert!(
+        status_stdout.contains("claude: not installed") || status_stdout.contains("claude: 未安装")
+    );
 
     let integration_uninstall = Command::new(env!("CARGO_BIN_EXE_herdr"))
         .args(["integration", "uninstall", "pi"])
@@ -502,7 +512,10 @@ fn status_reports_not_running_when_server_socket_is_missing() {
     let status = run_cli(&socket_path, &["status"]);
     assert!(status.status.success());
     let stdout = String::from_utf8_lossy(&status.stdout);
-    assert!(stdout.contains("  status: not running"), "stdout: {stdout}");
+    assert!(
+        stdout.contains("  status: not running") || stdout.contains("状态：未运行"),
+        "stdout: {stdout}"
+    );
     assert!(stdout.contains("  restart_needed: no"), "stdout: {stdout}");
     assert!(
         stdout.contains("  server_binary_stale: no"),

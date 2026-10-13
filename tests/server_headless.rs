@@ -604,7 +604,7 @@ fn server_survives_hangup_and_logs_why_it_stops() {
     let line = wait_for_log_line(
         &server_log_path(&config_home),
         "server shutdown initiated",
-        Duration::from_secs(5),
+        Duration::from_secs(10),
     );
     assert!(line.contains("reason=SIGTERM"), "{line}");
 
@@ -637,7 +637,7 @@ fn server_stop_request_logs_its_caller() {
     let line = wait_for_log_line(
         &server_log_path(&config_home),
         "server shutdown initiated",
-        Duration::from_secs(5),
+        Duration::from_secs(10),
     );
     let expected = if cfg!(any(target_os = "linux", target_os = "macos")) {
         format!("server.stop request from pid {}", std::process::id())

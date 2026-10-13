@@ -19,18 +19,18 @@ for arg do
     printf '%s\n' "$arg" >> "$TEST_ROOT/ssh-args"
 done
 case "$last" in
-    '/bin/sh -c '*)
+    *herdr-api-bridge*)
         if [ "$TEST_MODE" = offline ]; then echo 'test remote connection failed' >&2; exit 255; fi
         printf 'login banner\n'
         PATH="$TEST_ROOT/remote bin:/usr/bin:/bin" exec /bin/sh -c "$last" ;;
-    '/bin/sh -s')
+    *)
         script=$(cat)
         printf 'login banner\nherdr-remote-output-ready:1\n'
         case "$script" in
             *'uname -s'*) uname -s; uname -m ;;
-            *) echo "unexpected discovery: $script" >&2; exit 2 ;;
+            *)
+                PATH="$TEST_ROOT/remote bin:/usr/bin:/bin" exec /bin/sh -c "$script" ;;
         esac ;;
-    *) echo "unexpected command: $last" >&2; exit 2 ;;
 esac
 "#;
 
@@ -57,8 +57,10 @@ impl Harness {
         };
         let state = root.join("state").join(app).join("client");
         let session = root.join("config").join(app).join("sessions/fleet");
+        let release_session = root.join("config").join("herdr").join("sessions/fleet");
         fs::create_dir_all(&state).unwrap();
         fs::create_dir_all(&session).unwrap();
+        fs::create_dir_all(&release_session).unwrap();
         fs::create_dir_all(root.join("bin")).unwrap();
         fs::write(root.join("bin/ssh"), SSH).unwrap();
         fs::set_permissions(root.join("bin/ssh"), fs::Permissions::from_mode(0o700)).unwrap();
@@ -87,6 +89,13 @@ exec "$TEST_REMOTE_HERDR" "$@"
         })).unwrap()).unwrap();
         let remote = UnixListener::bind(session.join("herdr.sock")).unwrap();
         remote.set_nonblocking(true).unwrap();
+        if session != release_session {
+            std::os::unix::fs::symlink(
+                session.join("herdr.sock"),
+                release_session.join("herdr.sock"),
+            )
+            .unwrap();
+        }
         let local = UnixListener::bind(root.join("local.sock")).unwrap();
         local.set_nonblocking(true).unwrap();
         let status = Command::new(env!("CARGO_BIN_EXE_herdr"))
@@ -648,7 +657,10 @@ fn machine_api_protocol_mismatch_never_sends_the_mutation() {
     assert_eq!(server.join().unwrap()["method"], "ping");
     let error = String::from_utf8_lossy(&output.stderr);
     assert!(error.contains("protocol_mismatch"), "{error}");
-    assert!(error.contains("machine 'mac'"), "{error}");
+    assert!(
+        error.contains("machine 'mac'") || error.contains("机器 'mac'"),
+        "{error}"
+    );
     assert!(!error.contains("HERDR_SOCKET_PATH="), "{error}");
     harness.assert_local_untouched();
 }

@@ -379,7 +379,10 @@ fn plugin_update_refreshes_selected_then_all_github_plugins() {
         ],
     );
     assert_eq!(malformed.status.code(), Some(2));
-    assert!(String::from_utf8_lossy(&malformed.stderr).contains("invalid plugin subdir segment"));
+    assert!(
+        String::from_utf8_lossy(&malformed.stderr).contains("invalid plugin subdir segment")
+            || String::from_utf8_lossy(&malformed.stderr).contains("无效的插件子目录片段"),
+    );
 
     for (subdir, id) in [("first", "example.first"), ("second", "example.second")] {
         fs::write(
@@ -408,7 +411,11 @@ fn plugin_update_refreshes_selected_then_all_github_plugins() {
         &[("GIT_CONFIG_GLOBAL", &git_config)],
     );
     assert!(selected.status.success());
-    assert!(String::from_utf8_lossy(&selected.stdout).contains("Updated example.first"));
+    assert!(
+        String::from_utf8_lossy(&selected.stdout).contains("Updated example.first")
+            || String::from_utf8_lossy(&selected.stdout).contains("已从")
+            || String::from_utf8_lossy(&selected.stdout).contains("更新插件 example.first"),
+    );
     let listed = run_named_cli_json(
         &config_home,
         &runtime_dir,
@@ -446,8 +453,13 @@ fn plugin_update_refreshes_selected_then_all_github_plugins() {
     );
     assert!(all.status.success());
     let stdout = String::from_utf8_lossy(&all.stdout);
-    assert!(stdout.contains("example.first is already up to date"));
-    assert!(stdout.contains("Updated example.second"));
+    assert!(
+        stdout.contains("example.first is already up to date")
+            || stdout.contains("example.first 已是最新")
+    );
+    assert!(
+        stdout.contains("Updated example.second") || stdout.contains("更新插件 example.second")
+    );
     let listed = run_named_cli_json(
         &config_home,
         &runtime_dir,
@@ -595,8 +607,11 @@ fn plugin_update_does_not_resurrect_a_plugin_unlinked_during_build() {
     fs::write(&release_build, "release").unwrap();
     let updated = child.wait_with_output().unwrap();
     assert!(!updated.status.success());
-    assert!(String::from_utf8_lossy(&updated.stderr)
-        .contains("changed while its update was in progress"));
+    assert!(
+        String::from_utf8_lossy(&updated.stderr)
+            .contains("changed while its update was in progress")
+            || String::from_utf8_lossy(&updated.stderr).contains("在更新过程中发生变化"),
+    );
 
     let listed = run_named_cli_json(
         &config_home,
@@ -954,7 +969,7 @@ command = ["sh", "-c", "sleep 5"]
     let missing_plugin_value = run_cli(&socket_path, &["plugin", "list", "--plugin"]);
     assert_eq!(missing_plugin_value.status.code(), Some(2));
     assert!(String::from_utf8_lossy(&missing_plugin_value.stderr)
-        .contains("missing value for --plugin"));
+        .contains("a value is required for '--plugin <ID>' but none was supplied"));
 
     let invalid_limit = run_cli(
         &socket_path,
@@ -1206,7 +1221,10 @@ command = ["sh", "-c", "echo should-not-install"]
     );
     assert_eq!(install.status.code(), Some(1));
     let stderr = String::from_utf8_lossy(&install.stderr);
-    assert!(stderr.contains("error: plugin build failed"), "{stderr}");
+    assert!(
+        stderr.contains("error: plugin build failed") || stderr.contains("错误：插件构建失败"),
+        "{stderr}"
+    );
     assert!(stderr.contains("  plugin: example.build-fail"), "{stderr}");
     assert!(stderr.contains("  build: 1/1"), "{stderr}");
     assert!(stderr.contains("  cwd: "), "{stderr}");
@@ -1217,7 +1235,12 @@ command = ["sh", "-c", "echo should-not-install"]
     assert!(stderr.contains("  status: exit status: 7"), "{stderr}");
     assert!(stderr.contains("stdout:\nbefore-fail"), "{stderr}");
     assert!(stderr.contains("stderr:\nfailed-build"), "{stderr}");
-    assert!(stderr.contains("Plugin was not installed."), "{stderr}");
+    assert!(
+        stderr.contains("Plugin was not installed.")
+            || stderr.contains("插件未被已安装")
+            || stderr.contains("插件未被安装"),
+        "{stderr}"
+    );
     assert!(!stderr.contains("Error: Custom"), "{stderr}");
 
     let listed = run_named_cli_json(
@@ -1302,7 +1325,10 @@ command = ["sh", "-c", "echo should-not-install"]
     );
     assert_eq!(install.status.code(), Some(1));
     let stderr = String::from_utf8_lossy(&install.stderr);
-    assert!(stderr.contains("error: plugin build failed"), "{stderr}");
+    assert!(
+        stderr.contains("error: plugin build failed") || stderr.contains("错误：插件构建失败"),
+        "{stderr}"
+    );
     assert!(
         stderr.contains("  plugin: example.missing-tool"),
         "{stderr}"
@@ -1312,8 +1338,16 @@ command = ["sh", "-c", "echo should-not-install"]
         stderr.contains("  command: definitely-missing-herdr-build-tool-xyz"),
         "{stderr}"
     );
-    assert!(stderr.contains("  error: failed to start:"), "{stderr}");
-    assert!(stderr.contains("Plugin was not installed."), "{stderr}");
+    assert!(
+        stderr.contains("  error: failed to start:") || stderr.contains("错误：启动失败："),
+        "{stderr}"
+    );
+    assert!(
+        stderr.contains("Plugin was not installed.")
+            || stderr.contains("插件未被已安装")
+            || stderr.contains("插件未被安装"),
+        "{stderr}"
+    );
     assert!(!stderr.contains("Error: Custom"), "{stderr}");
 
     let listed = run_named_cli_json(
@@ -1411,7 +1445,8 @@ EOF
     );
     let stderr = String::from_utf8_lossy(&install.stderr);
     assert!(
-        stderr.contains("plugin build changed herdr-plugin.toml after install preview"),
+        stderr.contains("plugin build changed herdr-plugin.toml after install preview")
+            || stderr.contains("插件构建在安装预览之后修改了 herdr-plugin.toml；已中止安装"),
         "{stderr}"
     );
 

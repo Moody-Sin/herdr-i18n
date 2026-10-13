@@ -243,7 +243,7 @@ def check_untranslated_cli(catalog: dict[str, str], errors: list[str]) -> None:
     allowlist = load_allowlist()
     cli_root = SRC / "cli"
     for path in sorted(cli_root.rglob("*.rs")):
-        if "tests" in path.parts:
+        if "tests" in path.parts or path.name.endswith("_tests.rs"):
             continue
         relative = path.relative_to(ROOT)
         source = path.read_text(encoding="utf-8")

@@ -21,3 +21,12 @@
 
 subcommand checked immediately before mutable lookup
 validated machine add option
+agent status
+read source
+read format
+explain format
+agent state
+split direction
+right-click target
+pane direction
+

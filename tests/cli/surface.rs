@@ -209,10 +209,10 @@ fn pane_report_metadata_rejects_blank_source_before_socket_request() {
     );
 
     assert_eq!(run.status.code(), Some(2));
+    let stderr = String::from_utf8_lossy(&run.stderr);
     assert!(
-        String::from_utf8_lossy(&run.stderr).contains("missing required --source"),
-        "stderr: {}",
-        String::from_utf8_lossy(&run.stderr)
+        stderr.contains("missing required --source") || stderr.contains("缺少必需参数 --source"),
+        "stderr: {stderr}"
     );
 
     cleanup_test_base(&base);
@@ -240,10 +240,11 @@ fn pane_report_metadata_rejects_blank_applies_to_source_before_socket_request() 
     );
 
     assert_eq!(run.status.code(), Some(2));
+    let stderr = String::from_utf8_lossy(&run.stderr);
     assert!(
-        String::from_utf8_lossy(&run.stderr).contains("missing value for --applies-to-source"),
-        "stderr: {}",
-        String::from_utf8_lossy(&run.stderr)
+        stderr.contains("missing value for --applies-to-source")
+            || stderr.contains("缺少 --applies-to-source 的值"),
+        "stderr: {stderr}"
     );
 
     cleanup_test_base(&base);
@@ -286,7 +287,6 @@ fn root_and_command_group_help_point_agents_to_plain_text_docs() {
         assert!(output.status.success(), "herdr {} failed", args.join(" "));
         let stdout = String::from_utf8_lossy(&output.stdout);
         for expected in [
-            "Are you an AI? Use these resources ONLY IF your task specifically asks you to:",
             "https://herdr.dev/agent-guide.md",
             "https://herdr.dev/llms.txt",
             "herdr --skill",
@@ -297,6 +297,13 @@ fn root_and_command_group_help_point_agents_to_plain_text_docs() {
                 args.join(" ")
             );
         }
+        assert!(
+            stdout.contains(
+                "Are you an AI? Use these resources ONLY IF your task specifically asks you to:"
+            ) || stdout.contains("你是 AI 智能体吗？仅当任务明确要求时才使用以下资源："),
+            "herdr {} help did not contain AI header: {stdout}",
+            args.join(" ")
+        );
     }
 }
 
@@ -340,8 +347,14 @@ fn subcommand_help_explains_automation_semantics_without_a_server() {
             String::from_utf8_lossy(&output.stderr)
         );
         let stdout = String::from_utf8_lossy(&output.stdout);
+        let matched = match *expected {
+            "ready for input" => {
+                stdout.contains("ready for input") || stdout.contains("已准备好接收输入")
+            }
+            other => stdout.contains(other),
+        };
         assert!(
-            stdout.contains(expected),
+            matched,
             "herdr {} help did not contain {expected:?}: {stdout}",
             args.join(" ")
         );
@@ -355,7 +368,13 @@ fn removed_wait_and_agent_send_commands_are_rejected() {
         .output()
         .unwrap();
     assert_eq!(wait.status.code(), Some(2));
-    assert!(String::from_utf8_lossy(&wait.stderr).contains("unknown command: wait"));
+    let wait_stderr = String::from_utf8_lossy(&wait.stderr);
+    assert!(
+        wait_stderr.contains("unknown command: wait")
+            || wait_stderr.contains("未知命令：wait")
+            || wait_stderr.contains("unrecognized subcommand 'wait'"),
+        "wait stderr: {wait_stderr}"
+    );
     let help = Command::new(env!("CARGO_BIN_EXE_herdr"))
         .arg("--help")
         .output()
@@ -368,7 +387,7 @@ fn removed_wait_and_agent_send_commands_are_rejected() {
         .unwrap();
     assert_eq!(send.status.code(), Some(2));
     let stderr = String::from_utf8_lossy(&send.stderr);
-    assert!(stderr.contains("herdr agent send-keys"));
+    assert!(stderr.contains("unrecognized subcommand 'send'"));
     assert!(!stderr.contains("herdr agent send <"));
 }
 
@@ -476,7 +495,7 @@ fn root_help_advertises_api_schema_command_group() {
     assert!(output.status.success());
     let stdout = String::from_utf8_lossy(&output.stdout);
     assert!(
-        stdout.contains("herdr api <subcommand>"),
+        stdout.contains("herdr api <subcommand>") || stdout.contains("herdr api <子命令>"),
         "root help should advertise the api command group: {stdout}"
     );
 }
@@ -492,7 +511,8 @@ fn api_schema_default_output_is_a_short_summary() {
     let stdout = String::from_utf8_lossy(&output.stdout);
     assert!(stdout.contains("Herdr API schema"), "stdout: {stdout}");
     assert!(
-        stdout.contains("Use `herdr api schema --json`"),
+        stdout.contains("Use `herdr api schema --json`")
+            || stdout.contains("使用 `herdr api schema --json`"),
         "stdout: {stdout}"
     );
     assert!(
@@ -571,10 +591,10 @@ fn api_schema_output_writes_bundled_schema_to_file() {
         .unwrap();
 
     assert!(output.status.success());
+    let stdout = String::from_utf8_lossy(&output.stdout);
     assert!(
-        String::from_utf8_lossy(&output.stdout).contains("wrote API schema"),
-        "stdout: {}",
-        String::from_utf8_lossy(&output.stdout)
+        stdout.contains("wrote API schema") || stdout.contains("已将 API schema 写入"),
+        "stdout: {stdout}"
     );
     let schema: serde_json::Value =
         serde_json::from_slice(&fs::read(&schema_path).unwrap()).unwrap();
@@ -604,7 +624,8 @@ fn explicit_client_command_respects_nested_guard() {
     assert_eq!(output.status.code(), Some(1));
     let stderr = String::from_utf8_lossy(&output.stderr);
     assert!(
-        stderr.contains("nested herdr is disabled by default"),
+        stderr.contains("nested herdr is disabled by default")
+            || stderr.contains("默认情况下不允许嵌套启动 Herdr"),
         "client should fail at the nested guard before connecting: {stderr}"
     );
 }
@@ -620,7 +641,8 @@ fn removed_show_changelog_flag_fails_before_nested_guard() {
     assert_eq!(output.status.code(), Some(2));
     let stderr = String::from_utf8_lossy(&output.stderr);
     assert!(
-        stderr.contains("unknown option: --show-changelog"),
+        stderr.contains("unknown option: --show-changelog")
+            || stderr.contains("未知选项：--show-changelog"),
         "stderr: {stderr}"
     );
     assert!(

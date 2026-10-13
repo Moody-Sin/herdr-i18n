@@ -954,7 +954,10 @@ fn federated_launch_opens_local_directly_while_saved_ssh_is_unavailable() {
             assert!(wait_until(
                 Duration::from_secs(10),
                 Duration::from_millis(20),
-                || { read_output(&output).contains("Local") }
+                || {
+                    let out = read_output(&output);
+                    out.contains("Local") || out.contains("本\u{1b}[3;6H地") || out.contains("本地")
+                }
             ));
             let mut input = client._master.as_ref().unwrap().take_writer().unwrap();
             // Input is gated until Local's active surface is ready, and that readiness can lag

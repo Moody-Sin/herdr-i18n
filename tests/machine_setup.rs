@@ -220,7 +220,7 @@ fn setup_options(
         match rx.recv_timeout(Duration::from_secs(20)) {
             Ok(bytes) => {
                 output.push_str(&String::from_utf8_lossy(&bytes));
-                if !picked && output.contains("Esc cancel") {
+                if !picked && (output.contains("Esc cancel") || output.contains("Esc 取消")) {
                     writer.write_all(options.selection).unwrap();
                     writer.flush().unwrap();
                     picked = true;
@@ -324,7 +324,10 @@ fn machine_add_accepts_help_argument_order() {
     fs::remove_dir_all(root).unwrap();
     let stderr = String::from_utf8_lossy(&output.stderr);
     assert_eq!(output.status.code(), Some(1), "{stderr}");
-    assert!(stderr.contains("machine was not saved"), "{stderr}");
+    assert!(
+        stderr.contains("machine was not saved") || stderr.contains("机器配置未保存"),
+        "{stderr}"
+    );
     assert!(!saved, "failed preparation must not save a machine");
 }
 
@@ -389,8 +392,9 @@ fn machine_add_discovers_sessions_once_and_prepares_the_selected_session() {
         if !selection.is_empty() {
             let picker = result
                 .output
-                .split("Running sessions on fake-host:")
+                .split("上运行的会话：")
                 .nth(1)
+                .or_else(|| result.output.split("Running sessions on fake-host:").nth(1))
                 .unwrap();
             assert!(
                 picker.starts_with("\r\n"),
@@ -415,7 +419,7 @@ fn machine_add_failed_discovery_and_cancel_never_prepare_or_save() {
         (
             r#"{"sessions":[{"name":"default","running":true},{"name":"agents","running":true}]}"#,
             &b"\x1b"[..],
-            "selection cancelled",
+            "已取消远程会话选择",
         ),
     ] {
         let result = setup_options(
@@ -525,7 +529,7 @@ fn machine_setup_old_install_enter_cancels_without_remote_changes() {
     let result = setup("old", "\n", false);
     assert!(result.actions.is_empty(), "{}", result.output);
     assert!(
-        result.output.contains("machine was not saved"),
+        result.output.contains("machine was not saved") || result.output.contains("机器配置未保存"),
         "{}",
         result.output
     );
