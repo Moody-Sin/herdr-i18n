@@ -20,9 +20,13 @@ NAMED_ARGUMENT = re.compile(r"\b([a-zA-Z_][a-zA-Z0-9_]*)\s*=")
 # arguments must be split with balanced-delimiter scanning rather than a regex:
 # a nested-paren regex silently skips most of the table.
 ENTRY_CALL = re.compile(r"\bentry\(")
+LEAF_ABOUT = re.compile(
+    r"""(?:leaf!\(\s*"[^"]+",\s*("((?:\\.|[^"\\])*)")|about:\s*("((?:\\.|[^"\\])*)"))"""
+)
 # Literals in the CLI layer that are deliberately not translated: command
 # syntax, machine-readable keys, and identifiers are part of the interface.
 UNTRANSLATED_CLI_ALLOWLIST = ROOT / "scripts" / "localization-cli-allowlist.txt"
+PARSE_CHOICE_CALL = re.compile(r'\bparse_choice\([^,]+,\s*"((?:\\.|[^"\\])*)"')
 CLI_PROSE = re.compile(r"[a-z]+ [a-z]+")
 CLI_NOT_PROSE = re.compile(
     r"^(?:[a-z0-9_.-]+/)+"  # paths
@@ -103,6 +107,14 @@ def literal_spans(source: str) -> list[tuple[int, int]]:
         offset = source.find(raw, match.end())
         if offset != -1:
             spans.append((offset + 1, offset + len(raw) - 1))
+    for match in LEAF_ABOUT.finditer(source):
+        # leaf! or about: span
+        if match.group(1) is not None:
+            spans.append((match.start(2), match.end(2)))
+        elif match.group(3) is not None:
+            spans.append((match.start(4), match.end(4)))
+    for match in PARSE_CHOICE_CALL.finditer(source):
+        spans.append((match.start(1), match.end(1)))
     return spans
 
 
@@ -135,6 +147,8 @@ def macro_arguments(source: str, position: int) -> str:
     depth = 0
     in_string = False
     escaped = False
+    clean_parts: list[str] = []
+    part_start = start
     for index in range(start, len(source)):
         char = source[index]
         if in_string:
@@ -144,14 +158,18 @@ def macro_arguments(source: str, position: int) -> str:
                 escaped = True
             elif char == '"':
                 in_string = False
+                part_start = index + 1
             continue
         if char == '"':
+            clean_parts.append(source[part_start:index])
             in_string = True
+            continue
         elif char == "(":
             depth += 1
         elif char == ")":
             if depth == 0:
-                return source[start:index]
+                clean_parts.append(source[part_start:index])
+                return "".join(clean_parts)
             depth -= 1
     return ""
 
@@ -224,6 +242,17 @@ def check_catalog_keys(catalog: dict[str, str], errors: list[str]) -> None:
             if raw is None:
                 continue
             key = json.loads(raw)
+            if key not in catalog:
+                errors.append(f"{relative}: missing zh-CN text for {key!r}")
+
+        for match in LEAF_ABOUT.finditer(source):
+            raw = match.group(1) or match.group(3)
+            key = json.loads(raw)
+            if key not in catalog:
+                errors.append(f"{relative}: missing zh-CN text for {key!r}")
+
+        for match in PARSE_CHOICE_CALL.finditer(source):
+            key = json.loads(f'"{match.group(1)}"')
             if key not in catalog:
                 errors.append(f"{relative}: missing zh-CN text for {key!r}")
 

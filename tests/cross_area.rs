@@ -886,7 +886,8 @@ fn cross_area_server_kill_then_restart_and_reconnect() {
 
     let crash_output_lc = crash_output.to_lowercase();
     assert!(
-        crash_output_lc.contains("lost connection to server"),
+        crash_output_lc.contains("lost connection to server")
+            || crash_output_lc.contains("与服务器的连接已断开"),
         "thin client output must include explicit lost-connection message after server kill; output: {crash_output:?}"
     );
 

@@ -178,7 +178,7 @@ fn status(args: &[String]) -> std::io::Result<i32> {
             }
         }
         if rows.is_empty() {
-            println!("No saved SSH machines.");
+            println!("{}", crate::tr!("No saved SSH machines."));
         }
     }
     Ok(i32::from(rows.iter().any(|row| row.error.is_some())))
@@ -346,7 +346,10 @@ fn add(args: &[String]) -> std::io::Result<i32> {
             match discovered {
                 Ok(session) => session,
                 Err(error) => {
-                    eprintln!("error: {error}; machine was not saved");
+                    eprintln!(
+                        "{}",
+                        crate::trf!("error: {error}; machine was not saved", error = error)
+                    );
                     crate::remote::print_saved_ssh_error_hint(&error, &target);
                     return Ok(1);
                 }
@@ -394,7 +397,10 @@ fn add(args: &[String]) -> std::io::Result<i32> {
     })?;
     if label_is_default {
         if let Err(error) = check_default_label(&catalog, &label) {
-            eprintln!("error: {error}; machine was not saved");
+            eprintln!(
+                "{}",
+                crate::trf!("error: {error}; machine was not saved", error = error)
+            );
             return Ok(2);
         }
     }

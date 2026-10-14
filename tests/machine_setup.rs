@@ -337,7 +337,8 @@ fn machine_add_fresh_host_offers_installation_and_cancellation_saves_nothing() {
     assert_eq!(result.probes, "platform\ncandidates\n", "{}", result.output);
     assert_eq!(result.prompts, 1, "{}", result.output);
     assert!(
-        result.output.contains("installation cancelled"),
+        result.output.contains("installation cancelled")
+            || result.output.contains("已取消远程 Herdr 安装"),
         "{}",
         result.output
     );
@@ -437,7 +438,8 @@ fn machine_add_failed_discovery_and_cancel_never_prepare_or_save() {
         assert!(result.actions.is_empty(), "{}", result.output);
         assert!(result.output.contains(expected), "{}", result.output);
         assert!(
-            result.output.contains("machine was not saved"),
+            result.output.contains("machine was not saved")
+                || result.output.contains("机器配置未保存"),
             "{}",
             result.output
         );
@@ -500,7 +502,8 @@ fn machine_add_reports_strict_host_key_failure() {
         result.output
     );
     assert!(
-        !result.output.contains("lost connection to server"),
+        !result.output.contains("lost connection to server")
+            && !result.output.contains("与服务器的连接已断开"),
         "{}",
         result.output
     );
@@ -513,7 +516,8 @@ fn machine_setup_old_install_requires_one_explicit_stop_approval() {
     assert!(
         result
             .output
-            .contains("This stops active remote pane processes"),
+            .contains("This stops active remote pane processes")
+            || result.output.contains("停止服务器将退出活跃的远程窗格进程"),
         "{}",
         result.output
     );
@@ -542,7 +546,8 @@ fn machine_setup_new_install_old_server_enter_does_not_stop_or_handoff() {
     assert!(
         result
             .output
-            .contains("This stops active remote pane processes"),
+            .contains("This stops active remote pane processes")
+            || result.output.contains("停止服务器将退出活跃的远程窗格进程"),
         "{}",
         result.output
     );
@@ -562,7 +567,8 @@ fn machine_setup_explicit_remote_handoff_remains_available_but_restart_fallback_
     assert!(
         result
             .output
-            .contains("This stops active remote pane processes"),
+            .contains("This stops active remote pane processes")
+            || result.output.contains("停止服务器将退出活跃的远程窗格进程"),
         "{}",
         result.output
     );

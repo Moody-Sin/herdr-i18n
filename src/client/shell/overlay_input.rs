@@ -1102,7 +1102,7 @@ impl ClientShellState {
                 })
             {
                 self.receive_endpoint_unavailable(
-                    "Close target changed; try closing it again".into(),
+                    crate::tr!("Close target changed; try closing it again").to_owned(),
                 );
                 return;
             }

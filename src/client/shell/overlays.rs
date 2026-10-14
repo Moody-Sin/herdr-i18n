@@ -734,7 +734,7 @@ fn render_navigator_overlay(
         q.x + 2,
         q.y,
         q.width.saturating_sub(4),
-        " Go to ",
+        crate::tr!(" Go to "),
         Style::default().fg(p.accent).bg(p.panel_bg),
     );
     let rows = super::aggregate_navigation::navigator_rows(endpoints, active_endpoint_id, n);
@@ -830,7 +830,7 @@ fn render_navigator_overlay(
             body.x,
             body.y,
             body.width,
-            " No matching agents or terminals",
+            crate::tr!(" No matching agents or terminals"),
             Style::default().fg(p.overlay0).bg(p.panel_bg),
         );
     }

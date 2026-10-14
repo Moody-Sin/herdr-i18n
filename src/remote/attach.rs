@@ -2026,9 +2026,17 @@ fn confirm_remote_install_with_running_server(
                 )));
             }
             eprintln!(
-                "could not inspect the running remote herdr server on {target} before installing: {err}"
+                "{}",
+                crate::trf!(
+                    "could not inspect the running remote herdr server on {target} before installing: {error}",
+                    target = target,
+                    error = err
+                )
             );
-            eprint!("continue installing the remote herdr binary? [y/N] ");
+            eprint!(
+                "{}",
+                crate::tr!("continue installing the remote herdr binary? [y/N] ")
+            );
             io::stderr().flush()?;
 
             let mut answer = String::new();
@@ -2037,7 +2045,7 @@ fn confirm_remote_install_with_running_server(
             if answer != "y" && answer != "yes" {
                 return Err(io::Error::new(
                     io::ErrorKind::Interrupted,
-                    "remote herdr install cancelled",
+                    crate::tr!("remote herdr install cancelled"),
                 ));
             }
             return Ok(false);
@@ -2066,11 +2074,20 @@ fn confirm_remote_install_with_running_server(
 
     if plan == RemoteInstallRunningServerPlan::KeepRunning {
         if io::stdin().is_terminal() {
-            eprintln!("remote herdr server on {target} is already compatible:");
+            eprintln!(
+                "{}",
+                crate::trf!(
+                    "remote herdr server on {target} is already compatible:",
+                    target = target
+                )
+            );
             eprintln!("  server: v{}", version_label(version.as_deref()));
             eprintln!(
-                "Herdr will install {} without stopping the running remote server.",
-                current_version()
+                "{}",
+                crate::trf!(
+                    "Herdr will install {version} without stopping the running remote server.",
+                    version = current_version()
+                )
             );
         }
         return Ok(false);
@@ -2090,25 +2107,51 @@ fn confirm_remote_install_with_running_server(
     }
 
     if plan == RemoteInstallRunningServerPlan::LiveHandoff {
-        eprintln!("remote herdr server on {target} is currently running:");
+        eprintln!(
+            "{}",
+            crate::trf!(
+                "remote herdr server on {target} is currently running:",
+                target = target
+            )
+        );
         eprintln!("  server: v{}", version_label(version.as_deref()));
         eprintln!(
-            "Herdr will install {} and hand off live pane processes to the prepared server.",
-            current_version()
+            "{}",
+            crate::trf!(
+                "Herdr will install {version} and hand off live pane processes to the prepared server.",
+                version = current_version()
+            )
         );
         return Ok(false);
     }
 
-    eprintln!("remote herdr server on {target} is currently running:");
+    eprintln!(
+        "{}",
+        crate::trf!(
+            "remote herdr server on {target} is currently running:",
+            target = target
+        )
+    );
     eprintln!("  server: v{}", version_label(version.as_deref()));
     eprintln!(
-        "To complete the remote update, Herdr must stop the running remote server after installing."
+        "{}",
+        crate::tr!(
+            "To complete the remote update, Herdr must stop the running remote server after installing."
+        )
     );
-    eprintln!("This stops active remote pane processes, including shells, agents, dev servers, and tests.");
+    eprintln!(
+        "{}",
+        crate::tr!(
+            "This stops active remote pane processes, including shells, agents, dev servers, and tests."
+        )
+    );
     eprintln!();
     eprint!(
-        "Install {} and stop the remote server now? [y/N] ",
-        current_version()
+        "{}",
+        crate::trf!(
+            "Install {version} and stop the remote server now? [y/N] ",
+            version = current_version()
+        )
     );
     io::stderr().flush()?;
 
@@ -2118,7 +2161,7 @@ fn confirm_remote_install_with_running_server(
     if answer != "y" && answer != "yes" {
         return Err(io::Error::new(
             io::ErrorKind::Interrupted,
-            "remote herdr install cancelled",
+            crate::tr!("remote herdr install cancelled"),
         ));
     }
 
@@ -2329,24 +2372,40 @@ fn confirm_remote_server_stop(
         }
         RemoteServerRestartReason::SurfaceInterest => {
             eprintln!(
-                "the remote server must restart before it can join saved SSH endpoint federation."
+                "{}",
+                crate::tr!(
+                    "the remote server must restart before it can join saved SSH endpoint federation."
+                )
             );
         }
         RemoteServerRestartReason::HealthCheck => {
-            eprintln!("the remote server must restart to enable saved SSH endpoint health checks.");
+            eprintln!(
+                "{}",
+                crate::tr!(
+                    "the remote server must restart to enable saved SSH endpoint health checks."
+                )
+            );
         }
         RemoteServerRestartReason::DaemonDetach => {
             eprintln!(
-                "the remote server was started by a herdr build that may not survive SSH connection loss. restart it so network drops disconnect only this client."
+                "{}",
+                crate::tr!(
+                    "the remote server was started by a herdr build that may not survive SSH connection loss. restart it so network drops disconnect only this client."
+                )
             );
         }
     }
 
-    eprintln!("This stops active remote pane processes, including shells, agents, dev servers, and tests.");
+    eprintln!(
+        "{}",
+        crate::tr!(
+            "This stops active remote pane processes, including shells, agents, dev servers, and tests."
+        )
+    );
     let prompt = if required_upgrade {
-        "stop and update the remote server, then continue attaching? [y/N] "
+        crate::tr!("stop and update the remote server, then continue attaching? [y/N] ")
     } else {
-        "restart the remote server now? [y/N] "
+        crate::tr!("restart the remote server now? [y/N] ")
     };
     eprint!("{prompt}");
     io::stderr().flush()?;
@@ -2357,7 +2416,7 @@ fn confirm_remote_server_stop(
     if required_upgrade {
         return Err(io::Error::new(
             io::ErrorKind::Interrupted,
-            "remote herdr server stop cancelled",
+            crate::tr!("remote herdr server stop cancelled"),
         ));
     }
 
@@ -2402,8 +2461,11 @@ fn stop_remote_server(ssh: &RemoteSsh, remote_herdr: &RemoteHerdr) -> io::Result
 
     wait_for_remote_server_shutdown(ssh, remote_herdr)?;
     eprintln!(
-        "stopped the remote herdr server on {}; it will restart when the remote client bridge attaches.",
-        ssh.target()
+        "{}",
+        crate::trf!(
+            "stopped the remote herdr server on {target}; it will restart when the remote client bridge attaches.",
+            target = ssh.target()
+        )
     );
     Ok(())
 }
@@ -2441,7 +2503,10 @@ fn warn_if_remote_bin_not_on_path(ssh: &RemoteSsh) -> io::Result<()> {
     }
 
     eprintln!(
-        "herdr: installed remote binary to ~/.local/bin/herdr, but the remote shell does not resolve `herdr` to that path"
+        "{}",
+        crate::tr!(
+            "herdr: installed remote binary to ~/.local/bin/herdr, but the remote shell does not resolve `herdr` to that path"
+        )
     );
     Ok(())
 }
@@ -2609,7 +2674,7 @@ fn read_remote_confirmation(reader: &mut impl io::BufRead, default: bool) -> io:
     if reader.read_line(&mut answer)? == 0 {
         return Err(io::Error::new(
             io::ErrorKind::Interrupted,
-            "remote setup cancelled",
+            crate::tr!("remote setup cancelled"),
         ));
     }
     match answer.trim().to_ascii_lowercase().as_str() {
@@ -2618,7 +2683,7 @@ fn read_remote_confirmation(reader: &mut impl io::BufRead, default: bool) -> io:
         "" => Ok(default),
         _ => Err(io::Error::new(
             io::ErrorKind::Interrupted,
-            "remote setup cancelled: expected yes or no",
+            crate::tr!("remote setup cancelled: expected yes or no"),
         )),
     }
 }
@@ -2637,21 +2702,28 @@ fn confirm_remote_install(
     }
 
     eprintln!(
-        "matching herdr {} is not installed on {target} for {}.",
-        current_version(),
-        remote_herdr.platform.asset_key()
+        "{}",
+        crate::trf!(
+            "matching herdr {version} is not installed on {target} for {platform}.",
+            version = current_version(),
+            target = target,
+            platform = remote_herdr.platform.asset_key()
+        )
     );
     eprint!(
-        "Install {} to {}? [Y/n] ",
-        source_description,
-        remote_herdr.executable.display()
+        "{}",
+        crate::trf!(
+            "Install {source} to {path}? [Y/n] ",
+            source = source_description,
+            path = remote_herdr.executable.display()
+        )
     );
     io::stderr().flush()?;
 
     if !read_remote_confirmation(&mut io::stdin().lock(), true)? {
         return Err(io::Error::new(
             io::ErrorKind::Interrupted,
-            "remote herdr installation cancelled",
+            crate::tr!("remote herdr installation cancelled"),
         ));
     }
 
@@ -4490,7 +4562,7 @@ mod tests {
     fn extract_remote_args_rejects_remote_keybindings_without_remote() {
         let args = vec!["herdr".into(), "--remote-keybindings=server".into()];
         let err = extract_remote_args(&args).unwrap_err();
-        assert_eq!(err, "--remote-keybindings requires --remote");
+        assert_eq!(err, crate::tr!("--remote-keybindings requires --remote"));
     }
 
     #[test]
@@ -4502,21 +4574,24 @@ mod tests {
             "--remote-keybindings=server".into(),
         ];
         let err = extract_remote_args(&args).unwrap_err();
-        assert_eq!(err, "--remote-keybindings can only be specified once");
+        assert_eq!(
+            err,
+            crate::tr!("--remote-keybindings can only be specified once")
+        );
     }
 
     #[test]
     fn extract_remote_args_requires_value() {
         let args = vec!["herdr".into(), "--remote".into()];
         let err = extract_remote_args(&args).unwrap_err();
-        assert_eq!(err, "missing value for --remote");
+        assert_eq!(err, crate::tr!("missing value for --remote"));
     }
 
     #[test]
     fn extract_remote_args_rejects_empty_value() {
         let args = vec!["herdr".into(), "--remote=".into()];
         let err = extract_remote_args(&args).unwrap_err();
-        assert_eq!(err, "missing value for --remote");
+        assert_eq!(err, crate::tr!("missing value for --remote"));
     }
 
     #[test]
@@ -4527,14 +4602,14 @@ mod tests {
             "--remote=prod".into(),
         ];
         let err = extract_remote_args(&args).unwrap_err();
-        assert_eq!(err, "--remote can only be specified once");
+        assert_eq!(err, crate::tr!("--remote can only be specified once"));
     }
 
     #[test]
     fn extract_remote_args_rejects_option_like_target() {
         let args = vec!["herdr".into(), "--remote".into(), "-oProxyCommand=x".into()];
         let err = extract_remote_args(&args).unwrap_err();
-        assert_eq!(err, "--remote target must not start with '-'");
+        assert_eq!(err, crate::tr!("--remote target must not start with '-'"));
     }
 
     #[test]

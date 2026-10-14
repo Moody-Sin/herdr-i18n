@@ -464,14 +464,20 @@ impl<T> Choice<T> {
 
 pub(crate) fn parse_choice<T: Clone>(
     choices: &[Choice<T>],
-    label: &str,
+    label: &'static str,
     value: &str,
 ) -> Result<T, ParseError> {
     choices
         .iter()
         .find(|choice| choice.name == value)
         .map(|choice| choice.value.clone())
-        .ok_or_else(|| ParseError::Usage(format!("invalid {label}: {value}")))
+        .ok_or_else(|| {
+            ParseError::Usage(crate::trf!(
+                "invalid {label}: {value}",
+                label = crate::i18n::text(label),
+                value = value
+            ))
+        })
 }
 
 /// Fails when an API enum gains a value the CLI table cannot spell.

@@ -664,15 +664,18 @@ test "$sid" = "$$"
 
         let _ = handle.join();
         assert!(
-            message.contains("Stop the old server to use the new version"),
+            message.contains("Stop the old server to use the new version")
+                || message.contains("停止旧服务器以使用新版本"),
             "unexpected error: {message}"
         );
         assert!(
-            message.contains("Run `herdr session stop work`"),
+            message.contains("Run `herdr session stop work`")
+                || message.contains("运行 `herdr session stop work`"),
             "unexpected error: {message}"
         );
         assert!(
-            message.contains("then run `herdr session attach work` again"),
+            message.contains("then run `herdr session attach work` again")
+                || message.contains("然后再次运行 `herdr session attach work`"),
             "unexpected error: {message}"
         );
         std::env::remove_var("XDG_CONFIG_HOME");

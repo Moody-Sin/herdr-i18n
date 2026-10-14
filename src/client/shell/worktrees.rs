@@ -254,7 +254,7 @@ impl ClientShellState {
         }
         let branch = create.branch.trim().to_owned();
         if branch.is_empty() {
-            create.error = Some("branch is required".to_owned());
+            create.error = Some(crate::tr!("branch is required").to_owned());
             outcome.repaint = true;
             return;
         }
@@ -457,9 +457,9 @@ impl ClientShellState {
                         },
                     ));
                 } else {
-                    self.set_endpoint_error(
-                        "This workspace is not a Herdr-managed worktree checkout.",
-                    );
+                    self.set_endpoint_error(crate::tr!(
+                        "This workspace is not a Herdr-managed worktree checkout."
+                    ));
                 }
                 true
             }

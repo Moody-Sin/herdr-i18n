@@ -22,16 +22,33 @@ impl std::fmt::Display for ClientError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             ClientError::ConnectionFailed(err) => {
-                write!(f, "failed to connect to server: {err}")?;
+                write!(
+                    f,
+                    "{}",
+                    crate::trf!("failed to connect to server: {error}", error = err)
+                )?;
                 let path = client_socket_path();
                 write!(
                     f,
-                    "\nIs herdr server running? Start it with `herdr server`."
+                    "\n{}",
+                    crate::tr!("Is herdr server running? Start it with `herdr server`.")
                 )?;
-                write!(f, "\nSocket path: {}", path.display())
+                write!(
+                    f,
+                    "\n{}",
+                    crate::trf!("Socket path: {path}", path = path.display())
+                )
             }
             ClientError::HandshakeRejected { version, error } => {
-                write!(f, "server rejected handshake (version {version}): {error}")
+                write!(
+                    f,
+                    "{}",
+                    crate::trf!(
+                        "server rejected handshake (version {version}): {error}",
+                        version = version,
+                        error = error
+                    )
+                )
             }
             ClientError::ServerShutdown { reason } => {
                 match reason.as_deref() {
@@ -39,19 +56,29 @@ impl std::fmt::Display for ClientError {
                         if let Ok(reattach_command) =
                             std::env::var(crate::remote::REATTACH_COMMAND_ENV_VAR)
                         {
-                            write!(f, "detached from remote server")?;
-                            write!(f, "\nRun `{reattach_command}` to reattach")?;
-                        } else {
-                            write!(f, "detached from server")?;
+                            write!(f, "{}", crate::tr!("detached from remote server"))?;
                             write!(
                                 f,
-                                "\nRun `{}` to reattach",
-                                crate::session::local_attach_command()
+                                "\n{}",
+                                crate::trf!(
+                                    "Run `{command}` to reattach",
+                                    command = reattach_command
+                                )
+                            )?;
+                        } else {
+                            write!(f, "{}", crate::tr!("detached from server"))?;
+                            write!(
+                                f,
+                                "\n{}",
+                                crate::trf!(
+                                    "Run `{command}` to reattach",
+                                    command = crate::session::local_attach_command()
+                                )
                             )?;
                         }
                     }
                     _ => {
-                        write!(f, "server shut down")?;
+                        write!(f, "{}", crate::tr!("server shut down"))?;
                         if let Some(reason) = reason {
                             write!(f, ": {reason}")?;
                         }
@@ -62,14 +89,32 @@ impl std::fmt::Display for ClientError {
             ClientError::ConnectionLost(err) => {
                 if let Ok(reattach_command) = std::env::var(crate::remote::REATTACH_COMMAND_ENV_VAR)
                 {
-                    write!(f, "lost connection to remote Herdr: {err}")?;
-                    write!(f, "\nIf the remote server survived the SSH or network drop, its panes may still be running.")?;
-                    write!(f, "\nRun `{reattach_command}` to reattach")
+                    write!(
+                        f,
+                        "{}",
+                        crate::trf!("lost connection to remote Herdr: {error}", error = err)
+                    )?;
+                    write!(
+                        f,
+                        "\n{}",
+                        crate::tr!("If the remote server survived the SSH or network drop, its panes may still be running.")
+                    )?;
+                    write!(
+                        f,
+                        "\n{}",
+                        crate::trf!("Run `{command}` to reattach", command = reattach_command)
+                    )
                 } else {
-                    write!(f, "lost connection to server: {err}")
+                    write!(
+                        f,
+                        "{}",
+                        crate::trf!("lost connection to server: {error}", error = err)
+                    )
                 }
             }
-            ClientError::Protocol(err) => write!(f, "protocol error: {err}"),
+            ClientError::Protocol(err) => {
+                write!(f, "{}", crate::trf!("protocol error: {error}", error = err))
+            }
         }
     }
 }

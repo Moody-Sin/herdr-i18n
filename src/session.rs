@@ -122,11 +122,19 @@ pub fn stop_command_for(name: Option<&str>) -> String {
 
 pub fn restart_after_update_guidance(stop_command: &str, attach_command: Option<&str>) -> String {
     let restart = match attach_command {
-        Some(command) => format!("Run `{stop_command}`, then run `{command}` again."),
-        None => format!("Run `{stop_command}`, then restart Herdr with the same socket override."),
+        Some(command) => crate::trf!(
+            "Run `{stop_command}`, then run `{command}` again.",
+            stop_command = stop_command,
+            command = command
+        ),
+        None => crate::trf!(
+            "Run `{stop_command}`, then restart Herdr with the same socket override.",
+            stop_command = stop_command
+        ),
     };
-    format!(
-        "Stop the old server to use the new version.\nStopping exits pane processes.\n{restart}"
+    crate::trf!(
+        "Stop the old server to use the new version.\nStopping exits pane processes.\n{restart}",
+        restart = restart
     )
 }
 
@@ -973,12 +981,20 @@ mod tests {
 
     #[test]
     fn restart_after_update_guidance_names_stop_and_attach_commands() {
+        let expected_restart = crate::trf!(
+            "Run `{stop_command}`, then run `{command}` again.",
+            stop_command = "herdr session stop work",
+            command = "herdr session attach work"
+        );
         assert_eq!(
             restart_after_update_guidance(
                 "herdr session stop work",
                 Some("herdr session attach work")
             ),
-            "Stop the old server to use the new version.\nStopping exits pane processes.\nRun `herdr session stop work`, then run `herdr session attach work` again."
+            crate::trf!(
+                "Stop the old server to use the new version.\nStopping exits pane processes.\n{restart}",
+                restart = expected_restart
+            )
         );
     }
 
@@ -989,9 +1005,16 @@ mod tests {
         std::env::remove_var(SESSION_ENV_VAR);
         clear_explicit_session_for_test();
 
+        let expected_restart = crate::trf!(
+            "Run `{stop_command}`, then restart Herdr with the same socket override.",
+            stop_command = "HERDR_SOCKET_PATH=/tmp/custom-herdr.sock herdr server stop"
+        );
         assert_eq!(
             active_restart_after_update_guidance(),
-            "Stop the old server to use the new version.\nStopping exits pane processes.\nRun `HERDR_SOCKET_PATH=/tmp/custom-herdr.sock herdr server stop`, then restart Herdr with the same socket override."
+            crate::trf!(
+                "Stop the old server to use the new version.\nStopping exits pane processes.\n{restart}",
+                restart = expected_restart
+            )
         );
 
         std::env::remove_var(crate::api::SOCKET_PATH_ENV_VAR);

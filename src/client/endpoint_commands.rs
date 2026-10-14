@@ -189,7 +189,7 @@ impl EndpointCommands {
                     request_id: command.request_id,
                     result: Err(ClientShellEndpointError {
                         code: Some("endpoint_timeout".into()),
-                        message: "this server did not respond to the action".into(),
+                        message: crate::tr!("this server did not respond to the action").into(),
                     }),
                 })
             })

@@ -524,7 +524,7 @@ fn client_error_display_connection_failed() {
     ));
     let msg = err.to_string();
     assert!(
-        msg.contains("failed to connect to server"),
+        msg.contains("failed to connect to server") || msg.contains("无法连接到服务器"),
         "should mention connection failure: {msg}"
     );
     assert!(
@@ -541,7 +541,7 @@ fn client_error_display_handshake_rejected() {
     };
     let msg = err.to_string();
     assert!(
-        msg.contains("rejected handshake"),
+        msg.contains("rejected handshake") || msg.contains("服务器拒绝握手"),
         "should mention rejection: {msg}"
     );
     assert!(msg.contains("incompatible"), "should include error: {msg}");
@@ -554,7 +554,7 @@ fn client_error_display_server_shutdown() {
     };
     let msg = err.to_string();
     assert!(
-        msg.contains("server shut down"),
+        msg.contains("server shut down") || msg.contains("服务器已关闭"),
         "should mention shutdown: {msg}"
     );
     assert!(msg.contains("maintenance"), "should include reason: {msg}");
@@ -565,7 +565,7 @@ fn client_error_display_server_shutdown_no_reason() {
     let err = ClientError::ServerShutdown { reason: None };
     let msg = err.to_string();
     assert!(
-        msg.contains("server shut down"),
+        msg.contains("server shut down") || msg.contains("服务器已关闭"),
         "should mention shutdown: {msg}"
     );
 }
@@ -582,7 +582,7 @@ fn client_error_display_detached_default_session_reattach_hint() {
     };
     let msg = err.to_string();
     assert!(
-        msg.contains("Run `herdr` to reattach"),
+        msg.contains("Run `herdr` to reattach") || msg.contains("运行 `herdr` 重新连接"),
         "should suggest default reattach command: {msg}"
     );
 }
@@ -597,7 +597,8 @@ fn client_error_display_detached_named_session_reattach_hint() {
     };
     let msg = err.to_string();
     assert!(
-        msg.contains("Run `herdr session attach work` to reattach"),
+        msg.contains("Run `herdr session attach work` to reattach")
+            || msg.contains("运行 `herdr session attach work` 重新连接"),
         "should suggest named session reattach command: {msg}"
     );
 }
@@ -615,7 +616,8 @@ fn client_error_display_detached_remote_reattach_hint_takes_precedence() {
     };
     let msg = err.to_string();
     assert!(
-        msg.contains("Run `herdr --remote host --session work` to reattach"),
+        msg.contains("Run `herdr --remote host --session work` to reattach")
+            || msg.contains("运行 `herdr --remote host --session work` 重新连接"),
         "should prefer remote reattach command: {msg}"
     );
 }
@@ -627,7 +629,7 @@ fn client_error_display_connection_lost() {
     let err = ClientError::ConnectionLost(io::Error::new(io::ErrorKind::BrokenPipe, "broken pipe"));
     let msg = err.to_string();
     assert!(
-        msg.contains("lost connection to server"),
+        msg.contains("lost connection to server") || msg.contains("与服务器的连接已断开"),
         "should mention lost connection: {msg}"
     );
 }
@@ -642,15 +644,17 @@ fn client_error_display_remote_connection_lost_has_reattach_hint() {
     let err = ClientError::ConnectionLost(io::Error::new(io::ErrorKind::BrokenPipe, "broken pipe"));
     let msg = err.to_string();
     assert!(
-        msg.contains("lost connection to remote Herdr"),
+        msg.contains("lost connection to remote Herdr")
+            || msg.contains("与远程 Herdr 的连接已断开"),
         "should mention remote connection loss: {msg}"
     );
     assert!(
-        msg.contains("panes may still be running"),
+        msg.contains("panes may still be running") || msg.contains("窗格进程可能仍在运行"),
         "should explain possible persistence: {msg}"
     );
     assert!(
-        msg.contains("Run `herdr --remote host --session work` to reattach"),
+        msg.contains("Run `herdr --remote host --session work` to reattach")
+            || msg.contains("运行 `herdr --remote host --session work` 重新连接"),
         "should show remote reattach command: {msg}"
     );
 }

@@ -246,7 +246,7 @@ pub(super) fn begin_endpoint_activation(
         });
         if let Some(shell) = state.shell.as_mut() {
             shell.receive_endpoint_unavailable(
-                "Local is reconnecting; selection will resume when it is ready".into(),
+                crate::tr!("Local is reconnecting; selection will resume when it is ready").into(),
             );
         }
         return Ok(());
@@ -579,7 +579,10 @@ pub(super) fn handle_endpoint_disconnect(
             .endpoint_disconnected(
                 endpoints,
                 endpoint_id,
-                format!("endpoint connection was lost while activating {notice}"),
+                crate::trf!(
+                    "endpoint connection was lost while activating {notice}",
+                    notice = notice
+                ),
             );
         match outcome {
             endpoint::ActivationRollback::Pending => {}
@@ -640,7 +643,7 @@ pub(super) fn handle_endpoint_attention(
             .endpoint_disconnected(
                 endpoints,
                 endpoint_id,
-                "endpoint reported attention while activating".into(),
+                crate::tr!("endpoint reported attention while activating").into(),
             );
         if let endpoint::ActivationRollback::Unavailable(error) = outcome {
             *pending_activation = None;

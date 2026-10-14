@@ -7,6 +7,7 @@ python := if os() == "windows" { "python" } else { "python3" }
 test:
     cargo nextest run --locked --status-level fail --final-status-level fail --failure-output final --success-output never
     just maintenance-test
+    just localization-check
     just ui-hot-path-architecture-test
     just integration-assets-test
     just docs-contract-test

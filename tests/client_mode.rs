@@ -516,15 +516,16 @@ fn server_unreachable_shows_clear_error() {
     );
     let stderr = String::from_utf8_lossy(&output.stderr);
     assert!(
-        stderr.contains("failed to connect to server"),
+        stderr.contains("failed to connect to server") || stderr.contains("无法连接到服务器"),
         "stderr should mention connection failure: {stderr}"
     );
     assert!(
-        stderr.contains("Is herdr server running?"),
+        stderr.contains("Is herdr server running?")
+            || stderr.contains("Herdr 服务器是否正在运行？"),
         "stderr should include actionable guidance: {stderr}"
     );
     assert!(
-        stderr.contains("Socket path:"),
+        stderr.contains("Socket path:") || stderr.contains("Socket 路径："),
         "stderr should include attempted socket path: {stderr}"
     );
 
@@ -641,7 +642,8 @@ fn server_crash_after_attach_causes_lost_connection_error() {
 
     let crash_output_lc = crash_output.to_lowercase();
     assert!(
-        crash_output_lc.contains("lost connection to server"),
+        crash_output_lc.contains("lost connection to server")
+            || crash_output_lc.contains("与服务器的连接已断开"),
         "thin client must emit explicit lost-connection message after server crash; output: {crash_output:?}"
     );
 
@@ -1388,7 +1390,8 @@ fn client_shell_detaches_restores_and_freshly_reattaches_to_current_state() {
     assert!(
         disconnect_output
             .to_lowercase()
-            .contains("lost connection to server"),
+            .contains("lost connection to server")
+            || disconnect_output.contains("与服务器的连接已断开"),
         "client shell should explain endpoint loss; output: {disconnect_output:?}"
     );
 
