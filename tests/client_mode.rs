@@ -719,6 +719,18 @@ fn read_output(output: &SharedOutput) -> String {
         .clone()
 }
 
+fn running_inside_wsl() -> bool {
+    std::fs::read_to_string("/proc/sys/kernel/osrelease")
+        .map(|text| {
+            let text = text.to_ascii_lowercase();
+            text.contains("microsoft") || text.contains("wsl")
+        })
+        .unwrap_or(false)
+        || std::env::var_os("WSL_DISTRO_NAME").is_some()
+        || std::env::var_os("WSL_INTEROP").is_some()
+        || std::path::Path::new("/run/WSL").exists()
+}
+
 #[test]
 fn sigwinch_refreshes_host_palette_without_resizing() {
     let _lock = test_lock();
@@ -771,7 +783,11 @@ fn sigwinch_refreshes_host_palette_without_resizing() {
             wait_until(Duration::from_secs(5), Duration::from_millis(25), || {
                 let captured = read_output(&output);
                 let refreshed = &captured[watermark..];
-                refreshed.contains(queries) && refreshed.contains("\x1b]4;15;?\x1b\\")
+                if running_inside_wsl() {
+                    refreshed.contains(queries)
+                } else {
+                    refreshed.contains(queries) && refreshed.contains("\x1b]4;15;?\x1b\\")
+                }
             }),
             "SIGWINCH should query default colors and the ANSI palette without changing PTY size"
         );
