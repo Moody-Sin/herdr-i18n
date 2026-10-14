@@ -72,7 +72,10 @@ pub(crate) fn target(positional: bool) -> Field<Option<String>> {
             Input::positional("pane_id", 0, |slot, value| {
                 // Single-dash ids are accepted; `--` words are mistyped options.
                 if value.starts_with("--") {
-                    return Err(ParseError::Usage(format!("unknown option: {value}")));
+                    return Err(ParseError::Usage(crate::trf!(
+                        "unknown option: {value}",
+                        value = value
+                    )));
                 }
                 *slot = Some(crate::cli::normalize_pane_id(value));
                 Ok(())
@@ -156,7 +159,9 @@ pub(crate) fn environment() -> Input<HashMap<String, String>> {
         slot.insert(key, value);
         Ok(())
     })
-    .help("Set an environment variable for the launched process")
+    .help(crate::tr!(
+        "Set an environment variable for the launched process"
+    ))
 }
 
 pub(crate) fn joined(name: &'static str, value: &'static str) -> Input<String> {
@@ -262,7 +267,7 @@ pub(crate) fn matcher() -> Field<OutputMatch> {
         })
         .once()
         .configure(|arg| arg.conflicts_with("regex").required_unless_present("regex"))
-        .help("Match a literal substring"),
+        .help(crate::tr!("Match a literal substring")),
     )
     .input(
         Input::value("regex", "PATTERN", |slot, value| {
@@ -273,7 +278,7 @@ pub(crate) fn matcher() -> Field<OutputMatch> {
         })
         .once()
         .configure(|arg| arg.conflicts_with("match").required_unless_present("match"))
-        .help("Match a Rust regular expression"),
+        .help(crate::tr!("Match a Rust regular expression")),
     )
 }
 
@@ -288,9 +293,9 @@ pub(crate) fn resume() -> Input<Option<Vec<String>>> {
     })
     .value_name("RESUME_ARG")
     .configure(|arg| arg.required(false).num_args(0..).last(true))
-    .help(
-        "Command that resumes this session after a Herdr restart; starts with a plain command name",
-    )
+    .help(crate::tr!(
+        "Command that resumes this session after a Herdr restart; starts with a plain command name"
+    ))
 }
 
 pub(crate) fn token() -> Input<HashMap<String, Option<String>>> {
@@ -320,7 +325,10 @@ pub(crate) fn state_label() -> Input<HashMap<String, String>> {
             status.as_str(),
             "idle" | "working" | "blocked" | "done" | "unknown"
         ) {
-            return Err(ParseError::Usage(format!("unknown state label: {status}")));
+            return Err(ParseError::Usage(crate::trf!(
+                "unknown state label: {status}",
+                status = status
+            )));
         }
         slot.insert(status, label.to_owned());
         Ok(())
@@ -372,10 +380,10 @@ pub(crate) fn destination() -> Field<PaneMoveDestination> {
 cli_projection! { pub(crate) PaneWaitProjection for PaneWaitForOutputParams {
     pane_id => Field::new(String::new()).input(pane_id()),
     source => Field::new(ReadSource::Recent).input(read_source(false)),
-    lines => Field::new(None).input(lines().help("Restrict the searched snapshot to N lines")),
+    lines => Field::new(None).input(lines().help(crate::tr!("Restrict the searched snapshot to N lines"))),
     r#match => matcher(),
-    timeout_ms => Field::new(None).input(number("timeout", "MS").help("Fail after this many milliseconds")),
-    strip_ansi => Field::new(true).input(boolean("raw", false).help("Keep ANSI escape sequences while matching")),
+    timeout_ms => Field::new(None).input(number("timeout", "MS").help(crate::tr!("Fail after this many milliseconds"))),
+    strip_ansi => Field::new(true).input(boolean("raw", false).help(crate::tr!("Keep ANSI escape sequences while matching"))),
 } }
 
 cli_projection! { pub(crate) PaneTargetProjection for PaneTarget {
@@ -400,13 +408,14 @@ pub(super) struct Leaf {
 
 impl Leaf {
     pub(super) fn command(&self) -> Command {
-        let command = projection::command(self.name, (self.arguments)()).about(self.about);
+        let command =
+            projection::command(self.name, (self.arguments)()).about(crate::i18n::text(self.about));
         match self.name {
             "input" => command.group(clap::ArgGroup::new("selector").args(["pane_id", "pane", "current"]).required(true)),
             "move" => command.group(clap::ArgGroup::new("destination").args(["tab", "new-tab", "new-workspace"]).required(true)),
             "send-text" => command.after_help(crate::tr!("next: herdr pane run <PANE_ID> <COMMAND> sends text and Enter in one call")),
-            "send-keys" => command.after_help("Use esc as the canonical Escape key name; escape is also accepted."),
-            "wait-output" => command.after_help("The selected snapshot is searched immediately, including existing output, then polled. Without --timeout, this waits indefinitely."),
+            "send-keys" => command.after_help(crate::tr!("Use esc as the canonical Escape key name; escape is also accepted.")),
+            "wait-output" => command.after_help(crate::tr!("The selected snapshot is searched immediately, including existing output, then polled. Without --timeout, this waits indefinitely.")),
             _ => command,
         }
     }
@@ -733,7 +742,7 @@ pub(super) const LEAVES: &[Leaf] = &[
 
 pub(super) fn command() -> Command {
     Command::new("pane")
-        .about("Control terminal panes")
+        .about(crate::tr!("Control terminal panes"))
         .subcommands(LEAVES.iter().map(Leaf::command))
 }
 

@@ -116,7 +116,7 @@ pub(crate) fn kind() -> Input<String> {
     })
     .required()
     .configure(|arg| arg.value_parser(AgentKindCodec))
-    .help("Supported agent kind and canonical executable")
+    .help(crate::tr!("Supported agent kind and canonical executable"))
 }
 
 /// Lists kinds for help and completion. Only the final `--kind` is validated, by
@@ -151,7 +151,7 @@ pub(crate) fn pane() -> Input<String> {
         Ok(())
     })
     .required()
-    .help("Existing pane at an interactive shell prompt")
+    .help(crate::tr!("Existing pane at an interactive shell prompt"))
 }
 
 pub(crate) fn rename_name() -> Input<Option<String>> {
@@ -180,7 +180,9 @@ pub(crate) fn wait_presence() -> Input<Option<crate::api::schema::AgentPromptWai
         });
         Ok(())
     })
-    .help("Wait for the first matching state observed after submission")
+    .help(crate::tr!(
+        "Wait for the first matching state observed after submission"
+    ))
 }
 
 cli_projection! {
@@ -244,31 +246,31 @@ fn leaf(name: &'static str, arguments: Vec<clap::Arg>, about: &'static str) -> C
 
 pub(crate) fn command() -> Command {
     Command::new("agent")
-        .about("Control and inspect agent panes")
+        .about(crate::tr!("Control and inspect agent panes"))
         .subcommand_required(true)
-        .subcommand(leaf("list", Vec::new(), "List agents"))
-        .subcommand(leaf("get", TargetProjection::arguments(), "Show an agent"))
-        .subcommand(leaf("focus", TargetProjection::arguments(), "Focus an agent"))
-        .subcommand(leaf("read", AgentReadProjection::arguments(), "Read agent terminal output")
+        .subcommand(leaf("list", Vec::new(), crate::tr!("List agents")))
+        .subcommand(leaf("get", TargetProjection::arguments(), crate::tr!("Show an agent")))
+        .subcommand(leaf("focus", TargetProjection::arguments(), crate::tr!("Focus an agent")))
+        .subcommand(leaf("read", AgentReadProjection::arguments(), crate::tr!("Read agent terminal output"))
             .override_usage("herdr agent read <TARGET> [OPTIONS]"))
-        .subcommand(leaf("send-keys", AgentSendKeysProjection::arguments(), "Send key presses to an agent")
-            .after_help("Use esc as the canonical Escape key name; escape is also accepted."))
-        .subcommand(leaf("rename", AgentRenameProjection::arguments(), "Rename an agent")
+        .subcommand(leaf("send-keys", AgentSendKeysProjection::arguments(), crate::tr!("Send key presses to an agent"))
+            .after_help(crate::tr!("Use esc as the canonical Escape key name; escape is also accepted.")))
+        .subcommand(leaf("rename", AgentRenameProjection::arguments(), crate::tr!("Rename an agent"))
             .override_usage("herdr agent rename <TARGET> <NAME>|--clear")
             .group(ArgGroup::new("rename").args(["name", "clear"]).required(true)))
-        .subcommand(leaf("wait", AgentWaitProjection::arguments(), "Wait until an agent reaches one of the requested states")
+        .subcommand(leaf("wait", AgentWaitProjection::arguments(), crate::tr!("Wait until an agent reaches one of the requested states"))
             .override_usage("herdr agent wait <TARGET> [OPTIONS]")
-            .after_help("Without --until, matches idle, done, or blocked. Use --until unknown explicitly when needed. Without --timeout, waits indefinitely."))
-        .subcommand(leaf("prompt", AgentPromptProjection::arguments(), "Submit a prompt to an agent")
+            .after_help(crate::tr!("Without --until, matches idle, done, or blocked. Use --until unknown explicitly when needed. Without --timeout, waits indefinitely.")))
+        .subcommand(leaf("prompt", AgentPromptProjection::arguments(), crate::tr!("Submit a prompt to an agent"))
             .args(AgentPromptWaitProjection::arguments().into_iter().map(|arg| arg.requires("wait")))
             .override_usage("herdr agent prompt <TARGET> <TEXT> [OPTIONS]")
-            .after_help("If the agent is already blocked, submission is rejected with agent_blocked before any input is sent. When an accepted submission starts from another non-working state, --wait requires an observed working or blocked state within 5000ms; otherwise it returns agent_prompt_stalled. A caller timeout that expires first returns timeout. It then matches idle, done, or blocked by default, or any exact --until state. It does not track turns: if the agent is already working, that active turn's completion may match."))
-        .subcommand(leaf("start", AgentStartProjection::arguments(), "Start a supported interactive agent in an existing pane")
+            .after_help(crate::tr!("If the agent is already blocked, submission is rejected with agent_blocked before any input is sent. When an accepted submission starts from another non-working state, --wait requires an observed working or blocked state within 5000ms; otherwise it returns agent_prompt_stalled. A caller timeout that expires first returns timeout. It then matches idle, done, or blocked by default, or any exact --until state. It does not track turns: if the agent is already working, that active turn's completion may match.")))
+        .subcommand(leaf("start", AgentStartProjection::arguments(), crate::tr!("Start a supported interactive agent in an existing pane"))
             .override_usage("herdr agent start <NAME> --kind <KIND> --pane <ID> [OPTIONS] [-- [AGENT_ARG]...]")
             .after_help(crate::tr!("The pane must be at its interactive shell prompt. Success means the expected agent was detected in the same terminal and is ready for input.\n\nnext: herdr agent prompt <TARGET> <TEXT> --wait")))
-        .subcommand(leaf("attach", AttachProjection::arguments(), "Attach directly to an agent terminal")
+        .subcommand(leaf("attach", AttachProjection::arguments(), crate::tr!("Attach directly to an agent terminal"))
             .override_usage("herdr agent attach <TARGET> [OPTIONS]"))
-        .subcommand(leaf("explain", ExplainProjection::arguments(), "Explain agent detection state")
+        .subcommand(leaf("explain", ExplainProjection::arguments(), crate::tr!("Explain agent detection state"))
             .group(ArgGroup::new("explain_source").args(["target", "file"]).required(true)))
 }
 

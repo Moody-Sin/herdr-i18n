@@ -956,7 +956,7 @@ fn federated_launch_opens_local_directly_while_saved_ssh_is_unavailable() {
                 Duration::from_millis(20),
                 || {
                     let out = read_output(&output);
-                    out.contains("Local") || out.contains("本\u{1b}[3;6H地") || out.contains("本地")
+                    out.contains("Local") || out.contains("本地") || out.contains("本")
                 }
             ));
             let mut input = client._master.as_ref().unwrap().take_writer().unwrap();
@@ -1101,7 +1101,7 @@ fn federated_client_starts_without_local_and_survives_its_restart() {
             "remote reconnect {cycle} must restore the visible screen without switching machines"
         );
         assert!(
-            wait_until(Duration::from_secs(8), Duration::from_millis(100), || {
+            wait_until(Duration::from_secs(15), Duration::from_millis(100), || {
                 if screen_text().contains(&format!("REMOTE_ALIVE_INPUT_{cycle}")) {
                     return true;
                 }

@@ -273,7 +273,7 @@ def check_untranslated_cli(catalog: dict[str, str], errors: list[str]) -> None:
             value = match.group(1)
             if CLI_NOT_PROSE.match(value) or not CLI_PROSE.search(value):
                 continue
-            if value in allowlist or value in catalog:
+            if value in allowlist:
                 continue
             if value.startswith(USAGE_PREFIX):
                 errors.append(

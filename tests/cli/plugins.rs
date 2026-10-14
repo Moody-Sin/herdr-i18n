@@ -976,7 +976,10 @@ command = ["sh", "-c", "sleep 5"]
         &["plugin", "log", "list", "--limit", "not-a-number"],
     );
     assert_eq!(invalid_limit.status.code(), Some(2));
-    assert!(String::from_utf8_lossy(&invalid_limit.stderr).contains("invalid --limit value"));
+    assert!(
+        String::from_utf8_lossy(&invalid_limit.stderr).contains("invalid --limit value")
+            || String::from_utf8_lossy(&invalid_limit.stderr).contains("--limit 值无效")
+    );
 
     let unlinked = run_cli_json(&socket_path, &["plugin", "unlink", "example.layout"]);
     assert_eq!(unlinked["result"]["type"], "plugin_unlinked");
@@ -1236,9 +1239,7 @@ command = ["sh", "-c", "echo should-not-install"]
     assert!(stderr.contains("stdout:\nbefore-fail"), "{stderr}");
     assert!(stderr.contains("stderr:\nfailed-build"), "{stderr}");
     assert!(
-        stderr.contains("Plugin was not installed.")
-            || stderr.contains("插件未被已安装")
-            || stderr.contains("插件未被安装"),
+        stderr.contains("Plugin was not installed.") || stderr.contains("插件未安装。"),
         "{stderr}"
     );
     assert!(!stderr.contains("Error: Custom"), "{stderr}");
@@ -1343,9 +1344,7 @@ command = ["sh", "-c", "echo should-not-install"]
         "{stderr}"
     );
     assert!(
-        stderr.contains("Plugin was not installed.")
-            || stderr.contains("插件未被已安装")
-            || stderr.contains("插件未被安装"),
+        stderr.contains("Plugin was not installed.") || stderr.contains("插件未安装。"),
         "{stderr}"
     );
     assert!(!stderr.contains("Error: Custom"), "{stderr}");

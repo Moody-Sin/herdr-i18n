@@ -377,15 +377,12 @@ fn install_github_plugin(
             preview_plugin.manifest_path = relocated_plugin.manifest_path;
             preview_plugin.plugin_root = relocated_plugin.plugin_root;
             run_plugin_build_commands(&preview_plugin, &final_manifest_root).map_err(|err| {
-                io::Error::other(crate::trf!(
-                    "{err}\n\nPlugin was not {action}.",
-                    err = err,
-                    action = if updating {
-                        crate::tr!("updated")
-                    } else {
-                        crate::tr!("installed")
-                    }
-                ))
+                let notice = if updating {
+                    crate::tr!("Plugin was not updated.")
+                } else {
+                    crate::tr!("Plugin was not installed.")
+                };
+                io::Error::other(format!("{err}\n\n{notice}"))
             })?;
             let mut plugin = load_cli_plugin_manifest(&final_manifest_root, enabled)?;
             ensure_manifest_unchanged_after_build(&preview_plugin, &plugin)?;

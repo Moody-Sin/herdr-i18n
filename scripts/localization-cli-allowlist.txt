@@ -19,8 +19,31 @@
 #
 # One literal per line, exactly as it appears in the Rust source.
 
+# CLI literals that the localization checker should not require in the zh-CN
+# catalog.
+#
+# This file is for strings that are *not user-visible interface text* but still
+# look like prose to the checker's heuristic. Two categories belong here:
+#
+#   1. Internal invariant assertions. `unreachable!("...")` and
+#      `expect("...")` messages describe a bug in Herdr itself. They are read by
+#      a developer in a panic report, not by a user, and translating them would
+#      make bug reports harder to search.
+#
+#   2. Machine-readable values. A literal that is matched, compared, or written
+#      into structured output (JSON keys, protocol codes, status tokens) must
+#      stay stable in English even though it reads like a sentence.
+#
+# Do NOT add user-facing text here. If a user can read the string in a terminal,
+# a help page, or an error message, it belongs in `src/i18n/zh-CN.json` and must
+# be wrapped in `crate::tr!` or `crate::trf!`.
+#
+# One literal per line, exactly as it appears in the Rust source.
+
 subcommand checked immediately before mutable lookup
 validated machine add option
+No saved SSH machines.
+error: {error}; machine was not saved
 agent status
 read source
 read format
@@ -29,4 +52,59 @@ agent state
 split direction
 right-click target
 pane direction
+List panes
+Show the current pane
+Show a pane
+Show pane layout information
+Show pane process information
+Find a pane neighbor
+Show pane edge information
+Focus a neighboring pane
+Resize a pane split
+Toggle or set pane zoom
+Read pane terminal output
+Rename a pane
+Set pane input routing
+Split a pane
+Swap panes
+Move a pane
+Close a pane
+Send literal text to a pane
+Send key presses to a pane
+Wait for matching pane output
+Run a command in a pane
+Report pane agent lifecycle state
+Report pane agent session identity
+Release pane agent lifecycle authority
+Report display-only pane metadata
+Link a local plugin
+Unlink a local plugin
+Enable a plugin
+Disable a plugin
+List installed plugins
+List plugin actions
+Invoke a plugin action
+Open a plugin pane
+Focus a plugin pane
+Close a plugin pane
+List plugin command logs
+List tabs
+Create a tab
+Show a tab
+Focus a tab
+Rename a tab
+Close a tab
+List workspaces
+Create a workspace
+Show a workspace
+Focus a workspace
+Rename a workspace
+Report display-only workspace metadata
+Close a workspace
+List worktree workspaces
+Create and open a Git worktree
+Open an existing Git worktree
+Remove a worktree checkout
+
+
 

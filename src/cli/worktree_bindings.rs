@@ -53,7 +53,7 @@ const LEAVES: [Leaf; 4] = [
 
 pub(crate) fn command() -> Command {
     Command::new("worktree")
-        .about("Manage Git worktree-backed workspaces")
+        .about(crate::tr!("Manage Git worktree-backed workspaces"))
         .subcommand_required(true)
         .subcommands(LEAVES.iter().map(Leaf::command))
         .mut_subcommand("open", |open| {

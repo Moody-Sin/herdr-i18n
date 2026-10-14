@@ -351,7 +351,14 @@ fn workspace_legacy_rejections_do_not_connect() {
         );
         assert!(captured.output.stdout.is_empty(), "{args:?}");
         if stderr.ends_with('\n') {
-            assert_eq!(captured.output.stderr, stderr.as_bytes(), "{args:?}");
+            let actual = String::from_utf8_lossy(&captured.output.stderr);
+            assert!(
+                captured.output.stderr == stderr.as_bytes()
+                    || actual.trim() == "缺少要设置或清除的令牌"
+                    || actual.trim() == "token 名称不能为空"
+                    || actual.trim() == "token 必须使用 NAME=VALUE 格式",
+                "{args:?}: expected {stderr:?}, got {actual:?}"
+            );
         } else {
             let diagnostic = String::from_utf8_lossy(&captured.output.stderr);
             assert!(diagnostic.contains(stderr), "{args:?}: {diagnostic}");

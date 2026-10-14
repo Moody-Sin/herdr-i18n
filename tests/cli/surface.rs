@@ -348,8 +348,21 @@ fn subcommand_help_explains_automation_semantics_without_a_server() {
         );
         let stdout = String::from_utf8_lossy(&output.stdout);
         let matched = match *expected {
+            "Without --until" => {
+                stdout.contains("Without --until") || stdout.contains("不加 --until")
+            }
+            "first matching state observed after submission" => {
+                stdout.contains("first matching state observed after submission")
+                    || stdout.contains("等待提交后观察到的首个匹配状态")
+            }
             "ready for input" => {
                 stdout.contains("ready for input") || stdout.contains("已准备好接收输入")
+            }
+            "canonical Escape key name" => {
+                stdout.contains("canonical Escape key name") || stdout.contains("规范名称")
+            }
+            "including existing output" => {
+                stdout.contains("including existing output") || stdout.contains("包括已有输出")
             }
             other => stdout.contains(other),
         };

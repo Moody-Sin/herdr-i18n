@@ -58,11 +58,9 @@ pub(crate) fn environment() -> Input<HashMap<String, String>> {
 
 pub(crate) fn limit() -> Input<Option<usize>> {
     Input::value("limit", "N", |slot, value| {
-        *slot = Some(
-            value
-                .parse()
-                .map_err(|_| ParseError::Usage(format!("invalid --limit value: {value}")))?,
-        );
+        *slot = Some(value.parse().map_err(|_| {
+            ParseError::Usage(crate::trf!("invalid --limit value: {value}", value = value))
+        })?);
         Ok(())
     })
 }
@@ -88,7 +86,12 @@ pub(crate) fn placement() -> Input<Option<PluginPanePlacement>> {
                 .iter()
                 .find(|(name, _, _)| *name == value)
                 .map(|(_, placement, _)| *placement)
-                .ok_or_else(|| ParseError::Usage(format!("invalid pane placement: {value}")))?,
+                .ok_or_else(|| {
+                    ParseError::Usage(crate::trf!(
+                        "invalid pane placement: {value}",
+                        value = value
+                    ))
+                })?,
         );
         Ok(())
     })
@@ -108,7 +111,12 @@ pub(crate) fn direction() -> Input<Option<SplitDirection>> {
                 .iter()
                 .find(|(name, _)| *name == value)
                 .map(|(_, direction)| direction.clone())
-                .ok_or_else(|| ParseError::Usage(format!("invalid split direction: {value}")))?,
+                .ok_or_else(|| {
+                    ParseError::Usage(crate::trf!(
+                        "invalid split direction: {value}",
+                        value = value
+                    ))
+                })?,
         );
         Ok(())
     })
@@ -163,7 +171,8 @@ struct Leaf {
 
 impl Leaf {
     fn command(&self) -> Command {
-        let command = projection::command(self.name, (self.arguments)()).about(self.about);
+        let command =
+            projection::command(self.name, (self.arguments)()).about(crate::i18n::text(self.about));
         if self.json {
             command.arg(Arg::new("json").long("json").action(ArgAction::SetTrue))
         } else {
@@ -268,18 +277,18 @@ const LOG: Leaf = Leaf {
 
 fn group(name: &'static str, about: &'static str, leaves: &[Leaf]) -> Command {
     Command::new(name)
-        .about(about)
+        .about(crate::i18n::text(about))
         .subcommand_required(true)
         .subcommands(leaves.iter().map(Leaf::command))
 }
 
 pub(crate) fn command() -> Command {
     Command::new("plugin")
-        .about("Install and run workflow plugins")
+        .about(crate::tr!("Install and run workflow plugins"))
         .subcommand_required(true)
         .subcommand(
             Command::new("install")
-                .about("Install a plugin from GitHub")
+                .about(crate::tr!("Install a plugin from GitHub"))
                 .arg(
                     Arg::new("source")
                         .value_name("OWNER/REPO[/SUBDIR]")
@@ -295,12 +304,12 @@ pub(crate) fn command() -> Command {
         )
         .subcommand(
             Command::new("uninstall")
-                .about("Uninstall a plugin")
+                .about(crate::tr!("Uninstall a plugin"))
                 .arg(Arg::new("plugin").value_name("PLUGIN").required(true)),
         )
         .subcommand(
             Command::new("update")
-                .about("Update GitHub-installed plugins")
+                .about(crate::tr!("Update GitHub-installed plugins"))
                 .arg(Arg::new("plugins").value_name("PLUGIN").num_args(0..))
                 .arg(
                     Arg::new("yes")
@@ -312,18 +321,22 @@ pub(crate) fn command() -> Command {
         .subcommands(DIRECT.iter().map(Leaf::command))
         .subcommand(
             Command::new("config-dir")
-                .about("Print a plugin config directory")
+                .about(crate::tr!("Print a plugin config directory"))
                 .arg(Arg::new("plugin_id").value_name("PLUGIN_ID").required(true)),
         )
-        .subcommand(group("action", "List or invoke plugin actions", ACTION))
+        .subcommand(group(
+            "action",
+            crate::tr!("List or invoke plugin actions"),
+            ACTION,
+        ))
         .subcommand(
             projection::command("log", (LOG.arguments)())
-                .about("Inspect plugin command logs")
+                .about(crate::tr!("Inspect plugin command logs"))
                 .visible_alias("logs")
                 .args_conflicts_with_subcommands(true)
                 .subcommand(LOG.command()),
         )
-        .subcommand(group("pane", "Manage plugin-owned panes", PANE))
+        .subcommand(group("pane", crate::tr!("Manage plugin-owned panes"), PANE))
 }
 
 fn leaf_matches(leaves: &[Leaf], matches: &ArgMatches) -> Result<(Method, bool), ParseError> {

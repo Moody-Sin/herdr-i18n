@@ -60,7 +60,7 @@ const LEAVES: [Leaf; 6] = [
 
 pub(crate) fn command() -> Command {
     Command::new("tab")
-        .about("Manage tabs over the socket API")
+        .about(crate::tr!("Manage tabs over the socket API"))
         .subcommand_required(true)
         .subcommands(LEAVES.iter().map(Leaf::command))
 }

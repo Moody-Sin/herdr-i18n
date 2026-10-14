@@ -33,7 +33,9 @@ pub(crate) fn environment() -> Input<HashMap<String, String>> {
         slot.insert(key, value);
         Ok(())
     })
-    .help("Set an environment variable for the launched process")
+    .help(crate::tr!(
+        "Set an environment variable for the launched process"
+    ))
 }
 
 pub(crate) fn source() -> Input<String> {
@@ -46,7 +48,9 @@ pub(crate) fn source() -> Input<String> {
 
 pub(crate) fn validate_source(source: &str) -> Result<(), ParseError> {
     if source.trim().is_empty() {
-        return Err(ParseError::Usage("missing required --source".into()));
+        return Err(ParseError::Usage(
+            crate::tr!("missing required --source").into(),
+        ));
     }
     Ok(())
 }
@@ -68,7 +72,9 @@ pub(crate) fn clear_token() -> Input<HashMap<String, Option<String>>> {
 
 pub(crate) fn validate_tokens(tokens: &HashMap<String, Option<String>>) -> Result<(), ParseError> {
     if tokens.is_empty() {
-        return Err(ParseError::Usage("missing token to set or clear".into()));
+        return Err(ParseError::Usage(
+            crate::tr!("missing token to set or clear").into(),
+        ));
     }
     Ok(())
 }
@@ -121,7 +127,8 @@ impl Leaf {
     }
 
     fn command(&self) -> Command {
-        super::projection::command(self.name, (self.arguments)()).about(self.about)
+        super::projection::command(self.name, (self.arguments)())
+            .about(crate::i18n::text(self.about))
     }
 }
 
@@ -198,7 +205,7 @@ pub(crate) const LEAVES: [Leaf; 7] = [
 
 pub(crate) fn command() -> Command {
     Command::new("workspace")
-        .about("Manage workspaces over the socket API")
+        .about(crate::tr!("Manage workspaces over the socket API"))
         .subcommands(LEAVES.iter().map(Leaf::command))
 }
 
@@ -307,10 +314,10 @@ mod tests {
             matches!(request("report-metadata", &["id", "--source", "valid", "--seq", "bad"]), Err(ParseError::Io(error)) if error.to_string() == "invalid value for --seq: bad")
         );
         assert!(
-            matches!(request("report-metadata", &["id", "--source", " "]), Err(ParseError::Usage(message)) if message == "missing required --source")
+            matches!(request("report-metadata", &["id", "--source", " "]), Err(ParseError::Usage(message)) if message == "missing required --source" || message == crate::tr!("missing required --source"))
         );
         assert!(
-            matches!(request("report-metadata", &["id", "--source", "valid"]), Err(ParseError::Usage(message)) if message == "missing token to set or clear")
+            matches!(request("report-metadata", &["id", "--source", "valid"]), Err(ParseError::Usage(message)) if message == "missing token to set or clear" || message == crate::tr!("missing token to set or clear"))
         );
     }
 

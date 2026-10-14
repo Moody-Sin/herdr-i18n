@@ -55,7 +55,7 @@ pub(crate) struct Leaf {
 
 impl Leaf {
     pub(crate) fn command(&self) -> Command {
-        command(self.name, (self.arguments)()).about(self.about)
+        command(self.name, (self.arguments)()).about(crate::i18n::text(self.about))
     }
 }
 
@@ -148,7 +148,7 @@ fn push_synopses(path: &str, command: &Command, lines: &mut Vec<String>) {
 /// The command list a bare group prints, derived from the group's declarations.
 pub(crate) fn group_commands(group: &Command) -> String {
     let path = format!("herdr {}", group.get_name());
-    let mut lines = vec![format!("{path} commands:")];
+    let mut lines = vec![crate::trf!("{path} commands:", path = path)];
     let mut synopses = Vec::new();
     push_synopses(&path, group, &mut synopses);
     lines.extend(synopses.into_iter().map(|line| format!("  {line}")));
@@ -839,9 +839,11 @@ mod tests {
                         .required(true),
                 ),
             );
-        assert_eq!(
-            group_commands(&group),
-            "herdr group commands:\n  herdr group label <id> [<LABEL>...] [--clear]\n  herdr group nested numbers [--seq N] [--pattern TEXT]\n  herdr group pick (--seq N | --pattern TEXT)"
+        assert!(
+            group_commands(&group)
+                == "herdr group commands:\n  herdr group label <id> [<LABEL>...] [--clear]\n  herdr group nested numbers [--seq N] [--pattern TEXT]\n  herdr group pick (--seq N | --pattern TEXT)"
+                || group_commands(&group)
+                    == "herdr group 命令：\n  herdr group label <id> [<LABEL>...] [--clear]\n  herdr group nested numbers [--seq N] [--pattern TEXT]\n  herdr group pick (--seq N | --pattern TEXT)"
         );
     }
 
