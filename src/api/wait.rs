@@ -37,13 +37,18 @@ pub(super) fn wait_for_output(
             Err(err) => {
                 return Ok(Some(
                     serde_json::to_string(&ErrorResponse {
-                        id: request_id,
+                        id: request_id.clone(),
                         error: ErrorBody {
                             code: "invalid_regex".into(),
                             message: err.to_string(),
                         },
                     })
-                    .unwrap(),
+                    .unwrap_or_else(|_| {
+                        format!(
+                            "{{\"id\":{id:?},\"error\":{{\"code\":\"invalid_regex\",\"message\":\"invalid regular expression\"}}}}",
+                            id = request_id
+                        )
+                    }),
                 ));
             }
         },
@@ -75,7 +80,11 @@ pub(super) fn wait_for_output(
         if value.get("error").is_some() {
             let mut value = value;
             value["id"] = serde_json::Value::String(request_id.clone());
-            return Ok(Some(serde_json::to_string(&value).unwrap()));
+            return Ok(Some(
+                serde_json::to_string(&value).unwrap_or_else(|_| {
+                    "{\"error\":{\"code\":\"serialization_failed\",\"message\":\"failed to serialize error\"}}".into()
+                }),
+            ));
         }
 
         let read_value = value["result"]["read"].clone();
@@ -89,7 +98,9 @@ pub(super) fn wait_for_output(
                         message: "failed to decode pane read result".into(),
                     },
                 })
-                .unwrap(),
+                .unwrap_or_else(|_| {
+                    "{\"error\":{\"code\":\"serialization_failed\",\"message\":\"failed to serialize internal error\"}}".into()
+                }),
             ));
         };
 
@@ -107,7 +118,9 @@ pub(super) fn wait_for_output(
                         read,
                     },
                 })
-                .unwrap(),
+                .unwrap_or_else(|_| {
+                    "{\"error\":{\"code\":\"serialization_failed\",\"message\":\"failed to serialize success response\"}}".into()
+                }),
             ));
         }
 
@@ -121,7 +134,9 @@ pub(super) fn wait_for_output(
                         message: "timed out waiting for output match".into(),
                     },
                 })
-                .unwrap(),
+                .unwrap_or_else(|_| {
+                    "{\"error\":{\"code\":\"timeout\",\"message\":\"timed out waiting for output match\"}}".into()
+                }),
             ));
         }
 
@@ -708,7 +723,16 @@ pub(super) fn wait_for_event(
 
     let subscription = match event_match_subscription(&request_id, params.match_event) {
         Ok(subscription) => subscription,
-        Err(response) => return Ok(Some(serde_json::to_string(&response).unwrap())),
+        Err(response) => {
+            return Ok(Some(serde_json::to_string(&response).unwrap_or_else(
+                |_| {
+                    format!(
+                        "{{\"id\":{id:?},\"error\":{{\"code\":\"unsupported_event_wait_match\",\"message\":\"unsupported event match\"}}}}",
+                        id = request_id
+                    )
+                },
+            )))
+        }
     };
     let mut active = match ActiveSubscription::new(
         subscription,
@@ -719,7 +743,16 @@ pub(super) fn wait_for_event(
         event_hub.current_sequence(),
     ) {
         Ok(active) => active,
-        Err(response) => return Ok(Some(serde_json::to_string(&response).unwrap())),
+        Err(response) => {
+            return Ok(Some(serde_json::to_string(&response).unwrap_or_else(
+                |_| {
+                    format!(
+                        "{{\"id\":{id:?},\"error\":{{\"code\":\"subscription_failed\",\"message\":\"failed to create subscription\"}}}}",
+                        id = request_id
+                    )
+                },
+            )))
+        }
     };
 
     loop {
@@ -748,7 +781,9 @@ pub(super) fn wait_for_event(
                         message: "timed out waiting for event match".into(),
                     },
                 })
-                .unwrap(),
+                .unwrap_or_else(|_| {
+                    "{\"error\":{\"code\":\"timeout\",\"message\":\"timed out waiting for event match\"}}".into()
+                }),
             ));
         }
 
@@ -787,7 +822,12 @@ fn wait_matched_response(request_id: &str, event: serde_json::Value) -> String {
                 message: "failed to decode matched event".into(),
             },
         })
-        .unwrap();
+        .unwrap_or_else(|_| {
+            format!(
+                "{{\"id\":{id:?},\"error\":{{\"code\":\"internal_error\",\"message\":\"failed to decode matched event\"}}}}",
+                id = request_id
+            )
+        });
     };
 
     let SubscriptionEventData::PaneAgentStatusChanged(data) = event.data else {
@@ -798,7 +838,12 @@ fn wait_matched_response(request_id: &str, event: serde_json::Value) -> String {
                 message: "events.wait currently supports pane agent status matches".into(),
             },
         })
-        .unwrap();
+        .unwrap_or_else(|_| {
+            format!(
+                "{{\"id\":{id:?},\"error\":{{\"code\":\"unsupported_event_wait_match\",\"message\":\"events.wait currently supports pane agent status matches\"}}}}",
+                id = request_id
+            )
+        });
     };
 
     serde_json::to_string(&SuccessResponse {
@@ -818,7 +863,12 @@ fn wait_matched_response(request_id: &str, event: serde_json::Value) -> String {
             },
         },
     })
-    .unwrap()
+    .unwrap_or_else(|_| {
+        format!(
+            "{{\"id\":{id:?},\"error\":{{\"code\":\"serialization_failed\",\"message\":\"failed to serialize wait matched response\"}}}}",
+            id = request_id
+        )
+    })
 }
 
 #[cfg(test)]

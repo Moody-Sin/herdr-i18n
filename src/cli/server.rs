@@ -284,15 +284,47 @@ fn parse_live_handoff_params(args: &[String]) -> Result<ServerLiveHandoffParams,
 
 fn print_server_help() {
     eprintln!("{}", crate::tr!("Herdr server commands:"));
-    eprintln!("  herdr server                run as headless server");
+    eprintln!(
+        "  {:<32} {}",
+        "herdr server",
+        crate::tr!("Run as headless server")
+    );
     #[cfg(windows)]
-    eprintln!("  herdr server --allow-unelevated-clients  allow ordinary same-account clients to control an elevated server");
-    eprintln!("  herdr server stop           stop the running server via the API socket");
-    eprintln!("  herdr server live-handoff   hand off live panes to a new local server");
-    eprintln!("  herdr server reload-config  reload config.toml in the running server");
-    eprintln!("  herdr server agent-manifests [--json]  show agent detection manifest status");
-    eprintln!("  herdr server update-agent-manifests [--json]  fetch and reload agent detection manifests");
-    eprintln!("  herdr server reload-agent-manifests  reload agent detection manifests in the running server");
+    eprintln!(
+        "  {:<32} {}",
+        "herdr server --allow-unelevated-clients",
+        crate::tr!("allow ordinary same-account clients to control an elevated server")
+    );
+    eprintln!(
+        "  {:<32} {}",
+        "herdr server stop",
+        crate::tr!("Stop the running server via the API socket")
+    );
+    eprintln!(
+        "  {:<32} {}",
+        "herdr server live-handoff",
+        crate::tr!("hand off live panes to a new local server")
+    );
+    eprintln!(
+        "  {:<32} {}",
+        "herdr server reload-config",
+        crate::tr!("Reload config.toml in the running server")
+    );
+    eprintln!(
+        "  {:<32} {}",
+        "herdr server agent-manifests [--json]",
+        crate::tr!("show agent detection manifest status")
+    );
+    eprintln!(
+        "  {:<32} {}",
+        "herdr server update-agent-manifests [--json]",
+        crate::tr!("fetch and reload agent detection manifests")
+    );
+    eprintln!(
+        "  {:<32} {}",
+        "herdr server reload-agent-manifests",
+        crate::tr!("reload agent detection manifests in the running server")
+    );
 }
 
 #[cfg(test)]

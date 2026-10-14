@@ -134,6 +134,14 @@ integration-assets-test:
 localization-check:
     {{python}} scripts/check_localization.py
 
+# Run targeted fast i18n & unit tests for daily development
+test-i18n:
+    just localization-check
+    cargo test --test cli -- cases::contracts::
+    cargo test --test cli -- cases::workspace::
+    cargo test i18n
+
+
 # Regenerate the C API bindings with bindgen-cli 0.72.1
 libghostty-bindings *clang_args:
     bash scripts/generate_libghostty_bindings.sh {{clang_args}}

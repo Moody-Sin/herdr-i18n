@@ -10,18 +10,33 @@ state = "blocked"
 priority = 400
 region = "whole_recent"
 visible_blocker = true
-contains = ["↵ confirm"]
 any = [
-  { contains = ["run this command?"] },
-  { contains = ["write this file?"] },
-  { contains = ["apply these edits?"] },
-  { contains = ["stop this task?"] },
-  { contains = ["ready to build with this plan?"] },
-  { line_regex = ['(?i)^\s*▶?\s*approve .*\?$'] },
+  { contains = ["↵ confirm"] },
+  { contains = ["↵ 确认"] },
 ]
 all = [
-  { contains = [" choose"] },
-  { any = [{ contains = ["approve"] }, { contains = ["reject"] }, { contains = ["revise"] }] },
+  { any = [
+    { contains = [" choose"] },
+    { contains = [" 选择"] },
+    { contains = ["run this command?"] },
+    { contains = ["write this file?"] },
+    { contains = ["apply these edits?"] },
+    { contains = ["stop this task?"] },
+    { contains = ["ready to build with this plan?"] },
+    { line_regex = ['(?i)^\s*▶?\s*approve .*\?$'] },
+    { contains = ["运行此命令？"] },
+    { contains = ["写入此文件？"] },
+    { contains = ["应用这些修改？"] },
+    { contains = ["停止此任务？"] },
+  ] },
+  { any = [
+    { contains = ["approve"] },
+    { contains = ["reject"] },
+    { contains = ["revise"] },
+    { contains = ["批准"] },
+    { contains = ["拒绝"] },
+    { contains = ["修改"] },
+  ] },
 ]
 
 [[rules]]

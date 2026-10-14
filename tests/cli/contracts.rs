@@ -356,7 +356,11 @@ fn workspace_legacy_rejections_do_not_connect() {
                 captured.output.stderr == stderr.as_bytes()
                     || actual.trim() == "缺少要设置或清除的令牌"
                     || actual.trim() == "token 名称不能为空"
-                    || actual.trim() == "token 必须使用 NAME=VALUE 格式",
+                    || actual.trim() == "token 格式必须为 NAME=VALUE"
+                    || actual.trim() == "token 必须使用 NAME=VALUE 格式"
+                    || actual.trim() == "环境变量键名不能为空"
+                    || actual.trim() == "环境变量格式必须为 KEY=VALUE"
+                    || actual.trim() == "环境变量不能包含 NUL 字节",
                 "{args:?}: expected {stderr:?}, got {actual:?}"
             );
         } else {

@@ -33,6 +33,7 @@ const INITIAL_REQUEST_TIMEOUT: Duration = Duration::from_secs(5);
 const STREAM_WRITE_TIMEOUT: Duration = Duration::from_secs(5);
 const MAX_INITIAL_REQUEST_BYTES: usize = 1024 * 1024;
 const ACCEPT_ERROR_BACKOFF: Duration = Duration::from_millis(50);
+const MAX_CONCURRENT_API_CONNECTIONS: usize = 128;
 
 pub struct ServerHandle {
     _thread: std::thread::JoinHandle<()>,
@@ -119,12 +120,26 @@ fn start_server_inner(
 
     let running = Arc::new(AtomicBool::new(true));
     let listener_running = Arc::clone(&running);
+    let active_connections = Arc::new(std::sync::atomic::AtomicUsize::new(0));
+    struct ConnectionGuard(Arc<std::sync::atomic::AtomicUsize>);
+    impl Drop for ConnectionGuard {
+        fn drop(&mut self) {
+            self.0.fetch_sub(1, Ordering::Relaxed);
+        }
+    }
+
     let spawned = crate::thread_spawn::spawn_named("herdr-api-accept", move || {
         run_accept_loop(
             listener.incoming(),
             &listener_running,
             ACCEPT_ERROR_BACKOFF,
             |stream| {
+                if active_connections.load(Ordering::Relaxed) >= MAX_CONCURRENT_API_CONNECTIONS {
+                    warn!("max concurrent api connections reached; dropping connection");
+                    return;
+                }
+                active_connections.fetch_add(1, Ordering::Relaxed);
+                let guard = ConnectionGuard(Arc::clone(&active_connections));
                 let api_tx = api_tx.clone();
                 let event_hub = event_hub.clone();
                 let capabilities = capabilities.clone();
@@ -133,6 +148,7 @@ fn start_server_inner(
                 #[cfg(unix)]
                 let ssh_agents = ssh_agents.clone();
                 spawn_connection_handler(move || {
+                    let _guard = guard;
                     if let Err(err) = handle_connection_with_stop(
                         stream,
                         &api_tx,

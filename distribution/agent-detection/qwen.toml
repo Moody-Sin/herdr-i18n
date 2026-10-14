@@ -52,13 +52,22 @@ state = "blocked"
 priority = 990
 region = "bottom_non_empty_lines(20)"
 visible_blocker = true
-contains = ["yes, allow once"]
 any = [
-  { contains = ["apply this change?"] },
-  { contains = ["allow execution of:"] },
-  { contains = ["allow execution of mcp tool"] },
-  { contains = ["do you want to proceed?"] },
-  { contains = ["shell command execution"] },
+  { contains = ["yes, allow once"] },
+  { contains = ["允许执行"] },
+  { contains = ["确认执行"] },
+]
+all = [
+  { any = [
+    { contains = ["apply this change?"] },
+    { contains = ["allow execution of:"] },
+    { contains = ["allow execution of mcp tool"] },
+    { contains = ["do you want to proceed?"] },
+    { contains = ["shell command execution"] },
+    { contains = ["是否继续？"] },
+    { contains = ["应用此更改？"] },
+    { contains = ["执行命令"] },
+  ] },
 ]
 
 [[rules]]

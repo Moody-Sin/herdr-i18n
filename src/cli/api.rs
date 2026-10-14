@@ -102,7 +102,11 @@ fn schema_summary_text() -> std::io::Result<String> {
 fn print_api_help() {
     eprintln!("{}", crate::tr!("Herdr api commands:"));
     eprintln!("  herdr api snapshot");
-    eprintln!("  herdr api schema [--json | --output PATH]");
+    eprintln!(
+        "  {:<42} {}",
+        "herdr api schema [--json | --output PATH]",
+        crate::tr!("inspect socket API schema")
+    );
 }
 
 fn print_api_schema_help() {

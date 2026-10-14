@@ -405,9 +405,21 @@ fn current_exe_label() -> String {
 
 fn print_status_help() {
     eprintln!("{}", crate::tr!("Herdr status commands:"));
-    eprintln!("  herdr status [--json]         show local client and running server status");
-    eprintln!("  herdr status server [--json]  show running server status");
-    eprintln!("  herdr status client [--json]  show local client binary status");
+    eprintln!(
+        "  {:<32} {}",
+        "herdr status [--json]",
+        crate::tr!("Show local client and running server status")
+    );
+    eprintln!(
+        "  {:<32} {}",
+        "herdr status server [--json]",
+        crate::tr!("show running server status")
+    );
+    eprintln!(
+        "  {:<32} {}",
+        "herdr status client [--json]",
+        crate::tr!("show local client binary status")
+    );
 }
 
 #[cfg(test)]

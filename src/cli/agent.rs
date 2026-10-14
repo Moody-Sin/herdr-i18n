@@ -391,7 +391,10 @@ fn agent_attach(params: bindings::Attach) -> std::io::Result<i32> {
         return Ok(1);
     }
     let Some(terminal_id) = response["result"]["agent"]["terminal_id"].as_str() else {
-        eprintln!("agent attach failed: response did not include terminal_id");
+        eprintln!(
+            "{}",
+            crate::tr!("agent attach failed: response did not include terminal_id")
+        );
         return Ok(1);
     };
     crate::client::run_terminal_attach(terminal_id.to_owned(), takeover)?;

@@ -40,10 +40,12 @@ mod workspace;
 pub(crate) mod workspace_bindings;
 pub(crate) mod worktree;
 
-const TERMINAL_SESSION_OBSERVE_USAGE: &str =
-    "usage: herdr terminal session observe <target> [--cols N] [--rows N]";
-const TERMINAL_SESSION_CONTROL_USAGE: &str =
-    "usage: herdr terminal session control <target> [--takeover] [--cols N] [--rows N]";
+fn terminal_session_observe_usage() -> &'static str {
+    crate::tr!("usage: herdr terminal session observe <target> [--cols N] [--rows N]")
+}
+fn terminal_session_control_usage() -> &'static str {
+    crate::tr!("usage: herdr terminal session control <target> [--takeover] [--cols N] [--rows N]")
+}
 pub(crate) const AGENT_HELP_FOOTER: &str = concat!(
     "你是 AI 智能体吗？仅当任务明确要求时才使用以下资源：\n",
     "  帮助人类首次理解或配置 Herdr：\n",
@@ -56,23 +58,23 @@ pub(crate) const AGENT_HELP_FOOTER: &str = concat!(
 
 pub(crate) fn parse_token_assignment(raw: &str) -> Result<(String, Option<String>), String> {
     let Some((key, value)) = raw.split_once('=') else {
-        return Err("token must use NAME=VALUE".into());
+        return Err(crate::tr!("token must use NAME=VALUE").into());
     };
     if key.is_empty() {
-        return Err("token name must not be empty".into());
+        return Err(crate::tr!("token name must not be empty").into());
     }
     Ok((key.to_string(), Some(value.to_string())))
 }
 
 pub(crate) fn parse_env_assignment(raw: &str) -> Result<(String, String), String> {
     let Some((key, value)) = raw.split_once('=') else {
-        return Err("env must use KEY=VALUE".into());
+        return Err(crate::tr!("env must use KEY=VALUE").into());
     };
     if key.is_empty() {
-        return Err("env key must not be empty".into());
+        return Err(crate::tr!("env key must not be empty").into());
     }
     if key.contains('\0') || value.contains('\0') {
-        return Err("env must not contain NUL bytes".into());
+        return Err(crate::tr!("env must not contain NUL bytes").into());
     }
     Ok((key.to_string(), value.to_string()))
 }
@@ -177,7 +179,10 @@ fn run_channel_command(args: &[String]) -> std::io::Result<i32> {
 
 fn channel_set(args: &[String]) -> std::io::Result<i32> {
     let Some(channel) = parse_channel_set_arg(args) else {
-        eprintln!("usage: herdr channel set <stable|preview>");
+        eprintln!(
+            "{}",
+            crate::tr!("usage: herdr channel set <stable|preview>")
+        );
         return Ok(2);
     };
 
@@ -197,8 +202,12 @@ fn channel_set(args: &[String]) -> std::io::Result<i32> {
     };
     if let Err(err) = content.parse::<toml::Value>() {
         eprintln!(
-            "config file at {} is invalid TOML: {err}. Fix it before changing the update channel.",
-            path.display()
+            "{}",
+            crate::trf!(
+                "config file at {path} is invalid TOML: {err}. Fix it before changing the update channel.",
+                path = path.display(),
+                err = err
+            )
         );
         return Ok(1);
     }
@@ -211,8 +220,12 @@ fn channel_set(args: &[String]) -> std::io::Result<i32> {
     );
     if let Err(err) = updated.parse::<toml::Value>() {
         eprintln!(
-            "changing the update channel would make {} invalid TOML: {err}; leaving config unchanged",
-            path.display()
+            "{}",
+            crate::trf!(
+                "changing the update channel would make {path} invalid TOML: {err}; leaving config unchanged",
+                path = path.display(),
+                err = err
+            )
         );
         return Ok(1);
     }
@@ -221,8 +234,12 @@ fn channel_set(args: &[String]) -> std::io::Result<i32> {
     }
     std::fs::write(&path, updated)?;
     println!(
-        "Herdr update channel set to {channel} in {}.",
-        path.display()
+        "{}",
+        crate::trf!(
+            "Herdr update channel set to {channel} in {path}.",
+            channel = channel,
+            path = path.display()
+        )
     );
 
     match channel_set_install_action(
@@ -237,8 +254,8 @@ fn channel_set(args: &[String]) -> std::io::Result<i32> {
 
     crate::platform::end_cli_output();
     if let Err(err) = crate::update::self_update(crate::update::SelfUpdateOptions::default()) {
-        eprintln!("update failed: {err}");
-        eprintln!("Run `herdr update` to retry.");
+        eprintln!("{}", crate::trf!("update failed: {err}", err = err));
+        eprintln!("{}", crate::tr!("Run `herdr update` to retry."));
         return Ok(1);
     }
 
@@ -281,9 +298,15 @@ fn channel_set_install_action(
 }
 
 fn print_channel_help() {
-    eprintln!("herdr channel commands:");
-    eprintln!("  herdr channel show                  print the configured update channel");
-    eprintln!("  herdr channel set <stable|preview>  choose the update channel");
+    eprintln!("{}", crate::tr!("Herdr channel commands:"));
+    eprintln!(
+        "  herdr channel show                  {}",
+        crate::tr!("print the configured update channel")
+    );
+    eprintln!(
+        "  herdr channel set <stable|preview>  {}",
+        crate::tr!("Choose the stable or preview update channel")
+    );
 }
 
 fn run_config_command(args: &[String]) -> std::io::Result<i32> {
@@ -310,20 +333,20 @@ fn config_check(args: &[String]) -> std::io::Result<i32> {
     match args {
         [] => {}
         [flag] if matches!(flag.as_str(), "help" | "--help" | "-h") => {
-            eprintln!("usage: herdr config check");
+            eprintln!("{}", crate::tr!("usage: herdr config check"));
             return Ok(0);
         }
         _ => {
-            eprintln!("usage: herdr config check");
+            eprintln!("{}", crate::tr!("usage: herdr config check"));
             return Ok(2);
         }
     }
 
     let diagnostics = crate::config::Config::load().diagnostics;
     if diagnostics.is_empty() {
-        println!("config: ok");
+        println!("{}", crate::tr!("config: ok"));
     } else {
-        println!("config: issues found");
+        println!("{}", crate::tr!("config: issues found"));
         for diagnostic in &diagnostics {
             println!("{diagnostic}");
         }
@@ -334,15 +357,18 @@ fn config_check(args: &[String]) -> std::io::Result<i32> {
 
 fn config_reset_keys(args: &[String]) -> std::io::Result<i32> {
     if !args.is_empty() {
-        eprintln!("usage: herdr config reset-keys");
+        eprintln!("{}", crate::tr!("usage: herdr config reset-keys"));
         return Ok(2);
     }
 
     let path = crate::config::config_path();
     if !path.exists() {
         println!(
-            "No config file found at {}. Built-in v2 keybindings already apply.",
-            path.display()
+            "{}",
+            crate::trf!(
+                "No config file found at {path}. Built-in v2 keybindings already apply.",
+                path = path.display()
+            )
         );
         return Ok(0);
     }
@@ -352,24 +378,34 @@ fn config_reset_keys(args: &[String]) -> std::io::Result<i32> {
         Ok(value) => value,
         Err(err) => {
             eprintln!(
-                "config file at {} is invalid TOML: {err}. Fix it manually or move it aside to use defaults.",
-                path.display()
+                "{}",
+                crate::trf!(
+                    "config file at {path} is invalid TOML: {err}. Fix it manually or move it aside to use defaults.",
+                    path = path.display(),
+                    err = err
+                )
             );
             return Ok(1);
         }
     };
     let Some(table) = parsed.as_table() else {
         eprintln!(
-            "config file at {} is invalid TOML: top-level config must be a table.",
-            path.display()
+            "{}",
+            crate::trf!(
+                "config file at {path} is invalid TOML: top-level config must be a table.",
+                path = path.display()
+            )
         );
         return Ok(1);
     };
 
     if !table.contains_key("keys") {
         println!(
-            "No [keys] config found in {}. Built-in v2 keybindings already apply.",
-            path.display()
+            "{}",
+            crate::trf!(
+                "No [keys] config found in {path}. Built-in v2 keybindings already apply.",
+                path = path.display()
+            )
         );
         return Ok(0);
     }
@@ -377,15 +413,22 @@ fn config_reset_keys(args: &[String]) -> std::io::Result<i32> {
     let (updated, removed) = crate::config::remove_keybinding_config_sections(&content);
     if !removed {
         eprintln!(
-            "could not safely remove keybinding config from {} without rewriting comments; edit the file manually or remove the top-level keys setting.",
-            path.display()
+            "{}",
+            crate::trf!(
+                "could not safely remove keybinding config from {path} without rewriting comments; edit the file manually or remove the top-level keys setting.",
+                path = path.display()
+            )
         );
         return Ok(1);
     }
     if let Err(err) = updated.parse::<toml::Value>() {
         eprintln!(
-            "removing keybinding config would make {} invalid TOML: {err}; leaving config unchanged",
-            path.display()
+            "{}",
+            crate::trf!(
+                "removing keybinding config would make {path} invalid TOML: {err}; leaving config unchanged",
+                path = path.display(),
+                err = err
+            )
         );
         return Ok(1);
     }
@@ -394,17 +437,34 @@ fn config_reset_keys(args: &[String]) -> std::io::Result<i32> {
     std::fs::copy(&path, &backup_path)?;
     std::fs::write(&path, updated)?;
 
-    println!("Created backup: {}", backup_path.display());
     println!(
-        "Removed [keys], [keys.indexed], and [[keys.command]] from {}.",
-        path.display()
+        "{}",
+        crate::trf!("Created backup: {path}", path = backup_path.display())
     );
-    println!("Built-in v2 keybindings will apply after Herdr restarts or reloads config.");
-    println!("If a Herdr server is running, run `herdr server reload-config` to apply this now.");
     println!(
-        "To restore: cp {} {}",
-        backup_path.display(),
-        path.display()
+        "{}",
+        crate::trf!(
+            "Removed [keys], [keys.indexed], and [[keys.command]] from {path}.",
+            path = path.display()
+        )
+    );
+    println!(
+        "{}",
+        crate::tr!("Built-in v2 keybindings will apply after Herdr restarts or reloads config.")
+    );
+    println!(
+        "{}",
+        crate::tr!(
+            "If a Herdr server is running, run `herdr server reload-config` to apply this now."
+        )
+    );
+    println!(
+        "{}",
+        crate::trf!(
+            "To restore: cp {backup} {path}",
+            backup = backup_path.display(),
+            path = path.display()
+        )
     );
     Ok(0)
 }
@@ -469,15 +529,16 @@ fn session_attach_help(args: &[String]) -> std::io::Result<i32> {
         args.first().map(String::as_str),
         Some("help" | "--help" | "-h")
     ) {
-        eprintln!("usage: herdr session attach <name>");
+        eprintln!("{}", crate::tr!("usage: herdr session attach <name>"));
         return Ok(0);
     }
-    eprintln!("usage: herdr session attach <name>");
+    eprintln!("{}", crate::tr!("usage: herdr session attach <name>"));
     Ok(2)
 }
 
 fn session_list(args: &[String]) -> std::io::Result<i32> {
-    let json = match parse_session_json_only(args, "usage: herdr session list [--json]") {
+    let json = match parse_session_json_only(args, crate::tr!("usage: herdr session list [--json]"))
+    {
         Ok(json) => json,
         Err(code) => return Ok(code),
     };
@@ -494,11 +555,13 @@ fn session_list(args: &[String]) -> std::io::Result<i32> {
 }
 
 fn session_stop(args: &[String]) -> std::io::Result<i32> {
-    let (name, json) =
-        match parse_session_name_and_json(args, "usage: herdr session stop <name> [--json]") {
-            Ok(parsed) => parsed,
-            Err(code) => return Ok(code),
-        };
+    let (name, json) = match parse_session_name_and_json(
+        args,
+        crate::tr!("usage: herdr session stop <name> [--json]"),
+    ) {
+        Ok(parsed) => parsed,
+        Err(code) => return Ok(code),
+    };
 
     let target = match crate::session::parse_target_name(&name) {
         Ok(target) => target,
@@ -515,7 +578,10 @@ fn session_stop(args: &[String]) -> std::io::Result<i32> {
                     "session": session,
                 }));
             } else {
-                println!("stopped session {}", session.name);
+                println!(
+                    "{}",
+                    crate::trf!("stopped session {name}", name = session.name)
+                );
             }
             Ok(0)
         }
@@ -527,11 +593,13 @@ fn session_stop(args: &[String]) -> std::io::Result<i32> {
 }
 
 fn session_delete(args: &[String]) -> std::io::Result<i32> {
-    let (name, json) =
-        match parse_session_name_and_json(args, "usage: herdr session delete <name> [--json]") {
-            Ok(parsed) => parsed,
-            Err(code) => return Ok(code),
-        };
+    let (name, json) = match parse_session_name_and_json(
+        args,
+        crate::tr!("usage: herdr session delete <name> [--json]"),
+    ) {
+        Ok(parsed) => parsed,
+        Err(code) => return Ok(code),
+    };
 
     match crate::session::delete_session(&name) {
         Ok(session) => {
@@ -541,7 +609,10 @@ fn session_delete(args: &[String]) -> std::io::Result<i32> {
                     "session": session,
                 }));
             } else {
-                println!("deleted session {}", session.name);
+                println!(
+                    "{}",
+                    crate::trf!("deleted session {name}", name = session.name)
+                );
             }
             Ok(0)
         }
@@ -555,7 +626,7 @@ fn session_delete(args: &[String]) -> std::io::Result<i32> {
 fn terminal_attach(args: &[String]) -> std::io::Result<i32> {
     let (terminal_id, takeover) = match parse_attach_target(
         args,
-        "usage: herdr terminal attach <terminal_id> [--takeover]",
+        crate::tr!("usage: herdr terminal attach <terminal_id> [--takeover]"),
     ) {
         Ok(parsed) => parsed,
         Err(code) => return Ok(code),
@@ -569,13 +640,13 @@ fn terminal_session(args: &[String]) -> std::io::Result<i32> {
         Some("control") => terminal_session_control(&args[1..]),
         Some("observe") => terminal_session_observe(&args[1..]),
         Some("help" | "--help" | "-h") => {
-            eprintln!("{TERMINAL_SESSION_CONTROL_USAGE}");
-            eprintln!("{TERMINAL_SESSION_OBSERVE_USAGE}");
+            eprintln!("{}", terminal_session_control_usage());
+            eprintln!("{}", terminal_session_observe_usage());
             Ok(0)
         }
         _ => {
-            eprintln!("{TERMINAL_SESSION_CONTROL_USAGE}");
-            eprintln!("{TERMINAL_SESSION_OBSERVE_USAGE}");
+            eprintln!("{}", terminal_session_control_usage());
+            eprintln!("{}", terminal_session_observe_usage());
             Ok(2)
         }
     }
@@ -584,7 +655,7 @@ fn terminal_session(args: &[String]) -> std::io::Result<i32> {
 fn terminal_session_control(args: &[String]) -> std::io::Result<i32> {
     let options = match parse_terminal_session_options(
         args,
-        TERMINAL_SESSION_CONTROL_USAGE,
+        terminal_session_control_usage(),
         "control",
         true,
     )? {
@@ -604,7 +675,7 @@ fn terminal_session_control(args: &[String]) -> std::io::Result<i32> {
 fn terminal_session_observe(args: &[String]) -> std::io::Result<i32> {
     let options = match parse_terminal_session_options(
         args,
-        TERMINAL_SESSION_OBSERVE_USAGE,
+        terminal_session_observe_usage(),
         "observe",
         false,
     )? {
@@ -672,7 +743,14 @@ fn parse_terminal_session_options(
                 return Ok(Err(0));
             }
             other => {
-                eprintln!("unknown terminal session {command} option: {other}");
+                eprintln!(
+                    "{}",
+                    crate::trf!(
+                        "unknown terminal session {command} option: {other}",
+                        command = command,
+                        other = other
+                    )
+                );
                 eprintln!("{usage}");
                 return Ok(Err(2));
             }
@@ -691,13 +769,17 @@ fn parse_terminal_dimension(raw: &str, flag: &str) -> std::io::Result<u16> {
     let parsed = raw.parse::<u16>().map_err(|_| {
         std::io::Error::new(
             std::io::ErrorKind::InvalidInput,
-            format!("{flag} must be an integer between 1 and {}", u16::MAX),
+            crate::trf!(
+                "{flag} must be an integer between 1 and {max}",
+                flag = flag,
+                max = u16::MAX
+            ),
         )
     })?;
     if parsed == 0 {
         return Err(std::io::Error::new(
             std::io::ErrorKind::InvalidInput,
-            format!("{flag} must be greater than 0"),
+            crate::trf!("{flag} must be greater than 0", flag = flag),
         ));
     }
     Ok(parsed)
@@ -721,7 +803,7 @@ pub(super) fn parse_attach_target(args: &[String], usage: &str) -> Result<(Strin
                 return Err(0);
             }
             other => {
-                eprintln!("unknown option: {other}");
+                eprintln!("{}", crate::trf!("unknown option: {other}", other = other));
                 return Err(2);
             }
         }
@@ -792,9 +874,9 @@ pub(super) fn send_request_unchecked(request: &Request) -> std::io::Result<serde
 fn ensure_server_protocol_compatible(client: &ApiClient, request_id: &str) -> std::io::Result<()> {
     let status = target::server_status(client)
         .map_err(|err| map_server_not_running_or_io(err, request_id, client))?;
-    let server_protocol = status
-        .protocol
-        .ok_or_else(|| std::io::Error::other("server ping did not include a protocol version"))?;
+    let server_protocol = status.protocol.ok_or_else(|| {
+        std::io::Error::other(crate::tr!("server ping did not include a protocol version"))
+    })?;
     let Some(response) =
         protocol_guard::mismatch_response(request_id, server_protocol, &target::restart_guidance())
     else {
@@ -878,15 +960,23 @@ pub(super) fn normalize_pane_id(value: &str) -> String {
 }
 
 pub(super) fn parse_u32_flag(flag: &str, value: &str) -> std::io::Result<u32> {
-    value
-        .parse::<u32>()
-        .map_err(|_| std::io::Error::other(format!("invalid value for {flag}: {value}")))
+    value.parse::<u32>().map_err(|_| {
+        std::io::Error::other(crate::trf!(
+            "invalid value for {flag}: {value}",
+            flag = flag,
+            value = value
+        ))
+    })
 }
 
 pub(super) fn parse_u64_flag(flag: &str, value: &str) -> std::io::Result<u64> {
-    value
-        .parse::<u64>()
-        .map_err(|_| std::io::Error::other(format!("invalid value for {flag}: {value}")))
+    value.parse::<u64>().map_err(|_| {
+        std::io::Error::other(crate::trf!(
+            "invalid value for {flag}: {value}",
+            flag = flag,
+            value = value
+        ))
+    })
 }
 
 /// Expand `--flag=value` tokens into separate `--flag` and `value` tokens so
@@ -979,28 +1069,42 @@ fn print_session_error(code: &str, message: &str) {
 }
 
 fn print_config_help() {
-    eprintln!("herdr config commands:");
-    eprintln!("  herdr config check  validate config.toml and print diagnostics");
-    eprintln!("  herdr config reset-keys  back up config.toml and remove custom keybindings");
+    eprintln!("{}", crate::tr!("Herdr config commands:"));
+    eprintln!(
+        "  herdr config check       {}",
+        crate::tr!("validate config.toml and print diagnostics")
+    );
+    eprintln!(
+        "  herdr config reset-keys  {}",
+        crate::tr!("Back up config.toml and remove custom keybindings")
+    );
 }
 
 fn print_terminal_help() {
-    eprintln!("herdr terminal commands:");
+    eprintln!("{}", crate::tr!("Herdr terminal commands:"));
     eprintln!("  herdr terminal attach <terminal_id> [--takeover]");
     eprintln!("  herdr terminal session control <target> [--takeover] [--cols N] [--rows N]");
     eprintln!("  herdr terminal session observe <target> [--cols N] [--rows N]");
     eprintln!("  herdr terminal title set <title>");
     eprintln!("  herdr terminal title clear");
-    eprintln!("  detach from direct attach with ctrl+b q; send literal ctrl+b with ctrl+b ctrl+b");
+    eprintln!(
+        "  {}",
+        crate::tr!(
+            "detach from direct attach with ctrl+b q; send literal ctrl+b with ctrl+b ctrl+b"
+        )
+    );
 }
 
 fn print_session_help() {
-    eprintln!("herdr session commands:");
+    eprintln!("{}", crate::tr!("Herdr session commands:"));
     eprintln!("  herdr session list [--json]");
     eprintln!("  herdr session attach <name>");
     eprintln!("  herdr session stop <name> [--json]");
     eprintln!("  herdr session delete <name> [--json]");
-    eprintln!("  use 'default' as <name> to target the default session for stop");
+    eprintln!(
+        "  {}",
+        crate::tr!("use 'default' as <name> to target the default session for stop")
+    );
 }
 
 fn _print_json<T: Serialize>(value: &T) {

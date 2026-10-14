@@ -270,8 +270,8 @@ def test_region_start(source: str) -> int:
 
 def check_untranslated_cli(catalog: dict[str, str], errors: list[str]) -> None:
     allowlist = load_allowlist()
-    cli_root = SRC / "cli"
-    for path in sorted(cli_root.rglob("*.rs")):
+    cli_files = [SRC / "cli.rs"] + sorted((SRC / "cli").rglob("*.rs"))
+    for path in cli_files:
         if "tests" in path.parts or path.name.endswith("_tests.rs"):
             continue
         relative = path.relative_to(ROOT)
