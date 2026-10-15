@@ -1,138 +1,218 @@
-# herdr
+# herdr-i18n
 
+> 为智能体编码而生的终端复用器运行时（全量简体中文本地化分支）。
 
 <p align="center">
-  <img src="assets/logo.png" alt="herdr" width="100" />
+  <img src="assets/logo.png" alt="herdr logo" width="100" />
 </p>
 
 <p align="center">
-  <a href="https://herdr.dev">herdr.dev</a> · <a href="#install">install</a> · <a href="https://herdr.dev/docs/quick-start/">quick start</a> · <a href="https://herdr.dev/docs/">docs</a>
+  <a href="https://herdr.dev">官方主页</a> · <a href="#安装">安装</a> · <a href="https://herdr.dev/zh-cn/docs/quick-start/">快速开始</a> · <a href="https://herdr.dev/zh-cn/docs/">文档</a>
 </p>
 
 <p align="center">
-  English · <a href="README.zh-CN.md">简体中文</a>
+  简体中文 · <a href="README.zh-CN.md">快速镜像</a> · <a href="https://github.com/herdrdev/herdr">上游英文原版</a>
 </p>
 
 <p align="center">
-  <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-666666?labelColor=333333" alt="Apache 2.0 license" /></a>
-  <a href="https://github.com/herdrdev/herdr/releases"><img src="https://img.shields.io/github/downloads/herdrdev/herdr/total?labelColor=333333&color=666666" alt="total GitHub release downloads" /></a>
-  <a href="https://github.com/herdrdev/herdr/stargazers"><img src="https://img.shields.io/github/stars/herdrdev/herdr?labelColor=333333&color=666666&logo=github" alt="GitHub stars" /></a>
-  <a href="https://github.com/herdrdev/herdr/releases/latest"><img src="https://img.shields.io/github/v/release/herdrdev/herdr?label=release&labelColor=333333&color=666666" alt="latest stable release" /></a>
-  <a href="https://formulae.brew.sh/formula/herdr"><img src="https://img.shields.io/homebrew/v/herdr?label=homebrew&labelColor=333333&color=666666" alt="Homebrew version" /></a>
-  <a href="https://x.com/herdrdev"><img src="https://img.shields.io/badge/follow-%40herdrdev-000000?logo=x&logoColor=white" alt="follow @herdrdev on X" /></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-666666?labelColor=333333" alt="Apache 2.0 许可证" /></a>
+  <a href="https://github.com/herdrdev/herdr/releases"><img src="https://img.shields.io/github/downloads/herdrdev/herdr/total?labelColor=333333&color=666666" alt="GitHub 发行版总下载量" /></a>
+  <a href="https://github.com/herdrdev/herdr/stargazers"><img src="https://img.shields.io/github/stars/herdrdev/herdr?labelColor=333333&color=666666&logo=github" alt="GitHub Star 数" /></a>
+  <a href="https://github.com/herdrdev/herdr/releases/latest"><img src="https://img.shields.io/github/v/release/herdrdev/herdr?label=release&labelColor=333333&color=666666" alt="最新稳定版本" /></a>
 </p>
 
 ---
 
-> **this is a simplified chinese localization fork.** the interface is translated to
-> simplified chinese on top of upstream herdr. it is a local integration fork, not an
-> upstream project, and it does not send pull requests upstream. see
-> [relationship to upstream](#relationship-to-upstream) for what differs and how the
-> fork tracks upstream.
+## 目录
+
+- [背景与定位](#背景与定位)
+- [与上游的关系](#与上游的关系)
+- [核心特性](#核心特性)
+- [安装](#安装)
+- [快速开始](#快速开始)
+- [文档](#文档)
+- [本地化机制](#本地化机制)
+- [开发指南](#开发指南)
+- [目录结构](#目录结构)
+- [智能体须知](#智能体须知)
+- [致谢与赞助](#致谢与赞助)
+- [许可证](#许可证)
 
 ---
 
-https://github.com/user-attachments/assets/043ec09f-4bdd-41d5-aee0-8fda6b83e267
+## 背景与定位
 
-**the runtime your coding agents live on.**
+[Herdr](https://github.com/herdrdev/herdr) 是一款为 AI 编码智能体（如 Claude Code、Codex、Cursor、OpenCode、Grok 等）设计的终端复用器与多机工作流运行时。它在后台守护终端进程，具备多机连接、窗格管理、会话断点恢复以及智能体状态无感探测等能力。
 
-- **detach without stopping work** — herdr keeps terminals running in a background server when you close the client or lose your SSH connection. after a server or machine restart, herdr restores the saved layout and can resume supported agent sessions; the original processes do not survive. [session state →](https://herdr.dev/docs/session-state/)
-- **several machines, one window** — keep local work and saved ssh machines together, with a combined agent list and independent reconnects. [remote machines →](https://herdr.dev/docs/connecting-machines/)
-- **never hunt for the stuck one** — every pane is marked working, blocked, or idle. when an agent stops and needs an answer, herdr says so.
-- **agent-native** — agents drive herdr through the cli and socket api: they can spawn panes, prompt each other, and wait until another agent is genuinely blocked. [agent skill →](https://herdr.dev/docs/agent-skill/)
-- **runs what you already run** — claude code, codex, cursor, opencode, grok and the rest. herdr doesn't wrap or replace them; it owns their terminals. building an agent? [add herdr support →](https://herdr.dev/docs/add-herdr-support/)
-- **keyboard and mouse, both first-class** — tmux-style prefix keys *and* click, drag, split. pick per moment, not per tool.
-- **plugins** — extend panes and workflows. [browse the marketplace →](https://herdr.dev/plugins/)
-- **one rust binary, no electron** — runs in whatever terminal you already use.
+**本仓库（herdr-i18n）是专门维护简体中文全量本地化的复刻分支。** 在完整保留上游所有功能、底层 PTY/终端引擎、API 与协议特性的前提下，全面汉化了 TUI 交互界面、CLI 命令行输出、配置模板与交互提示，让中文开发者拥有开箱即用、无语言门槛的现代化智能体运行环境。
 
 ---
 
-## install
+## 与上游的关系
+
+本仓库为长期独立跟踪上游的本地化复刻项目：
+
+1. **不向上游推送 PR**：所有汉化与中文适配均在本仓库闭环维护，避免干扰上游纯英文项目治理与发布节奏。
+2. **跟踪上游发布**：持续拉取上游 `master` 分支的最新特性与修复，通过自动化的本地化检测脚本（`just localization-check`）发现并补齐上游新增的文案。
+3. **禁用官方自更新**：上游自带的官方二进制自更新和自动版本检查已被显式禁用（`src/i18n.rs::LOCALIZED_BUILD`），防止执行更新操作后官方英文二进制覆盖本地编译的中文版。更新方式为拉取本仓库最新源码并重新编译。
+4. **架构保持同构**：本仓库严格遵循上游的架构规范与协议边界，底层代码逻辑与协议编解码器完全一致。
+
+---
+
+## 核心特性
+
+- **工作不中断，后台静默守护**：关闭客户端或 SSH 意外断开时，Herdr 在后台服务中保持终端持续运行；服务或系统重启后，可完整恢复保存的窗口布局并唤醒智能体会话。
+- **多机合一，统一全局透视**：在单一窗口中同时纳管本地环境与远程 SSH 机器，聚合智能体运行状态树，支持跨机器独立重连。
+- **状态感知，告别盲目找寻**：实时无损侦测并标明智能体运行状态（`working` 运行中、`blocked` 阻塞等待确认、`idle` 空闲就绪），谁被卡住需要用户输入一目了然。
+- **智能体原生驱动**：提供纯净的 Socket API 与 CLI 接口，智能体可自主创建窗格、互相传递 Prompt、等待其他依赖智能体完工，构建自动化多智能体协作链。
+- **兼容现有开发工作流**：不包装、不阉割智能体生态；原生托管已有终端进程，无论运行 Claude Code、Codex 还是自定义脚本均无缝衔接。
+- **键鼠双一等公民**：既有 tmux 风格的高效前缀快捷键体系，又完整支持现代终端的鼠标点击、拖拽分屏、窗口缩放。
+- **轻量纯粹，拒绝 Electron**：单一纯 Rust 二进制交付，极致启动速度与低资源占用。
+
+---
+
+## 安装
+
+### 方式一：从本仓库源码构建（推荐）
+
+确保本地已安装 Rust（stable）以及 Zig 0.16.0（用于编译 vendored libghostty-vt）：
+
+```bash
+git clone https://github.com/herdrdev/herdr.git herdr-i18n
+cd herdr-i18n
+git checkout zh-CN
+cargo build --release
+```
+
+编译产物位于 `target/release/herdr`，可将其放置在系统 `PATH` 路径中（如 `/usr/local/bin`）。
+
+### 方式二：上游官方安装脚本（英文原版）
+
+> 提示：上游官方安装脚本会安装官方英文二进制，且会启用自动更新功能。
 
 ```bash
 curl -fsSL https://herdr.dev/install.sh | sh
 ```
 
-or `brew install herdr` · `mise use -g herdr` · windows: `powershell -ExecutionPolicy Bypass -c "irm https://herdr.dev/install.ps1 | iex"` · [endpoint-protected Windows](https://herdr.dev/docs/windows-beta/) · [binaries](https://github.com/herdrdev/herdr/releases)
+或使用 macOS Homebrew / Windows PowerShell：
+```bash
+brew install herdr
+```
 
-then start it where the work lives:
+---
+
+## 快速开始
+
+在需要开展编码工作的代码库根目录下启动：
 
 ```bash
 herdr
 ```
 
-run your agents, split panes, walk away. `ctrl+b q` detaches, `herdr` reattaches. [quick start →](https://herdr.dev/docs/quick-start/)
+常见快捷操作：
+- `ctrl+b %`：垂直分割当前窗格
+- `ctrl+b "`：水平分割当前窗格
+- `ctrl+b q`：安全分离（Detach）会话，终端继续在后台运行
+- `ctrl+b ?`：打开内置全量快捷键与交互帮助指南
+- `herdr`：重新连接（Attach）回到先前的会话
 
-## docs
+---
 
-everything lives at [herdr.dev/docs](https://herdr.dev/docs/): [quick start](https://herdr.dev/docs/quick-start/) · [concepts](https://herdr.dev/docs/concepts/) · [supported agents](https://herdr.dev/docs/agents/) · [keyboard](https://herdr.dev/docs/keyboard/) · [configuration](https://herdr.dev/docs/configuration/) · [session state](https://herdr.dev/docs/session-state/) · [connecting machines](https://herdr.dev/docs/connecting-machines/) · [remote](https://herdr.dev/docs/persistence-remote/) · [integrations](https://herdr.dev/docs/integrations/) · [add herdr support to your agent](https://herdr.dev/docs/add-herdr-support/) · [plugins](https://herdr.dev/docs/plugins/) · [socket api](https://herdr.dev/docs/socket-api/)
+## 文档
 
-## thanks
+完整的进阶指引与配置参考可参阅官方文档：
 
-every past sponsor and backer is listed in [SPONSORS.md](./SPONSORS.md) — thank you 🐑
+- [快速上手指南 (Quick Start)](https://herdr.dev/zh-cn/docs/quick-start/)
+- [核心概念与架构 (Concepts)](https://herdr.dev/zh-cn/docs/concepts/)
+- [受支持的智能体清单 (Agents)](https://herdr.dev/zh-cn/docs/agents/)
+- [快捷键与按键绑定 (Keyboard)](https://herdr.dev/zh-cn/docs/keyboard/)
+- [配置文件规范 (Configuration)](https://herdr.dev/zh-cn/docs/configuration/)
+- [会话保存与恢复 (Session State)](https://herdr.dev/zh-cn/docs/session-state/)
+- [远程机器连接 (Remote Machines)](https://herdr.dev/zh-cn/docs/connecting-machines/)
+- [Socket API 接口参考 (Socket API)](https://herdr.dev/zh-cn/docs/socket-api/)
 
-enterprise / partnership: hey@herdr.dev
+---
 
-## agent instructions
+## 本地化机制
 
-if you are an ai agent helping with this repository, read [`AGENTS.md`](./AGENTS.md) before making changes and read [`CONTRIBUTING.md`](./CONTRIBUTING.md) before opening issues or PRs.
+本仓库所有的中文化文本统一维护在 [`src/i18n/zh-CN.json`](src/i18n/zh-CN.json) 映射表中，并遵循以下机制：
 
-## development
+1. **查找模式**：Rust 源码中通过 `crate::tr!("English text")`（静态文案）和 `crate::trf!("Message {name}", name = value)`（动态插值）进行匹配。英文原文即为字典 Key，若条目缺失则平滑回退至英文，绝不发生运行时崩溃。
+2. **规范术语统一**：所有界面的专业术语翻译均严格对照 [`src/i18n/GLOSSARY.md`](src/i18n/GLOSSARY.md)（例如：*worktree* 译为“工作树”，*pane* 译为“窗格”，*agent* 译为“智能体”）。
+3. **严格的自动化保障**：通过 `just localization-check` 扫描源代码 AST，确保所有面向用户的输出均走 `tr!`，并且严格验证插值占位符对称性与未登记英文字面量。
+
+---
+
+## 开发指南
+
+使用 `just` 作为统一的任务运行器：
 
 ```bash
-git clone https://github.com/herdrdev/herdr
-cd herdr
-cargo build --release
+# 运行单元测试与集成测试
+just test
 
-just test        # unit tests
-just check       # formatting, tests, and maintenance checks
+# 运行代码格式、静态检查、维护测试与本地化缺漏检查
+just check
+
+# 专项执行本地化覆盖率与有效性检查
+just localization-check
 ```
 
-### localization
+### 同步上游流程
 
-user-facing text is looked up through `crate::tr!` / `crate::trf!` against
-`src/i18n/zh-CN.json`. the english source string is the catalog key, and a missing
-entry falls back to english rather than failing. `just localization-check` verifies
-that every `tr!`/`trf!` key has an entry, that placeholders match between the english
-and chinese text, and that CLI text is either localized or explicitly listed in
-`scripts/localization-cli-allowlist.txt`.
-
-when adding interface text, wrap it in `tr!` and add the chinese entry to
-`src/i18n/zh-CN.json`. command syntax lines (`herdr pane split ...`) stay in english
-on purpose; only prose and labels are translated.
-
-### syncing upstream
-
-this fork tracks upstream `master`. to sync:
+当上游发布新版本需要同步时：
 
 ```bash
 git fetch origin
 git merge origin/master
-just localization-check   # add entries for new upstream interface text
+# 运行检查发现上游新增的文案，并在 src/i18n/zh-CN.json 中补齐
+just localization-check
 just check
 ```
 
-`just localization-check` reports new upstream text that still needs a translation,
-so a sync is complete once it passes.
+---
 
-## relationship to upstream
+## 目录结构
 
-this repository is a localized fork of [herdrdev/herdr](https://github.com/herdrdev/herdr).
+详细的源码设计与各层职责请参阅 [`src/README.md`](src/README.md)。概览如下：
 
-the differences from upstream are:
+```text
+├── assets/             # 静态多媒体资源与图标
+├── docs/               # 网站文档与多版本快照
+├── scripts/            # 维护脚本、本地化检查及自动化测试
+├── src/                # 核心 Rust 源代码（见 src/README.md）
+│   ├── api/            # Socket API 与 JSON-RPC 服务协议
+│   ├── app/            # 核心业务状态机（AppState）、工作区与窗格逻辑
+│   ├── cli/            # 命令行解析与子命令处理（已全量本地化）
+│   ├── client/         # TUI 客户端渲染与终端交互
+│   ├── detect/         # 智能体屏幕无感侦测与规则引擎
+│   ├── i18n/           # 简体中文语言包、术语对照表与翻译文档
+│   ├── server/         # 后台守护进程与无头服务
+│   └── terminal/       # 虚拟终端解析与底层状态管理
+├── vendor/             # 依赖源码树（如 vendored libghostty-vt）
+├── CHANGELOG.md        # 版本更新日志
+├── CONTRIBUTING.md     # 贡献指引
+├── LESSONS.md          # 经验教训积累文档
+└── README.md           # 项目主说明文档
+```
 
-- simplified chinese interface text, stored in `src/i18n/zh-CN.json`.
-- self-update and automatic version checks are disabled (`src/i18n.rs::LOCALIZED_BUILD`),
-  because installing an upstream binary would overwrite the localized build. update by
-  syncing upstream and rebuilding from source instead.
-- the localization check is wired into `just ci-tests`.
+---
 
-all application logic, the terminal engine, the API, and the release tooling are
-unchanged from upstream. fixes and features are not sent upstream from this fork;
-upstream work is taken in through merges only. when upstream changes a string, the
-catalog entry for the old text becomes unused and the new text needs a translation;
-`just localization-check` surfaces both cases.
+## 智能体须知
 
-## license
+协助本仓库开发的 AI 智能体在进行修改前必须阅读 [`AGENTS.md`](./AGENTS.md)，遵守约定式提交、语义化版本与简体中文回复规范；在提交代码前使用 `just check` 运行全量验证。
 
-Herdr is licensed under the [Apache License 2.0](LICENSE).
+---
+
+## 致谢与赞助
+
+感谢每一位支持和赞助 Herdr 项目的开发者，历史赞助者名单详见 [SPONSORS.md](./SPONSORS.md)。
+
+- 上游发起与维护者：[herdrdev/herdr](https://github.com/herdrdev/herdr)
+- 赞助伙伴：[Terminal Trove](https://terminaltrove.com/)
+
+---
+
+## 许可证
+
+本项目基于 [Apache License 2.0](LICENSE) 协议开源。
