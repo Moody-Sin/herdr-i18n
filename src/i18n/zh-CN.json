@@ -804,5 +804,16 @@
   "using config.toml": "使用 config.toml",
   "with warnings": "存在警告",
   "Agent detection rules updated": "智能体检测规则已更新",
-  "unknown update option: {arg}": "未知的 update 选项：{arg}"
+  "unknown update option: {arg}": "未知的 update 选项：{arg}",
+  "the argument '--{id}' cannot be used multiple times\n": "参数 '--{id}' 不能重复使用\n",
+  "name": "名称",
+  "status": "状态",
+  "directory": "目录",
+  "socket": "socket",
+  "running": "运行中",
+  "stopped": "已停止",
+  "unavailable": "不可用",
+  "herdr: failed to set up terminal: {err}": "herdr：终端初始化失败：{err}",
+  "Update the Local server before switching between machines": "在机器之间切换前请先更新本地服务器",
+  "session.startup_per_agent_delay_ms changes require restarting Herdr; kept current setting": "修改 session.startup_per_agent_delay_ms 需要重启 Herdr；已保留当前设置"
 }

@@ -1,5 +1,26 @@
 use super::*;
 
+/// Fits an integration label into the fixed 9-column name field.
+///
+/// `{:<9}` pads by `char` count rather than terminal columns and never
+/// truncates, so a longer label (`antigravity`) or a translated one would
+/// overlap the status text drawn at `area.x + 14`.
+fn pad_integration_label(label: &str) -> String {
+    const WIDTH: usize = 9;
+    let mut text = String::new();
+    let mut used = 0usize;
+    for character in label.chars() {
+        let character_width = unicode_width::UnicodeWidthChar::width(character).unwrap_or(0);
+        if used + character_width > WIDTH {
+            break;
+        }
+        text.push(character);
+        used += character_width;
+    }
+    text.push_str(&" ".repeat(WIDTH - used));
+    text
+}
+
 fn choice_style(selected: bool, palette: &Palette) -> Style {
     if selected {
         Style::default()
@@ -382,7 +403,10 @@ fn render_integrations(
             area.x + 3,
             y,
             11.min(area.width.saturating_sub(3)),
-            &format!("{:<9}", integration.label),
+            // `{:<9}` pads by `char` count, so a label longer than the column
+            // (`antigravity`) or a future translated label would run into the
+            // status text that starts at `area.x + 14`.
+            &pad_integration_label(&integration.label),
             Style::default().fg(palette.subtext0).bg(palette.panel_bg),
         );
         put_text(

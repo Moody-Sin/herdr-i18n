@@ -236,7 +236,7 @@ impl ClientShellState {
     ) {
         if !self.retry_machine(endpoint_id) {
             let label = self.endpoint_label(endpoint_id).to_owned();
-            self.receive_endpoint_unavailable(format!("{label} is not ready"));
+            self.receive_endpoint_unavailable(crate::trf!("{label} is not ready", label = label));
         }
         outcome.repaint = true;
     }

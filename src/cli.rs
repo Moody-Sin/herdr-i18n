@@ -1034,19 +1034,31 @@ fn parse_session_name_and_json(args: &[String], usage: &str) -> Result<(String, 
 }
 
 fn print_session_table(sessions: &[crate::session::SessionInfo]) {
-    println!("{:<20} {:<8} {:<48} socket", "name", "status", "directory");
+    let headers = [
+        crate::tr!("name"),
+        crate::tr!("status"),
+        crate::tr!("directory"),
+    ];
+    println!(
+        "{}{}{}{}",
+        pad_display(headers[0], NAME_COLUMN_WIDTH),
+        pad_display(headers[1], STATUS_COLUMN_WIDTH),
+        pad_display(headers[2], DIRECTORY_COLUMN_WIDTH),
+        crate::tr!("socket")
+    );
     for session in sessions {
+        let state = if session.connection_error.is_some() {
+            crate::tr!("unavailable")
+        } else if session.running {
+            crate::tr!("running")
+        } else {
+            crate::tr!("stopped")
+        };
         println!(
-            "{:<20} {:<8} {:<48} {}",
-            session.name,
-            if session.connection_error.is_some() {
-                "unavailable"
-            } else if session.running {
-                "running"
-            } else {
-                "stopped"
-            },
-            session.session_dir,
+            "{}{}{}{}",
+            pad_display(&session.name, NAME_COLUMN_WIDTH),
+            pad_display(state, STATUS_COLUMN_WIDTH),
+            pad_display(&session.session_dir, DIRECTORY_COLUMN_WIDTH),
             session.socket_path
         );
         if let Some(error) = &session.connection_error {
@@ -1054,6 +1066,20 @@ fn print_session_table(sessions: &[crate::session::SessionInfo]) {
         }
     }
 }
+
+/// Pads to a terminal-column width, not a `char` count.
+///
+/// `{:<20}` counts `char`s, so a translated header or a CJK session name (one
+/// `char`, two columns) would be padded short and push the following columns
+/// out of alignment.
+fn pad_display(text: &str, width: usize) -> String {
+    let padding = width.saturating_sub(unicode_width::UnicodeWidthStr::width(text)) + 1;
+    format!("{text}{}", " ".repeat(padding))
+}
+
+const NAME_COLUMN_WIDTH: usize = 20;
+const STATUS_COLUMN_WIDTH: usize = 8;
+const DIRECTORY_COLUMN_WIDTH: usize = 48;
 
 fn print_session_error(code: &str, message: &str) {
     eprintln!(

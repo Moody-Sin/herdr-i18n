@@ -475,6 +475,16 @@ fn exit_if_nested_disabled(config: &config::Config) {
     }
 }
 
+/// Pads to a terminal-column width, not a `char` count.
+///
+/// `{:<32}` counts `char`s, so a command carrying a translated `<子命令>`
+/// placeholder (one `char`, two columns each) is padded short and pushes the
+/// description column out of alignment.
+fn pad_display_width(text: &str, width: usize) -> String {
+    let padding = width.saturating_sub(unicode_width::UnicodeWidthStr::width(text)) + 1;
+    format!("{text}{}", " ".repeat(padding))
+}
+
 fn args_as_utf8<I>(args: I) -> Result<Vec<String>, String>
 where
     I: IntoIterator<Item = std::ffi::OsString>,
@@ -714,7 +724,10 @@ fn main() -> io::Result<()> {
                 crate::tr!("Manage built-in agent integrations"),
             ),
         ] {
-            println!("  {command:<32} {description}");
+            // `{command:<32}` pads by `char` count, so a command containing a
+            // translated `<子命令>` placeholder would be padded short and push
+            // every description in the list out of alignment.
+            println!("  {}{}", pad_display_width(command, 32), description);
         }
         println!();
         println!("{}", crate::tr!("Advanced commands:"));

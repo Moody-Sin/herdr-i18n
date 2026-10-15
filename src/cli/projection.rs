@@ -595,7 +595,10 @@ impl<T> Field<T> {
                     if input.once && indices.len() > 1 {
                         return Err(ParseError::Clap(clap::Error::raw(
                             clap::error::ErrorKind::ArgumentConflict,
-                            format!("the argument '--{id}' cannot be used multiple times\n"),
+                            crate::trf!(
+                                "the argument '--{id}' cannot be used multiple times\n",
+                                id = id
+                            ),
                         )));
                     }
                     for (index, value) in indices.zip(string_values(matches, &input.argument)) {

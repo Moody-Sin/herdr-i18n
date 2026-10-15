@@ -1954,7 +1954,7 @@ fn unavailable_restored_pane_keeps_saved_cwd_in_server() {
     assert_eq!(cwd, missing_cwd);
     assert!(pane["result"]["pane"]["restore_error"]
         .as_str()
-        .is_some_and(|error| error.contains("directory")));
+        .is_some_and(|error| error.contains("directory") || error.contains("目录")));
 
     let client_shell = spawn_client_shell_process(&config_home, &runtime_dir, &api_socket);
     let output = spawn_pty_drain(
@@ -1967,8 +1967,17 @@ fn unavailable_restored_pane_keeps_saved_cwd_in_server() {
     );
     assert!(
         wait_until(Duration::from_secs(8), Duration::from_millis(20), || {
-            let screen = read_output(&output);
-            screen.contains("missing-cwd") && screen.contains("unavailable")
+            // Parse the escape stream into a screen. A Chinese message is
+            // written cell by cell with a cursor move between glyphs, so the
+            // raw stream never contains the translated phrase contiguously.
+            let bytes = output
+                .lock()
+                .unwrap_or_else(|p| p.into_inner())
+                .bytes
+                .clone();
+            let screen = terminal_screen::text(&bytes, 80, 24);
+            screen.contains("missing-cwd")
+                && (screen.contains("unavailable") || screen.contains("不可用"))
         }),
         "client shell should render the unavailable pane; output: {:?}",
         read_output(&output)

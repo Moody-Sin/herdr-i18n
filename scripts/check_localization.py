@@ -27,6 +27,11 @@ LEAF_ABOUT = re.compile(
 # syntax, machine-readable keys, and identifiers are part of the interface.
 UNTRANSLATED_CLI_ALLOWLIST = ROOT / "scripts" / "localization-cli-allowlist.txt"
 PARSE_CHOICE_CALL = re.compile(r'\bparse_choice\([^,]+,\s*"((?:\\.|[^"\\])*)"')
+# Help text reaches clap as a plain `&'static str`, and the catalog is keyed by
+# that English text. A bare literal keeps English in the help output even when
+# `zh-CN.json` already carries a translation, so every call site must pass
+# `crate::tr!("...")`; the regex below only matches the unwrapped form.
+HELP_CALL = re.compile(r'\.help\(\s*"((?:\\.|[^"\\])*)"')
 CLI_PROSE = re.compile(r"[a-z]+ [a-z]+")
 CLI_NOT_PROSE = re.compile(
     r"^(?:[a-z0-9_.-]+/)+"  # paths
@@ -256,16 +261,76 @@ def check_catalog_keys(catalog: dict[str, str], errors: list[str]) -> None:
             if key not in catalog:
                 errors.append(f"{relative}: missing zh-CN text for {key!r}")
 
+        for match in HELP_CALL.finditer(source):
+            key = json.loads(f'"{match.group(1)}"')
+            errors.append(
+                f"{relative}: help text {key!r} is not wrapped in crate::tr! "
+                f"(bare literals reach clap untranslated)"
+            )
 
-def test_region_start(source: str) -> int:
-    """Offset where the trailing `#[cfg(test)]` region begins, or len(source).
+
+def item_end(source: str, start: int) -> int:
+    """Offset just past the Rust item that begins at ``start``.
+
+    An external module declaration ends at its `;`, while a block item ends at
+    its matching `}`. Both are needed to know how far a `#[cfg(test)]` item
+    really reaches.
+    """
+    depths = {"(": 0, "[": 0, "{": 0}
+    closers = {")": "(", "]": "[", "}": "{"}
+    in_string = False
+    escaped = False
+    index = start
+    while index < len(source):
+        char = source[index]
+        if in_string:
+            if escaped:
+                escaped = False
+            elif char == "\\":
+                escaped = True
+            elif char == '"':
+                in_string = False
+            index += 1
+            continue
+        if char == "/" and source[index : index + 2] == "//":
+            newline = source.find("\n", index)
+            index = len(source) if newline == -1 else newline + 1
+            continue
+        if char == "/" and source[index : index + 2] == "/*":
+            close = source.find("*/", index + 2)
+            index = len(source) if close == -1 else close + 2
+            continue
+        if char == '"':
+            in_string = True
+        elif char in depths:
+            depths[char] += 1
+        elif char in closers:
+            opener = closers[char]
+            depths[opener] = max(0, depths[opener] - 1)
+            if char == "}" and depths["{"] == 0:
+                return index + 1
+        elif char == ";" and not any(depths.values()):
+            return index + 1
+        index += 1
+    return len(source)
+
+
+def test_regions(source: str) -> list[tuple[int, int]]:
+    """Character ranges covered by `#[cfg(test)]` items.
 
     Unit tests assert against literal English messages, so the untranslated-CLI
     scan must not treat them as user-visible gaps. Catalog-key scanning still
     covers them, because a test that calls `crate::tr!` needs a real entry.
+
+    `#[cfg(test)]` annotates a single item, and that item is not always the
+    trailing test module. A two-line `mod bindings_tests;` declaration used to
+    be read as the start of everything after it, so the rest of `agent.rs` was
+    never scanned and real untranslated strings there stayed invisible.
     """
-    match = re.search(r"^#\[cfg\(test\)\]", source, re.MULTILINE)
-    return match.start() if match else len(source)
+    return [
+        (match.start(), item_end(source, match.end()))
+        for match in re.finditer(r"^#\[cfg\(test\)\]", source, re.MULTILINE)
+    ]
 
 
 def check_untranslated_cli(catalog: dict[str, str], errors: list[str]) -> None:
@@ -277,7 +342,7 @@ def check_untranslated_cli(catalog: dict[str, str], errors: list[str]) -> None:
         relative = path.relative_to(ROOT)
         source = path.read_text(encoding="utf-8")
         localized = literal_spans(source)
-        tests_start = test_region_start(source)
+        tests = test_regions(source)
         line_starts = [0]
         for index, char in enumerate(source):
             if char == "\n":
@@ -295,7 +360,7 @@ def check_untranslated_cli(catalog: dict[str, str], errors: list[str]) -> None:
 
         for match in STRING.finditer(source):
             start, end = match.start(1), match.end(1)
-            if start >= tests_start:
+            if any(region_start <= start and end <= region_end for region_start, region_end in tests):
                 continue
             if any(span_start <= start and end <= span_end for span_start, span_end in localized):
                 continue

@@ -524,8 +524,10 @@ fn restore_tab(
             let terminal = unavailable_restored_terminal(
                 saved_pane,
                 cwd,
-                "Saved directory is unavailable. Restore the directory and restart this session."
-                    .into(),
+                crate::tr!(
+                    "Saved directory is unavailable. Restore the directory and restart this session."
+                )
+                .into(),
             );
             panes.insert(*id, PaneState::new(terminal.id.clone()));
             terminals.push(terminal);
@@ -752,7 +754,7 @@ fn restore_tab(
                 if !was_imported {
                     let terminal = unavailable_restored_terminal(
                         saved_pane, cwd,
-                        format!("Could not start the saved shell: {e}. Fix the shell configuration and restart this session."),
+                        crate::trf!("Could not start the saved shell: {err}. Fix the shell configuration and restart this session.", err = e),
                     );
                     panes.insert(*id, PaneState::new(terminal.id.clone()));
                     terminals.push(terminal);

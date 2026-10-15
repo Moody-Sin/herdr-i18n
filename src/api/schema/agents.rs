@@ -35,10 +35,10 @@ cli_params! {
         pub target: String => Field::new(String::new()).input(bindings::target()),
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
         pub until: Vec<AgentStatus> => Field::new(Vec::new()).input(bindings::until()
-            .help("State to match; repeat for more than one state")),
+            .help(crate::tr!("State to match; repeat for more than one state"))),
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub timeout_ms: Option<u64> => Field::new(None).input(bindings::timeout()
-            .help("Fail after this many milliseconds")),
+            .help(crate::tr!("Fail after this many milliseconds"))),
     }
 }
 
@@ -47,10 +47,10 @@ cli_params! {
     pub struct AgentPromptWaitOptions => AgentPromptWaitProjection {
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
         pub until: Vec<AgentStatus> => Field::new(Vec::new()).input(bindings::until()
-            .help("State to match after --wait; repeat for more than one state")),
+            .help(crate::tr!("State to match after --wait; repeat for more than one state"))),
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub timeout_ms: Option<u64> => Field::new(None).input(bindings::timeout()
-            .help("Fail after this many milliseconds")),
+            .help(crate::tr!("Fail after this many milliseconds"))),
         #[serde(skip)]
         #[schemars(skip)]
         pub(crate) submission_deadline: Option<std::time::Instant> => Field::new(None::<std::time::Instant>),
@@ -192,7 +192,7 @@ cli_params! {
         /// Startup timeout in milliseconds. Values must be greater than 3000 and at most 300000.
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub timeout_ms: Option<u64> => Field::new(None).input(bindings::timeout()
-            .help("Wait for interactive readiness (default: 30000; max: 300000)")),
+            .help(crate::tr!("Wait for interactive readiness (default: 30000; max: 300000)"))),
     }
 }
 

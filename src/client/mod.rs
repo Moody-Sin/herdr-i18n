@@ -266,7 +266,10 @@ fn run_client_with_mode(
         setup_terminal(mouse_capture)
     }
     .map_err(|err| {
-        eprintln!("herdr: failed to set up terminal: {err}");
+        eprintln!(
+            "{}",
+            crate::trf!("herdr: failed to set up terminal: {err}", err = err)
+        );
         err
     })?;
     loop_config.host_escape_disambiguation_active =
@@ -703,8 +706,10 @@ async fn run_client_loop(
                             {
                                 if let Some(shell) = state.shell.as_mut() {
                                     shell.receive_endpoint_unavailable(
-                                        "Update the Local server before switching between machines"
-                                            .into(),
+                                        crate::tr!(
+                                            "Update the Local server before switching between machines"
+                                        )
+                                        .into(),
                                     );
                                 }
                             }

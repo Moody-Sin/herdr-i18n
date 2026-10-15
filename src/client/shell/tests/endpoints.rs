@@ -489,7 +489,8 @@ fn selecting_a_reconnecting_machine_retries_it() {
             assert!(state
                 .visible_endpoint_notice
                 .as_ref()
-                .is_some_and(|notice| notice.body == "Build is not ready"));
+                .is_some_and(|notice| notice.body == "Build is not ready"
+                    || notice.body == crate::trf!("{label} is not ready", label = "Build")));
         }
     }
 }

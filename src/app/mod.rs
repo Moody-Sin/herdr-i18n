@@ -929,8 +929,10 @@ impl App {
                 != self.startup_per_agent_delay
         {
             diagnostics.push(
-                "session.startup_per_agent_delay_ms changes require restarting Herdr; kept current setting"
-                    .into(),
+                crate::tr!(
+                    "session.startup_per_agent_delay_ms changes require restarting Herdr; kept current setting"
+                )
+                .into(),
             );
         }
 
@@ -1852,7 +1854,9 @@ mod tests {
         assert_eq!(report.status, crate::config::ConfigReloadStatus::Partial);
         assert_eq!(app.startup_per_agent_delay, Duration::from_millis(100));
         assert_eq!(report.diagnostics, vec![
-            "session.startup_per_agent_delay_ms changes require restarting Herdr; kept current setting"
+            crate::tr!(
+                "session.startup_per_agent_delay_ms changes require restarting Herdr; kept current setting"
+            )
         ]);
 
         let report = app.apply_live_config(&config, &[], &["session".into()], false);

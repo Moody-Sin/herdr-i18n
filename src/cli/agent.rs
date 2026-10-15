@@ -95,7 +95,11 @@ fn agent_explain(params: bindings::Explain) -> std::io::Result<i32> {
                     id: "cli:agent:explain".into(),
                     error: ErrorBody {
                         code: "agent_explain_file_read_failed".into(),
-                        message: format!("failed to read agent explain file {path}: {err}"),
+                        message: crate::trf!(
+                            "failed to read agent explain file {path}: {err}",
+                            path = path,
+                            err = err
+                        ),
                     },
                 };
                 let response = serde_json::to_string(&response).map_err(std::io::Error::other)?;
@@ -333,7 +337,7 @@ fn agent_start(params: AgentStartParams) -> std::io::Result<i32> {
         return super::print_response(&cli_agent_error(
             "cli:agent:start",
             "agent_start_failed",
-            "agent start response did not include terminal_id",
+            crate::tr!("agent start response did not include terminal_id"),
         ));
     };
     if pinned_terminal_id
@@ -457,7 +461,10 @@ fn wait_for_named_agent(
                 Some("blocked") => Some(Err(cli_agent_error(
                     "cli:agent:start",
                     "agent_not_ready",
-                    format!("agent {name} is blocked during startup and is not ready for prompts"),
+                    crate::trf!(
+                        "agent {name} is blocked during startup and is not ready for prompts",
+                        name = name
+                    ),
                 ))),
                 Some("unknown")
                     if expected_kind == "codex"
@@ -473,7 +480,7 @@ fn wait_for_named_agent(
                     Some(Err(cli_agent_error(
                         "cli:agent:start",
                         "agent_start_failed",
-                        "agent process exited before becoming interactive",
+                        crate::tr!("agent process exited before becoming interactive"),
                     )))
                 }
                 _ => None,
@@ -546,7 +553,10 @@ fn agent_name_lost_error(request_id: &str, expected_name: &str) -> serde_json::V
     cli_agent_error(
         request_id,
         "agent_name_not_found",
-        format!("named agent {expected_name} no longer owns the target terminal"),
+        crate::trf!(
+            "named agent {expected_name} no longer owns the target terminal",
+            expected_name = expected_name
+        ),
     )
 }
 
@@ -572,7 +582,7 @@ fn agent_wait_timeout() -> serde_json::Value {
     cli_agent_error(
         "cli:agent:start",
         "timeout",
-        "timed out waiting for agent startup",
+        crate::tr!("timed out waiting for agent startup"),
     )
 }
 
