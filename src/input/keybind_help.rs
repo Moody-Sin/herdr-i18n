@@ -39,12 +39,14 @@ fn entry(key: impl Into<String>, label: &'static str) -> KeybindHelpEntry {
 }
 
 fn binding_label(bindings: &ActionKeybinds) -> String {
-    bindings.label().unwrap_or_else(|| "unset".to_owned())
+    bindings
+        .label()
+        .unwrap_or_else(|| crate::tr!("unset").to_owned())
 }
 
 fn indexed_label(bindings: &[IndexedKeybind]) -> String {
     if bindings.is_empty() {
-        return "unset".to_owned();
+        return crate::tr!("unset").to_owned();
     }
     let mut parts = Vec::new();
     let mut index = 0;

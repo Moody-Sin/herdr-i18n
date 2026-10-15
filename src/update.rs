@@ -17,6 +17,7 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 #[cfg(not(windows))]
 use std::time::{Duration, Instant};
+use unicode_width::UnicodeWidthStr;
 
 #[cfg(not(windows))]
 use interprocess::local_socket::traits::Stream as _;
@@ -1116,7 +1117,9 @@ pub(crate) fn parse_self_update_args(args: &[String]) -> Result<SelfUpdateOption
             "--help" | "-h" => {
                 return Err("usage: herdr update [--handoff]".to_string());
             }
-            _ => return Err(format!("unknown update option: {arg}")),
+            _ => {
+                return Err(crate::trf!("unknown update option: {arg}", arg = arg));
+            }
         }
     }
     Ok(options)
@@ -2315,7 +2318,7 @@ fn kept_server_notice_lines(kept: &[KeptServer<'_>], release_label: &str) -> Vec
         servers => {
             let width = servers
                 .iter()
-                .map(|server| server.label.chars().count())
+                .map(|server| server.label.width())
                 .max()
                 .unwrap_or(0);
             let mut lines = vec![
@@ -2325,9 +2328,13 @@ fn kept_server_notice_lines(kept: &[KeptServer<'_>], release_label: &str) -> Vec
                 format!("server fixes in v{release_label} apply only after each one restarts:"),
             ];
             lines.extend(servers.iter().map(|server| {
+                // Pad by terminal column width: `{:<width$}` counts chars, so a
+                // CJK label would be padded short and break the column.
+                let pad = width.saturating_sub(server.label.width());
                 format!(
-                    "  {:<width$}  v{}  `{}`, then {}",
+                    "  {}{}  v{}  `{}`, then {}",
                     server.label,
+                    " ".repeat(pad),
                     server.version,
                     server.stop_command,
                     server.reconnect()
@@ -3021,7 +3028,7 @@ mod tests {
         );
         assert_eq!(
             parse_self_update_args(&["--unknown".to_string()]).unwrap_err(),
-            "unknown update option: --unknown"
+            crate::trf!("unknown update option: {arg}", arg = "--unknown")
         );
     }
 

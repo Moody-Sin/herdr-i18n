@@ -257,7 +257,12 @@ impl App {
         if !cwd.is_dir() {
             if let Some(terminal) = self.state.terminals.get_mut(&terminal_id) {
                 terminal.pending_agent_resume_plan = None;
-                terminal.restore_error = Some("Saved directory is unavailable. Restore the directory and restart this session.".into());
+                terminal.restore_error = Some(
+                    crate::tr!(
+                        "Saved directory is unavailable. Restore the directory and restart this session."
+                    )
+                    .into(),
+                );
                 terminal.revision = terminal.revision.saturating_add(1);
             }
             return true;
@@ -288,7 +293,10 @@ impl App {
                 );
                 if let Some(terminal) = self.state.terminals.get_mut(&terminal_id) {
                     terminal.pending_agent_resume_plan = None;
-                    terminal.restore_error = Some(format!("Could not start the saved shell: {err}. Fix the shell configuration and restart this session."));
+                    terminal.restore_error = Some(crate::trf!(
+                        "Could not start the saved shell: {err}. Fix the shell configuration and restart this session.",
+                        err = err
+                    ));
                     terminal.revision = terminal.revision.saturating_add(1);
                 }
                 return true;

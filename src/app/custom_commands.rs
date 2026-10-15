@@ -351,8 +351,11 @@ impl App {
         if let Some(public_pane_id) = self.public_pane_id(ws_idx, pane_id) {
             self.state.toast = Some(crate::app::state::ToastNotification {
                 kind: crate::app::state::ToastKind::Finished,
-                title: "opened scrollback".to_string(),
-                context: format!("focused pane {public_pane_id}"),
+                title: crate::tr!("opened scrollback").to_string(),
+                context: crate::trf!(
+                    "focused pane {public_pane_id}",
+                    public_pane_id = public_pane_id
+                ),
                 position: None,
                 target: None,
             });

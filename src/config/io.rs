@@ -217,29 +217,32 @@ pub fn config_diagnostic_summary(diagnostics: &[String]) -> Option<String> {
         .any(|diagnostic| diagnostic.contains("using defaults"))
     {
         if read_error {
-            " unreadable; using defaults"
+            crate::tr!(" unreadable; using defaults")
         } else {
-            " invalid; using defaults"
+            crate::tr!(" invalid; using defaults")
         }
     } else if diagnostics
         .iter()
         .any(|diagnostic| diagnostic.contains("keeping current config"))
     {
         if read_error {
-            " unreadable; keeping current config"
+            crate::tr!(" unreadable; keeping current config")
         } else {
-            " invalid; keeping current config"
+            crate::tr!(" invalid; keeping current config")
         }
     } else if diagnostics
         .iter()
         .all(|diagnostic| diagnostic.starts_with("unknown config key "))
     {
-        " has unknown keys"
+        crate::tr!(" has unknown keys")
     } else {
         ""
     };
 
-    Some(format!("{target}{impact}; herdr config check"))
+    Some(format!(
+        "{target}{impact}{}",
+        crate::tr!("; herdr config check")
+    ))
 }
 
 pub fn load_live_config() -> Result<LoadedConfig, Vec<String>> {
@@ -786,9 +789,10 @@ mod tests {
             "five".to_string(),
         ];
 
+        let expected = format!("config.toml{}", crate::tr!("; herdr config check"));
         assert_eq!(
             config_diagnostic_summary(&diagnostics).as_deref(),
-            Some("config.toml; herdr config check")
+            Some(expected.as_str())
         );
     }
 
@@ -799,9 +803,14 @@ mod tests {
             "unknown config key keys.new_tabb; ignoring key".to_string(),
         ];
 
+        let expected = format!(
+            "config.toml{}{}",
+            crate::tr!(" has unknown keys"),
+            crate::tr!("; herdr config check")
+        );
         assert_eq!(
             config_diagnostic_summary(&diagnostics).as_deref(),
-            Some("config.toml has unknown keys; herdr config check")
+            Some(expected.as_str())
         );
     }
 
@@ -812,9 +821,10 @@ mod tests {
             "unknown config key keys.new_tabb; ignoring key".to_string(),
         ];
 
+        let expected = format!("config.toml{}", crate::tr!("; herdr config check"));
         assert_eq!(
             config_diagnostic_summary(&diagnostics).as_deref(),
-            Some("config.toml; herdr config check")
+            Some(expected.as_str())
         );
     }
 
@@ -825,25 +835,40 @@ mod tests {
                 .to_string(),
         ];
 
+        let expected = format!(
+            "config.toml{}{}",
+            crate::tr!(" invalid; using defaults"),
+            crate::tr!("; herdr config check")
+        );
         assert_eq!(
             config_diagnostic_summary(&diagnostics).as_deref(),
-            Some("config.toml invalid; using defaults; herdr config check")
+            Some(expected.as_str())
         );
     }
 
     #[test]
     fn config_diagnostic_summary_reports_unreadable_config_impact() {
         let startup = vec!["config read error: permission denied; using defaults".to_string()];
+        let expected = format!(
+            "config.toml{}{}",
+            crate::tr!(" unreadable; using defaults"),
+            crate::tr!("; herdr config check")
+        );
         assert_eq!(
             config_diagnostic_summary(&startup).as_deref(),
-            Some("config.toml unreadable; using defaults; herdr config check")
+            Some(expected.as_str())
         );
 
         let reload =
             vec!["config read error: permission denied; keeping current config".to_string()];
+        let expected = format!(
+            "config.toml{}{}",
+            crate::tr!(" unreadable; keeping current config"),
+            crate::tr!("; herdr config check")
+        );
         assert_eq!(
             config_diagnostic_summary(&reload).as_deref(),
-            Some("config.toml unreadable; keeping current config; herdr config check")
+            Some(expected.as_str())
         );
     }
 
@@ -854,9 +879,14 @@ mod tests {
                 .to_string(),
         ];
 
+        let expected = format!(
+            "config.toml{}{}",
+            crate::tr!(" invalid; keeping current config"),
+            crate::tr!("; herdr config check")
+        );
         assert_eq!(
             config_diagnostic_summary(&diagnostics).as_deref(),
-            Some("config.toml invalid; keeping current config; herdr config check")
+            Some(expected.as_str())
         );
     }
 

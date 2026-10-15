@@ -1031,8 +1031,8 @@ impl App {
             if notify_success {
                 self.state.toast = Some(crate::app::state::ToastNotification {
                     kind: crate::app::state::ToastKind::UpdateInstalled,
-                    title: "reloaded config".to_string(),
-                    context: "using config.toml".to_string(),
+                    title: crate::tr!("reloaded config").to_string(),
+                    context: crate::tr!("using config.toml").to_string(),
                     position: None,
                     target: None,
                 });
@@ -1043,8 +1043,8 @@ impl App {
             if notify_success {
                 self.state.toast = Some(crate::app::state::ToastNotification {
                     kind: crate::app::state::ToastKind::UpdateInstalled,
-                    title: "reloaded config".to_string(),
-                    context: "with warnings".to_string(),
+                    title: crate::tr!("reloaded config").to_string(),
+                    context: crate::tr!("with warnings").to_string(),
                     position: None,
                     target: None,
                 });
@@ -1806,8 +1806,8 @@ mod tests {
         assert!(app.state.config_diagnostic.is_none());
         let toast = app.state.toast.as_ref().unwrap();
         assert_eq!(toast.kind, crate::app::state::ToastKind::UpdateInstalled);
-        assert_eq!(toast.title, "reloaded config");
-        assert_eq!(toast.context, "using config.toml");
+        assert_eq!(toast.title, crate::tr!("reloaded config"));
+        assert_eq!(toast.context, crate::tr!("using config.toml"));
 
         std::env::remove_var(crate::config::CONFIG_PATH_ENV_VAR);
         let _ = std::fs::remove_dir_all(path.parent().unwrap());
@@ -2009,9 +2009,10 @@ mod tests {
             app.state.pane_borders, original_pane_borders,
             "[ui] is treated as invalid on bad bounds; pane_borders must not apply"
         );
+        let expected = format!("config.toml{}", crate::tr!("; herdr config check"));
         assert_eq!(
             app.state.config_diagnostic.as_deref(),
-            Some("config.toml; herdr config check")
+            Some(expected.as_str())
         );
 
         std::env::remove_var(crate::config::CONFIG_PATH_ENV_VAR);
@@ -2071,9 +2072,14 @@ mod tests {
             vec!["unknown config key ui.mouse_captur; ignoring key"]
         );
         assert_eq!(app.state.pane_borders, target_pane_borders);
+        let expected = format!(
+            "config.toml{}{}",
+            crate::tr!(" has unknown keys"),
+            crate::tr!("; herdr config check")
+        );
         assert_eq!(
             app.state.config_diagnostic.as_deref(),
-            Some("config.toml has unknown keys; herdr config check")
+            Some(expected.as_str())
         );
 
         std::env::remove_var(crate::config::CONFIG_PATH_ENV_VAR);
@@ -2202,7 +2208,12 @@ mod tests {
             .config_diagnostic
             .as_deref()
             .is_some_and(|message| {
-                message == "config.toml invalid; keeping current config; herdr config check"
+                let expected = format!(
+                    "config.toml{}{}",
+                    crate::tr!(" invalid; keeping current config"),
+                    crate::tr!("; herdr config check")
+                );
+                message == expected
             }));
         assert!(app.state.toast.is_none());
 

@@ -950,7 +950,7 @@ fn render_navigator_overlay(
                     rect.right() - columns + 1,
                     rect.y,
                     11,
-                    r.agent.as_deref().unwrap_or("terminal"),
+                    r.agent.as_deref().unwrap_or(crate::tr!("terminal")),
                     meta_style,
                 );
             }
@@ -1103,7 +1103,11 @@ fn help_lines(
             )),
         ));
         for (key, label) in entries {
-            let padded_key = format!(" {key:<key_width$} ");
+            // Pad by terminal column width, not `char` count: Rust's `{:<width$}`
+            // counts chars, so a CJK key (1 char, 2 columns) would otherwise be
+            // padded short and break the column alignment.
+            let pad = key_width.saturating_sub(usize::from(display_width(key.as_str())));
+            let padded_key = format!(" {key}{} ", " ".repeat(pad));
             let label = label.into_owned();
             let width =
                 usize::from(display_width(&padded_key)) + usize::from(display_width(&label));
@@ -1329,4 +1333,37 @@ fn render_confirm_close_overlay(
         cursor: None,
         ..OverlayRender::default()
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// `help_lines` pads each key to the widest key's *terminal column* width.
+    /// Rust's `{:<width$}` counts `char`s, so a CJK key (1 char, 2 columns) used
+    /// to be padded short and pushed its whole column out of alignment.
+    ///
+    /// This covers the padding rule itself, with an explicit CJK key, because
+    /// every other key in the real help table is ASCII.
+    #[test]
+    fn help_lines_pad_keys_to_the_widest_key_column_width() {
+        fn width(text: &str) -> usize {
+            usize::from(display_width(text))
+        }
+
+        fn padded(key: &str, key_width: usize) -> String {
+            let pad = key_width.saturating_sub(width(key));
+            format!(" {key}{} ", " ".repeat(pad))
+        }
+
+        // "未设置" is 3 chars but 6 terminal columns.
+        let key_width = 8;
+        assert_eq!(width("未设置"), 6);
+        assert_eq!(width(&padded("unset", key_width)), key_width + 2);
+        assert_eq!(width(&padded("未设置", key_width)), key_width + 2);
+        assert_eq!(width(&padded("", key_width)), key_width + 2);
+
+        // A key wider than the column is not truncated or padded negatively.
+        assert_eq!(width(&padded("very-long-key", 4)), 15);
+    }
 }

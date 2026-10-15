@@ -1442,7 +1442,7 @@ impl AppState {
                         .join(", ");
                     self.toast = Some(ToastNotification {
                         kind: ToastKind::UpdateInstalled,
-                        title: "Agent detection rules updated".to_string(),
+                        title: crate::tr!("Agent detection rules updated").to_string(),
                         context: agent_list,
                         position: None,
                         target: None,
@@ -4353,7 +4353,7 @@ mod tests {
         );
         let toast = state.toast.as_ref().expect("manifest update toast");
         assert_eq!(toast.kind, ToastKind::UpdateInstalled);
-        assert_eq!(toast.title, "Agent detection rules updated");
+        assert_eq!(toast.title, crate::tr!("Agent detection rules updated"));
         assert_eq!(toast.context, "codex 2026.06.10.1");
     }
 

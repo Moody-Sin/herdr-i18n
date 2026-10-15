@@ -545,7 +545,11 @@ pub(super) fn render_expanded(
             buffer,
             workspace_area,
             footer_y,
-            if attention { "● menu" } else { "menu" },
+            if attention {
+                crate::tr!("● menu")
+            } else {
+                crate::tr!("menu")
+            },
             Style::default().fg(if attention {
                 palette.accent
             } else {
@@ -606,9 +610,9 @@ fn render_endpoint_row(
         state
     };
     let signal = if auth.required_for(endpoint) {
-        "! auth".to_owned()
+        crate::tr!("! auth").to_owned()
     } else if endpoint.status == ClientEndpointStatus::Attention {
-        "! error".to_owned()
+        crate::tr!("! error").to_owned()
     } else if endpoint.endpoint_id.is_local() {
         String::new()
     } else if state.is_empty() {
