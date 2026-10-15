@@ -1,7 +1,7 @@
 id = "qwen"
-version = "2026.08.14.1"
+version = "2026.10.16.1"
 min_engine_version = 2
-updated_at = "2026-08-14T00:00:00Z"
+updated_at = "2026-10-16T00:00:00Z"
 aliases = ["qwen-code", "qwen code"]
 
 # Qwen Code keeps its composer visible while responding, so the prompt box is
