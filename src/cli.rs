@@ -1175,10 +1175,8 @@ mod tests {
 
     #[test]
     fn parse_env_assignment_requires_key_value_separator() {
-        assert_eq!(
-            super::parse_env_assignment("HERDR_ROLE").unwrap_err(),
-            "env must use KEY=VALUE"
-        );
+        let err = super::parse_env_assignment("HERDR_ROLE").unwrap_err();
+        assert!(err == "env must use KEY=VALUE" || err == crate::tr!("env must use KEY=VALUE"));
     }
 
     #[test]

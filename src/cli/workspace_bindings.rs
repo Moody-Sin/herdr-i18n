@@ -311,7 +311,7 @@ mod tests {
             })
         );
         assert!(
-            matches!(request("report-metadata", &["id", "--source", "valid", "--seq", "bad"]), Err(ParseError::Io(error)) if error.to_string() == "invalid value for --seq: bad")
+            matches!(request("report-metadata", &["id", "--source", "valid", "--seq", "bad"]), Err(ParseError::Io(error)) if error.to_string() == "invalid value for --seq: bad" || error.to_string() == crate::trf!("invalid value for {flag}: {value}", flag = "--seq", value = "bad"))
         );
         assert!(
             matches!(request("report-metadata", &["id", "--source", " "]), Err(ParseError::Usage(message)) if message == "missing required --source" || message == crate::tr!("missing required --source"))
@@ -348,7 +348,7 @@ mod tests {
             matches!(request("get", &["id", "--help"]), Err(ParseError::Clap(error)) if error.kind() == clap::error::ErrorKind::DisplayHelp && error.exit_code() == 0)
         );
         assert!(
-            matches!(request("create", &["--env", "=value"]), Err(ParseError::Usage(message)) if message == "env key must not be empty")
+            matches!(request("create", &["--env", "=value"]), Err(ParseError::Usage(message)) if message == "env key must not be empty" || message == crate::tr!("env key must not be empty"))
         );
     }
 }
