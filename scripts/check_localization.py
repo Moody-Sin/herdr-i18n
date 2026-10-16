@@ -197,12 +197,20 @@ def load_catalog() -> dict[str, str]:
 
 
 def load_allowlist() -> set[str]:
+    """Literals exempt from the untranslated-text scan.
+
+    Lines are kept verbatim apart from the trailing newline. Stripping them
+    would make an entry that legitimately carries leading or trailing spaces
+    unmatchable, which is exactly the shape of the notification-title markers
+    (`" needs attention"`, `"Herdr v"`) that a `strip_suffix`/`strip_prefix`
+    call must compare against verbatim. A `#` comment marker is still honored
+    when it is the first non-space character of the line.
+    """
     if not UNTRANSLATED_CLI_ALLOWLIST.exists():
         return set()
     entries: set[str] = set()
     for line in UNTRANSLATED_CLI_ALLOWLIST.read_text(encoding="utf-8").splitlines():
-        line = line.strip()
-        if not line or line.startswith("#"):
+        if not line or line.lstrip().startswith("#"):
             continue
         entries.add(line)
     return entries
@@ -333,12 +341,38 @@ def test_regions(source: str) -> list[tuple[int, int]]:
     ]
 
 
-def check_untranslated_cli(catalog: dict[str, str], errors: list[str]) -> None:
-    allowlist = load_allowlist()
-    cli_files = [SRC / "cli.rs"] + sorted((SRC / "cli").rglob("*.rs"))
-    for path in cli_files:
+def scanned_sources():
+    """Every Rust file whose user-visible text must be localized.
+
+    The scan started as CLI-only and is widened in stages, because the TUI
+    renders most of its text outside `src/cli/` and a gap there is invisible to
+    every other check: a bare literal compiles, ships, and reaches the screen in
+    English while the catalog already holds the translation.
+
+    `src/update.rs` is deliberately absent. Most of its literals are internal
+    error strings for the download/install path, which a localized build refuses
+    before reaching (`i18n::LOCALIZED_BUILD` short-circuits `self_update`), plus
+    test fixtures. Only its user-reachable instruction text is localized, and
+    that is covered by the catalog-key scan.
+
+    Files under a `tests` directory are excluded, as are `*_tests.rs`; their
+    literals are fixtures and assertions rather than interface text.
+    """
+    files = [
+        SRC / "cli.rs",
+        *sorted((SRC / "cli").rglob("*.rs")),
+        *sorted((SRC / "client" / "shell").rglob("*.rs")),
+        *sorted((SRC / "ui").rglob("*.rs")),
+    ]
+    for path in files:
         if "tests" in path.parts or path.name.endswith("_tests.rs"):
             continue
+        yield path
+
+
+def check_untranslated_cli(catalog: dict[str, str], errors: list[str]) -> None:
+    allowlist = load_allowlist()
+    for path in scanned_sources():
         relative = path.relative_to(ROOT)
         source = path.read_text(encoding="utf-8")
         localized = literal_spans(source)

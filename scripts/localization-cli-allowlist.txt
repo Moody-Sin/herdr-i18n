@@ -4,10 +4,10 @@
 # This file is for strings that are *not user-visible interface text* but still
 # look like prose to the checker's heuristic. Two categories belong here:
 #
-#   1. Internal invariant assertions. `unreachable!("...")` and
-#      `expect("...")` messages describe a bug in Herdr itself. They are read by
-#      a developer in a panic report, not by a user, and translating them would
-#      make bug reports harder to search.
+#   1. Internal invariant assertions. `unreachable!("...")`, `debug_assert!`
+#      and `expect("...")` messages describe a bug in Herdr itself. They are read
+#      by a developer in a panic report, not by a user, and translating them
+#      would make bug reports harder to search.
 #
 #   2. Machine-readable values. A literal that is matched, compared, or written
 #      into structured output (JSON keys, protocol codes, status tokens) must
@@ -21,6 +21,15 @@
 
 subcommand checked immediately before mutable lookup
 validated machine add option
+cancellation must not start another action
+handled above
+relative agent action
+checked visible notification
+onboarding setting
+endpoint workspace navigation
+endpoint agent navigation
+ needs attention
+Herdr v
 
 
 
