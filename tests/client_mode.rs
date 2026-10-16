@@ -783,11 +783,13 @@ fn sigwinch_refreshes_host_palette_without_resizing() {
             wait_until(Duration::from_secs(5), Duration::from_millis(25), || {
                 let captured = read_output(&output);
                 let refreshed = &captured[watermark..];
-                if running_inside_wsl() {
-                    refreshed.contains(queries)
-                } else {
-                    refreshed.contains(queries) && refreshed.contains("\x1b]4;15;?\x1b\\")
-                }
+                // WSL's console host does not answer the ANSI palette query
+                // (`OSC 4 ; 15 ; ?`), so only the default-color query is
+                // observable there. The size-unchanged assertion below still
+                // runs on every platform, and the palette query is still
+                // required everywhere it is answerable.
+                refreshed.contains(queries)
+                    && (running_inside_wsl() || refreshed.contains("\x1b]4;15;?\x1b\\"))
             }),
             "SIGWINCH should query default colors and the ANSI palette without changing PTY size"
         );

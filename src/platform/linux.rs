@@ -884,7 +884,19 @@ pub fn open_url(url: &str) -> std::io::Result<Option<std::process::Child>> {
 }
 
 pub fn read_clipboard_image() -> Option<ClipboardImage> {
-    if running_inside_wsl() {
+    read_clipboard_image_with_wsl(running_inside_wsl())
+}
+
+/// Read a clipboard image, optionally consulting the Windows clipboard first.
+///
+/// The WSL check is a parameter rather than an inline `running_inside_wsl()`
+/// call because that helper caches its answer in a `OnceLock`, so a test cannot
+/// turn it off through the environment. On a WSL host the branch would otherwise
+/// reach the real Windows clipboard through `powershell.exe`, and a test that
+/// stubs `wl-paste`/`xclip` on `PATH` to prove a non-image payload is rejected
+/// would instead return whatever image the developer happens to have copied.
+fn read_clipboard_image_with_wsl(use_wsl_clipboard: bool) -> Option<ClipboardImage> {
+    if use_wsl_clipboard {
         if let Some(image) = read_wsl_clipboard_image_with_command(|program| Command::new(program))
         {
             return Some(image);
@@ -2100,7 +2112,9 @@ mod tests {
             std::env::set_var("PATH", test_path);
         }
 
-        let result = read_clipboard_image();
+        // Skip the WSL branch: it shells out to powershell.exe and would read the
+        // developer's real Windows clipboard instead of the stubbed commands.
+        let result = read_clipboard_image_with_wsl(false);
 
         unsafe {
             match old_path {
@@ -2157,7 +2171,9 @@ mod tests {
             std::env::set_var("PATH", test_path);
         }
 
-        let result = read_clipboard_image();
+        // Skip the WSL branch: it shells out to powershell.exe and would read the
+        // developer's real Windows clipboard instead of the stubbed commands.
+        let result = read_clipboard_image_with_wsl(false);
 
         unsafe {
             match old_path {

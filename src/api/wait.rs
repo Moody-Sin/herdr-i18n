@@ -80,11 +80,9 @@ pub(super) fn wait_for_output(
         if value.get("error").is_some() {
             let mut value = value;
             value["id"] = serde_json::Value::String(request_id.clone());
-            return Ok(Some(
-                serde_json::to_string(&value).unwrap_or_else(|_| {
-                    "{\"error\":{\"code\":\"serialization_failed\",\"message\":\"failed to serialize error\"}}".into()
-                }),
-            ));
+            return Ok(Some(serde_json::to_string(&value).unwrap_or_else(|_| {
+                degraded_error_response(&request_id, "failed to serialize error")
+            })));
         }
 
         let read_value = value["result"]["read"].clone();
@@ -92,14 +90,14 @@ pub(super) fn wait_for_output(
         else {
             return Ok(Some(
                 serde_json::to_string(&ErrorResponse {
-                    id: request_id,
+                    id: request_id.clone(),
                     error: ErrorBody {
                         code: "internal_error".into(),
                         message: "failed to decode pane read result".into(),
                     },
                 })
                 .unwrap_or_else(|_| {
-                    "{\"error\":{\"code\":\"serialization_failed\",\"message\":\"failed to serialize internal error\"}}".into()
+                    degraded_error_response(&request_id, "failed to serialize internal error")
                 }),
             ));
         };
@@ -110,7 +108,7 @@ pub(super) fn wait_for_output(
             crate::logging::api_wait_completed(&request_id, &params.pane_id, "matched");
             return Ok(Some(
                 serde_json::to_string(&SuccessResponse {
-                    id: request_id,
+                    id: request_id.clone(),
                     result: ResponseResult::OutputMatched {
                         pane_id: read.pane_id.clone(),
                         revision,
@@ -119,7 +117,7 @@ pub(super) fn wait_for_output(
                     },
                 })
                 .unwrap_or_else(|_| {
-                    "{\"error\":{\"code\":\"serialization_failed\",\"message\":\"failed to serialize success response\"}}".into()
+                    degraded_error_response(&request_id, "failed to serialize success response")
                 }),
             ));
         }
@@ -864,11 +862,21 @@ fn wait_matched_response(request_id: &str, event: serde_json::Value) -> String {
         },
     })
     .unwrap_or_else(|_| {
-        format!(
-            "{{\"id\":{id:?},\"error\":{{\"code\":\"serialization_failed\",\"message\":\"failed to serialize wait matched response\"}}}}",
-            id = request_id
-        )
+        degraded_error_response(request_id, "failed to serialize wait matched response")
     })
+}
+
+/// Fallback body for a response whose serialization failed.
+///
+/// The `id` field is mandatory on every response and is how a client matches a
+/// reply to its request, so a degraded response must still carry it. Dropping it
+/// here made an already-broken response impossible to correlate, and left these
+/// branches inconsistent with the errors that serialize normally.
+fn degraded_error_response(request_id: &str, message: &str) -> String {
+    format!(
+        "{{\"id\":{id:?},\"error\":{{\"code\":\"serialization_failed\",\"message\":{message:?}}}}}",
+        id = request_id,
+    )
 }
 
 #[cfg(test)]
