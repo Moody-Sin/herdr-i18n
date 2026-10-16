@@ -78,9 +78,9 @@
 确保本地已安装 Rust（stable）以及 Zig 0.16.0（用于编译 vendored libghostty-vt）：
 
 ```bash
-git clone https://github.com/herdrdev/herdr.git herdr-i18n
+git clone https://github.com/Moody-Sin/herdr-i18n.git
 cd herdr-i18n
-git checkout zh-CN
+git switch zh-CN
 cargo build --release
 ```
 

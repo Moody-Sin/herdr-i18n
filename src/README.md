@@ -26,7 +26,7 @@
 2. **渲染纯粹性 (Render is pure)**：
    `compute_view()` 负责几何计算与布局计算，而 `render()` 只接收不可变引用 `&AppState` 进行屏幕绘制。严禁在渲染流程中修改状态。
 3. **消除上帝对象 (No god objects)**：
-   业务逻辑严格拆分。例如 `app/` 目录下按状态 (`state.rs`)、输入 (`input.rs`)、创建动作 (`creation.rs`) 等独立模块解耦组织。
+   业务逻辑严格拆分。例如 `app/` 目录下按状态 (`state.rs`)、创建动作 (`creation.rs`)、运行时 (`runtime.rs`)、动作处理 (`actions.rs`) 等独立模块解耦组织；终端输入解析独立在 `input/` 目录。
 4. **平台代码严格隔离 (Platform code is isolated)**：
    所有操作系统特定实现统一收敛在 `src/platform/<os>.rs`（如 `linux.rs`, `macos.rs`, `windows.rs`），公共特征与协议收敛在 `src/platform/mod.rs`。核心业务逻辑严禁直接散落 `#[cfg(target_os)]`。
 5. **探测机制无感解耦 (Detection is decoupled)**：
