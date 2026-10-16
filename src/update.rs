@@ -17,6 +17,9 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 #[cfg(not(windows))]
 use std::time::{Duration, Instant};
+// Only the non-Windows kept-server notice pads a column by display width, so the
+// trait is unused on Windows and would fail the Windows lint as an unused import.
+#[cfg(not(windows))]
 use unicode_width::UnicodeWidthStr;
 
 #[cfg(not(windows))]
@@ -1896,20 +1899,27 @@ pub(crate) fn update_install_command() -> &'static str {
     }
 }
 
+/// The instruction a user needs to reconnect after updating.
+///
+/// Every branch goes through the catalog: they all reach the user as a toast
+/// context, a system notification body, or the release-notes preview. Returning
+/// a bare literal here silently kept those surfaces English even though the
+/// catalog already carried the translations.
 pub(crate) fn update_install_instruction(install_command: &str) -> String {
     match install_command {
         HERDR_UPDATE_COMMAND => {
-            "detach, run `herdr update`, then run Herdr again to reconnect".to_string()
+            crate::tr!("detach, run `herdr update`, then run Herdr again to reconnect").to_string()
         }
-        HOMEBREW_UPDATE_COMMAND => {
+        HOMEBREW_UPDATE_COMMAND => crate::tr!(
             "detach, run `brew update && brew upgrade herdr`, then run Herdr again to reconnect"
+        )
+        .to_string(),
+        MISE_UPDATE_COMMAND => {
+            crate::tr!("detach, run `mise upgrade herdr`, then run Herdr again to reconnect")
                 .to_string()
         }
-        MISE_UPDATE_COMMAND => {
-            "detach, run `mise upgrade herdr`, then run Herdr again to reconnect".to_string()
-        }
         NIX_UPDATE_COMMAND => {
-            "detach, update through Nix, then run Herdr again to reconnect".to_string()
+            crate::tr!("detach, update through Nix, then run Herdr again to reconnect").to_string()
         }
         command => crate::trf!(
             "detach, run `{command}`, then run Herdr again to reconnect",
@@ -1953,11 +1963,17 @@ pub(crate) fn preview_channel_rejection_for_current_install() -> Option<&'static
 pub(crate) fn package_manager_channel_update_guidance_for_current_install() -> Option<&'static str>
 {
     if is_homebrew_managed_install() {
-        Some("Use `brew update && brew upgrade herdr` to update Homebrew installs.")
+        Some(crate::tr!(
+            "Use `brew update && brew upgrade herdr` to update Homebrew installs."
+        ))
     } else if is_mise_managed_install() {
-        Some("Use `mise upgrade herdr` to update mise installs.")
+        Some(crate::tr!(
+            "Use `mise upgrade herdr` to update mise installs."
+        ))
     } else if is_nix_managed_install() {
-        Some("Update through Nix to update Nix-managed Herdr installs.")
+        Some(crate::tr!(
+            "Update through Nix to update Nix-managed Herdr installs."
+        ))
     } else {
         None
     }
@@ -1965,15 +1981,17 @@ pub(crate) fn package_manager_channel_update_guidance_for_current_install() -> O
 
 fn preview_channel_rejection_for_exe_path(path: &Path) -> Option<&'static str> {
     if is_homebrew_managed_exe_path_following_links(path) {
-        Some(
-            "preview channel is only available for direct Herdr installs; Homebrew installs update through `brew update && brew upgrade herdr`",
-        )
+        Some(crate::tr!(
+            "preview channel is only available for direct Herdr installs; Homebrew installs update through `brew update && brew upgrade herdr`"
+        ))
     } else if is_mise_managed_exe_path_following_links(path) {
-        Some(
-            "preview channel is only available for direct Herdr installs; mise installs update through `mise upgrade herdr`",
-        )
+        Some(crate::tr!(
+            "preview channel is only available for direct Herdr installs; mise installs update through `mise upgrade herdr`"
+        ))
     } else if is_nix_store_exe_path_following_links(path) {
-        Some("preview channel is only available for direct Herdr installs; Nix installs update through Nix")
+        Some(crate::tr!(
+            "preview channel is only available for direct Herdr installs; Nix installs update through Nix"
+        ))
     } else {
         None
     }
@@ -2970,17 +2988,21 @@ mod tests {
 
     #[test]
     fn update_install_instruction_distinguishes_install_from_restart() {
+        // Compare against the catalog entry rather than a frozen English
+        // string: the point of this test is that each install kind gets its own
+        // instruction, and that holds in either language. Asserting the English
+        // literal would fail as soon as the catalog is applied.
         assert_eq!(
             update_install_instruction(HERDR_UPDATE_COMMAND),
-            "detach, run `herdr update`, then run Herdr again to reconnect"
+            crate::tr!("detach, run `herdr update`, then run Herdr again to reconnect")
         );
         assert_eq!(
             update_install_instruction(HOMEBREW_UPDATE_COMMAND),
-            "detach, run `brew update && brew upgrade herdr`, then run Herdr again to reconnect"
+            crate::tr!("detach, run `brew update && brew upgrade herdr`, then run Herdr again to reconnect")
         );
         assert_eq!(
             update_install_instruction(MISE_UPDATE_COMMAND),
-            "detach, run `mise upgrade herdr`, then run Herdr again to reconnect"
+            crate::tr!("detach, run `mise upgrade herdr`, then run Herdr again to reconnect")
         );
     }
 

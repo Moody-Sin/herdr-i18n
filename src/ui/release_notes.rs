@@ -151,9 +151,7 @@ fn release_notes_preview_line_entries<'a>(
         .fg(p.accent)
         .bg(p.surface0)
         .add_modifier(Modifier::BOLD);
-    let instruction =
-        crate::i18n::text_ref(&crate::update::update_install_instruction(install_command))
-            .into_owned();
+    let instruction = crate::update::update_install_instruction(install_command);
     let (instruction_width, mut instruction_spans) =
         release_notes_inline_spans(&instruction, text_style, inline_code_style);
     instruction_spans.insert(0, Span::raw(" "));

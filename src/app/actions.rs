@@ -1410,7 +1410,7 @@ impl AppState {
                 ) {
                     self.toast = Some(ToastNotification {
                         kind: ToastKind::UpdateInstalled,
-                        title: format!("v{version} available"),
+                        title: crate::trf!("Herdr v{version} available", version = version),
                         context: crate::update::update_install_instruction(&install_command),
                         position: None,
                         target: None,
@@ -4299,10 +4299,13 @@ mod tests {
         assert!(state.update_dismissed);
         let toast = state.toast.as_ref().expect("update toast");
         assert_eq!(toast.kind, ToastKind::UpdateInstalled);
-        assert_eq!(toast.title, "v0.5.0 available");
+        assert_eq!(
+            toast.title,
+            crate::trf!("Herdr v{version} available", version = "0.5.0")
+        );
         assert_eq!(
             toast.context,
-            "detach, run `herdr update`, then run Herdr again to reconnect"
+            crate::tr!("detach, run `herdr update`, then run Herdr again to reconnect")
         );
     }
 
@@ -4323,7 +4326,7 @@ mod tests {
         let toast = state.toast.as_ref().expect("update toast");
         assert_eq!(
             toast.context,
-            "detach, run `brew update && brew upgrade herdr`, then run Herdr again to reconnect"
+            crate::tr!("detach, run `brew update && brew upgrade herdr`, then run Herdr again to reconnect")
         );
     }
 

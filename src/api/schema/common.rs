@@ -169,7 +169,7 @@ mod notification_cli {
     pub(super) fn position() -> Field<Option<ToastHerdrPosition>> {
         Field::new(None).input(Input::value("position", "POSITION", |slot, value| {
             *slot = Some(POSITIONS.iter().find(|(name, _)| *name == value).map(|(_, value)| *value)
-                .ok_or_else(|| ParseError::Usage(format!("invalid position: {value} (expected top-left, top-right, bottom-left, or bottom-right)")))?);
+                .ok_or_else(|| ParseError::Usage(crate::trf!("invalid position: {value} (expected top-left, top-right, bottom-left, or bottom-right)", value = value)))?);
             Ok(())
         }).configure(|arg| arg.value_parser(clap::builder::PossibleValuesParser::new(POSITIONS.iter().map(|(name, _)| *name)))).order(1))
     }
@@ -182,8 +182,9 @@ mod notification_cli {
                     .find(|(name, _)| *name == value)
                     .map(|(_, value)| *value)
                     .ok_or_else(|| {
-                        ParseError::Usage(format!(
-                            "invalid sound: {value} (expected none, done, or request)"
+                        ParseError::Usage(crate::trf!(
+                            "invalid sound: {value} (expected none, done, or request)",
+                            value = value
                         ))
                     })?;
                 Ok(())

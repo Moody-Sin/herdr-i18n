@@ -1758,7 +1758,7 @@ impl App {
             return encode_error(
                 id,
                 "invalid_metadata_request",
-                "cannot set and clear the same metadata field",
+                crate::tr!("cannot set and clear the same metadata field"),
             );
         }
         if title.is_none()

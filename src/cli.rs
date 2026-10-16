@@ -253,6 +253,19 @@ fn channel_set(args: &[String]) -> std::io::Result<i32> {
     }
 
     crate::platform::end_cli_output();
+    // A localized build refuses self-update by design, so the channel change
+    // itself succeeded and there is nothing to retry. Report that plainly
+    // instead of wrapping the refusal as a failure, which would suggest the
+    // command did not work.
+    if crate::i18n::LOCALIZED_BUILD {
+        eprintln!(
+            "{}",
+            crate::tr!(
+                "self-update is disabled for this local Chinese build; sync upstream and rebuild"
+            )
+        );
+        return Ok(0);
+    }
     if let Err(err) = crate::update::self_update(crate::update::SelfUpdateOptions::default()) {
         eprintln!("{}", crate::trf!("update failed: {err}", err = err));
         eprintln!("{}", crate::tr!("Run `herdr update` to retry."));

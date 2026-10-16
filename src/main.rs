@@ -604,7 +604,11 @@ fn main() -> io::Result<()> {
         match update::self_update(options) {
             Ok(_) => return Ok(()),
             Err(e) => {
-                if e.starts_with("self-update is disabled") {
+                // A localized build refuses self-update by design; that refusal is
+                // reported as-is rather than wrapped as a failure. Branch on the
+                // build flag instead of matching the message text, because the
+                // message is translated at runtime and no English prefix survives.
+                if crate::i18n::LOCALIZED_BUILD {
                     eprintln!("{e}");
                 } else {
                     eprintln!("{}", crate::trf!("update failed: {error}", error = e));

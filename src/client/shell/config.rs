@@ -327,17 +327,23 @@ impl ClientShellConfig {
                     self.keybinds = keybinds;
                     diagnostics.extend(keybind_diagnostics);
                 }
-                Err(keybind_diagnostics) => diagnostics.extend(
-                    keybind_diagnostics
-                        .into_iter()
-                        .map(|diagnostic| format!("{diagnostic}; kept current keybinds")),
-                ),
+                Err(keybind_diagnostics) => {
+                    diagnostics.extend(keybind_diagnostics.into_iter().map(|diagnostic| {
+                        crate::trf!(
+                            "{diagnostic}; kept current keybinds",
+                            diagnostic = diagnostic
+                        )
+                    }))
+                }
             }
         }
 
         if !invalid_section("ui") {
             if let Some(diagnostic) = config.invalid_sidebar_bounds_diagnostic() {
-                diagnostics.push(format!("{diagnostic}; keeping previous [ui] settings"));
+                diagnostics.push(crate::trf!(
+                    "{diagnostic}; keeping previous [ui] settings",
+                    diagnostic = diagnostic
+                ));
             } else {
                 let ui = &config.ui;
                 diagnostics.extend(ui.sound.diagnostics());

@@ -815,5 +815,13 @@
   "unavailable": "不可用",
   "herdr: failed to set up terminal: {err}": "herdr：终端初始化失败：{err}",
   "Update the Local server before switching between machines": "在机器之间切换前请先更新本地服务器",
-  "session.startup_per_agent_delay_ms changes require restarting Herdr; kept current setting": "修改 session.startup_per_agent_delay_ms 需要重启 Herdr；已保留当前设置"
+  "session.startup_per_agent_delay_ms changes require restarting Herdr; kept current setting": "修改 session.startup_per_agent_delay_ms 需要重启 Herdr；已保留当前设置",
+  "Use `brew update && brew upgrade herdr` to update Homebrew installs.": "使用 `brew update && brew upgrade herdr` 更新 Homebrew 安装。",
+  "Use `mise upgrade herdr` to update mise installs.": "使用 `mise upgrade herdr` 更新 mise 安装。",
+  "Update through Nix to update Nix-managed Herdr installs.": "通过 Nix 更新由 Nix 管理的 Herdr 安装。",
+  "preview channel is only available for direct Herdr installs; Homebrew installs update through `brew update && brew upgrade herdr`": "preview 通道仅适用于直接安装的 Herdr；Homebrew 安装请使用 `brew update && brew upgrade herdr` 更新",
+  "preview channel is only available for direct Herdr installs; mise installs update through `mise upgrade herdr`": "preview 通道仅适用于直接安装的 Herdr；mise 安装请使用 `mise upgrade herdr` 更新",
+  "preview channel is only available for direct Herdr installs; Nix installs update through Nix": "preview 通道仅适用于直接安装的 Herdr；Nix 安装请通过 Nix 更新",
+  "{diagnostic}; kept current keybinds": "{diagnostic}；已保留当前快捷键",
+  "{diagnostic}; keeping previous [ui] settings": "{diagnostic}；继续使用先前的 [ui] 设置"
 }
