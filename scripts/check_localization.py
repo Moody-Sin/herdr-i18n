@@ -377,6 +377,7 @@ def scanned_sources():
         *sorted((SRC / "cli").rglob("*.rs")),
         *sorted((SRC / "client" / "shell").rglob("*.rs")),
         SRC / "client" / "errors.rs",
+        SRC / "remote.rs",
         SRC / "remote" / "args.rs",
         *sorted((SRC / "ui").rglob("*.rs")),
     ]

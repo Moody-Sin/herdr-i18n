@@ -19,9 +19,10 @@ pub(crate) fn run_remote_api_bridge(args: &[String]) -> std::io::Result<()> {
             let stream = crate::ipc::connect_local_stream(&path).map_err(|error| {
                 std::io::Error::new(
                     error.kind(),
-                    format!(
-                        "failed to connect to remote Herdr API socket {}: {error}",
-                        path.display()
+                    crate::trf!(
+                        "failed to connect to remote Herdr API socket {path}: {error}",
+                        path = path.display(),
+                        error = error
                     ),
                 )
             })?;
@@ -33,7 +34,7 @@ pub(crate) fn run_remote_api_bridge(args: &[String]) -> std::io::Result<()> {
         }
         _ => Err(std::io::Error::new(
             std::io::ErrorKind::InvalidInput,
-            "usage: herdr remote-api-bridge [--check]",
+            crate::tr!("usage: herdr remote-api-bridge [--check]"),
         )),
     }
 }
@@ -41,7 +42,10 @@ pub(crate) fn run_remote_api_bridge(args: &[String]) -> std::io::Result<()> {
 pub(crate) fn print_saved_ssh_error_hint(err: &std::io::Error, target: &str) {
     if is_remote_host_key_error(err) {
         eprintln!(
-            "hint: saved machines use strict host-key checking; add the host key to the configured known_hosts file, then retry."
+            "{}",
+            crate::tr!(
+                "hint: saved machines use strict host-key checking; add the host key to the configured known_hosts file, then retry."
+            )
         );
     } else {
         print_remote_error_hint(err, target);
@@ -51,11 +55,17 @@ pub(crate) fn print_saved_ssh_error_hint(err: &std::io::Error, target: &str) {
 pub(crate) fn print_remote_error_hint(err: &std::io::Error, target: &str) {
     if is_remote_auth_error(err) {
         eprintln!(
-            "hint: verify SSH access first with `{}`.",
-            ssh_check_command(target)
+            "{}",
+            crate::trf!(
+                "hint: verify SSH access first with `{command}`.",
+                command = ssh_check_command(target)
+            )
         );
         eprintln!(
-            "hint: if your SSH key has a passphrase, load it into ssh-agent with `ssh-add` before running `herdr --remote`."
+            "{}",
+            crate::tr!(
+                "hint: if your SSH key has a passphrase, load it into ssh-agent with `ssh-add` before running `herdr --remote`."
+            )
         );
     }
 }

@@ -126,14 +126,14 @@ pub(super) fn wait_for_output(
             crate::logging::api_wait_timed_out(&request_id, &params.pane_id);
             return Ok(Some(
                 serde_json::to_string(&ErrorResponse {
-                    id: request_id,
+                    id: request_id.clone(),
                     error: ErrorBody {
                         code: "timeout".into(),
                         message: "timed out waiting for output match".into(),
                     },
                 })
                 .unwrap_or_else(|_| {
-                    "{\"error\":{\"code\":\"timeout\",\"message\":\"timed out waiting for output match\"}}".into()
+                    degraded_error_response(&request_id, "timed out waiting for output match")
                 }),
             ));
         }
@@ -773,14 +773,14 @@ pub(super) fn wait_for_event(
         if deadline.is_some_and(|deadline| std::time::Instant::now() >= deadline) {
             return Ok(Some(
                 serde_json::to_string(&ErrorResponse {
-                    id: request_id,
+                    id: request_id.clone(),
                     error: ErrorBody {
                         code: "timeout".into(),
                         message: "timed out waiting for event match".into(),
                     },
                 })
                 .unwrap_or_else(|_| {
-                    "{\"error\":{\"code\":\"timeout\",\"message\":\"timed out waiting for event match\"}}".into()
+                    degraded_error_response(&request_id, "timed out waiting for event match")
                 }),
             ));
         }

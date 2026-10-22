@@ -315,7 +315,7 @@ fn stop_socket_with_timeout(
 
 pub fn delete_session(name: &str) -> Result<SessionInfo, String> {
     if name == DEFAULT_SESSION_NAME {
-        return Err("deleting the default session is not supported".to_string());
+        return Err(crate::tr!("deleting the default session is not supported").to_string());
     }
     validate_name(name)?;
     let Some(dir) = exact_session_dir_for_delete(name)? else {
@@ -323,8 +323,9 @@ pub fn delete_session(name: &str) -> Result<SessionInfo, String> {
     };
     let socket_path = dir.join("herdr.sock");
     if is_running_at(&socket_path) {
-        return Err(format!(
-            "session {name} is running; stop it before deleting"
+        return Err(crate::trf!(
+            "session {name} is running; stop it before deleting",
+            name = name
         ));
     }
     let info = session_info(Some(name));
@@ -352,8 +353,9 @@ fn exact_session_dir_for_delete(name: &str) -> Result<Option<PathBuf>, String> {
     // A path lookup alone can resolve a different spelling on case-insensitive
     // filesystems. Never probe its socket or delete it without an exact entry.
     match std::fs::symlink_metadata(sessions_dir.join(name)) {
-        Ok(_) => Err(format!(
-            "session {name} does not match an exact session name; use the spelling shown by `herdr session list`"
+        Ok(_) => Err(crate::trf!(
+            "session {name} does not match an exact session name; use the spelling shown by `herdr session list`",
+            name = name
         )),
         Err(err) if err.kind() == std::io::ErrorKind::NotFound => Ok(None),
         Err(err) => Err(err.to_string()),
@@ -468,23 +470,25 @@ fn socket_timeout_from_remaining(remaining: Duration) -> Option<Duration> {
 
 pub fn validate_name(name: &str) -> Result<(), String> {
     if name.is_empty() {
-        return Err("session name cannot be empty".to_string());
+        return Err(crate::tr!("session name cannot be empty").to_string());
     }
     if name.len() > MAX_SESSION_NAME_LEN {
-        return Err(format!(
-            "session name cannot be longer than {MAX_SESSION_NAME_LEN} bytes"
+        return Err(crate::trf!(
+            "session name cannot be longer than {max} bytes",
+            max = MAX_SESSION_NAME_LEN
         ));
     }
     if name == "." || name == ".." {
-        return Err("session name cannot be . or ..".to_string());
+        return Err(crate::tr!("session name cannot be . or ..").to_string());
     }
     if !name
         .bytes()
         .all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'.' | b'_' | b'-'))
     {
-        return Err(
-            "session name may only contain ASCII letters, numbers, '.', '_' and '-'".to_string(),
-        );
+        return Err(crate::tr!(
+            "session name may only contain ASCII letters, numbers, '.', '_' and '-'"
+        )
+        .to_string());
     }
     Ok(())
 }

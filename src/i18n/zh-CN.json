@@ -826,5 +826,17 @@
   "{diagnostic}; keeping previous [ui] settings": "{diagnostic}；继续使用先前的 [ui] 设置",
   "argument {index} is not valid UTF-8": "参数 {index} 不是有效的 UTF-8",
   "missing value for --session": "缺少 --session 的值",
-  "server closed connection": "服务器已关闭连接"
+  "server closed connection": "服务器已关闭连接",
+  "deleting the default session is not supported": "不支持删除默认会话",
+  "session {name} is running; stop it before deleting": "会话 {name} 正在运行；请在删除前停止",
+  "session {name} does not match an exact session name; use the spelling shown by `herdr session list`": "会话 {name} 与精确会话名称不匹配；请使用 `herdr session list` 显示的拼写",
+  "session name cannot be empty": "会话名称不能为空",
+  "session name cannot be longer than {max} bytes": "会话名称长度不能超过 {max} 字节",
+  "session name cannot be . or ..": "会话名称不能为 . 或 ..",
+  "session name may only contain ASCII letters, numbers, '.', '_' and '-'": "会话名称只能包含 ASCII 字母、数字、'.'、'_' 和 '-'",
+  "usage: herdr remote-api-bridge [--check]": "用法：herdr remote-api-bridge [--check]",
+  "hint: saved machines use strict host-key checking; add the host key to the configured known_hosts file, then retry.": "提示：已保存的机器使用严格的主机密钥检查；请将主机密钥添加到配置的 known_hosts 文件中，然后重试。",
+  "hint: verify SSH access first with `{command}`.": "提示：请先通过 `{command}` 验证 SSH 访问权限。",
+  "hint: if your SSH key has a passphrase, load it into ssh-agent with `ssh-add` before running `herdr --remote`.": "提示：如果您的 SSH 密钥设置了密码，请在运行 `herdr --remote` 前通过 `ssh-add` 将其加载到 ssh-agent 中。",
+  "failed to connect to remote Herdr API socket {path}: {error}": "无法连接到远程 Herdr API 套接字 {path}：{error}"
 }

@@ -155,10 +155,8 @@ fn delete_session_preserves_running_session() {
 
     assert_eq!(output.status.code(), Some(1));
     let error: serde_json::Value = serde_json::from_slice(&output.stderr).unwrap();
-    assert!(error["error"]["message"]
-        .as_str()
-        .unwrap()
-        .contains("running"));
+    let message = error["error"]["message"].as_str().unwrap();
+    assert!(message.contains("running") || message.contains("运行"));
     assert_eq!(
         fs::read(dir.join("session.json")).unwrap(),
         b"saved session"

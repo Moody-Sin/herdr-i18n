@@ -569,7 +569,8 @@ fn machine_add_reports_strict_host_key_failure() {
     assert!(
         result
             .output
-            .contains("saved machines use strict host-key checking"),
+            .contains("saved machines use strict host-key checking")
+            || result.output.contains("已保存的机器使用严格的主机密钥检查"),
         "{}",
         result.output
     );

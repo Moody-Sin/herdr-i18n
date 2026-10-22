@@ -15,7 +15,7 @@
 - 每个 `tr!`/`trf!` 键、以及 `keybind_help.rs` 中每个 `entry(.., "label")` 标签都有译文；
 - `trf!` 的实参名称与消息占位符一致，且中英占位符集合一致；
 - 每个 `.help(...)` 都写成 `.help(crate::tr!("..."))`。裸字面量会绕过字典，即使 `zh-CN.json` 已有译文也照样输出英文；
-- `src/main.rs`、`src/session.rs`、`src/cli/`、`src/client/shell/` 与 `src/ui/` 中的界面文案要么已本地化，要么显式登记在 `scripts/localization-cli-allowlist.txt`。
+- `src/main.rs`、`src/session.rs`、`src/cli/`、`src/client/shell/`、`src/remote.rs` 与 `src/ui/` 中的界面文案要么已本地化，要么显式登记在 `scripts/localization-cli-allowlist.txt`。
 
 检查器按**每个** `#[cfg(test)]` 条目的真实跨度跳过测试代码，而不是「首个 `#[cfg(test)]` 之后全部跳过」。像 `#[cfg(test)] mod bindings_tests;` 这样的外部模块声明只有两行，其后的生产代码仍会被扫描。
 

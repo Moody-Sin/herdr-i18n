@@ -31,13 +31,9 @@ endpoint agent navigation
  needs attention
 Herdr v
 update ready
-deleting the default session is not supported
-session {name} is running; stop it before deleting
-session {name} does not match an exact session name; use the spelling shown by `herdr session list`
-session name cannot be empty
-session name cannot be longer than {MAX_SESSION_NAME_LEN} bytes
-session name cannot be . or ..
-session name may only contain ASCII letters, numbers, '.', '_' and '-'
+host key verification failed
+remote host identification has changed
+Permission denied
 
 
 
