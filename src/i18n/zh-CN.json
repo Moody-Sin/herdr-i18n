@@ -823,5 +823,8 @@
   "preview channel is only available for direct Herdr installs; mise installs update through `mise upgrade herdr`": "preview 通道仅适用于直接安装的 Herdr；mise 安装请使用 `mise upgrade herdr` 更新",
   "preview channel is only available for direct Herdr installs; Nix installs update through Nix": "preview 通道仅适用于直接安装的 Herdr；Nix 安装请通过 Nix 更新",
   "{diagnostic}; kept current keybinds": "{diagnostic}；已保留当前快捷键",
-  "{diagnostic}; keeping previous [ui] settings": "{diagnostic}；继续使用先前的 [ui] 设置"
+  "{diagnostic}; keeping previous [ui] settings": "{diagnostic}；继续使用先前的 [ui] 设置",
+  "argument {index} is not valid UTF-8": "参数 {index} 不是有效的 UTF-8",
+  "missing value for --session": "缺少 --session 的值",
+  "server closed connection": "服务器已关闭连接"
 }

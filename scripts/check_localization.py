@@ -39,13 +39,25 @@ CLI_NOT_PROSE = re.compile(
     r"|^\{.*\}$"  # pure placeholder
     r"|^[a-z0-9_]+$"  # identifier
     r"|^[A-Z_]+$"  # constant
-    r"|^\s*herdr "  # indented command syntax, kept in English by design
+    r"|^\s*(?:\{\}=\S*\s+)?herdr "  # indented or env-prefixed command syntax, kept in English by design
 )
 # `usage: herdr ...` lines keep their command syntax in English but the
 # `usage: ` label is translated, so they must still be flagged when unwrapped.
 # Excluding them here previously hid 51 usage lines that had no catalog entry.
 USAGE_PREFIX = "usage: "
 STRING = re.compile(r'"((?:\\.|[^"\\])*)"')
+RAW_STRING = re.compile(r'r(#*)"[\s\S]*?"\1')
+
+
+def raw_string_regions(source: str) -> list[tuple[int, int]]:
+    """Character ranges covered by Rust raw string literals `r#"..."#`.
+
+    Raw string literals can embed quotes and prose (such as default config
+    templates and regex patterns) without backslash escapes. The regex-based
+    `STRING` scanner otherwise mistakes content between unescaped quotes inside
+    the raw string for separate code string literals.
+    """
+    return [(match.start(), match.end()) for match in RAW_STRING.finditer(source)]
 
 
 def balanced_arguments(source: str, open_index: int) -> list[str] | None:
@@ -359,9 +371,13 @@ def scanned_sources():
     literals are fixtures and assertions rather than interface text.
     """
     files = [
+        SRC / "main.rs",
+        SRC / "session.rs",
         SRC / "cli.rs",
         *sorted((SRC / "cli").rglob("*.rs")),
         *sorted((SRC / "client" / "shell").rglob("*.rs")),
+        SRC / "client" / "errors.rs",
+        SRC / "remote" / "args.rs",
         *sorted((SRC / "ui").rglob("*.rs")),
     ]
     for path in files:
@@ -377,6 +393,7 @@ def check_untranslated_cli(catalog: dict[str, str], errors: list[str]) -> None:
         source = path.read_text(encoding="utf-8")
         localized = literal_spans(source)
         tests = test_regions(source)
+        raw_strings = raw_string_regions(source)
         line_starts = [0]
         for index, char in enumerate(source):
             if char == "\n":
@@ -397,6 +414,8 @@ def check_untranslated_cli(catalog: dict[str, str], errors: list[str]) -> None:
             if any(region_start <= start and end <= region_end for region_start, region_end in tests):
                 continue
             if any(span_start <= start and end <= span_end for span_start, span_end in localized):
+                continue
+            if any(raw_start <= start and end <= raw_end for raw_start, raw_end in raw_strings):
                 continue
             value = match.group(1)
             if CLI_NOT_PROSE.match(value) or not CLI_PROSE.search(value):

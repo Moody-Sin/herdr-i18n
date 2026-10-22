@@ -44,10 +44,10 @@ pub fn configure_from_args(args: &[String]) -> Result<Vec<String>, String> {
             return Ok(args.to_vec());
         }
         let Some(name) = args.get(3) else {
-            return Err("usage: herdr session attach <name>".to_string());
+            return Err(crate::tr!("usage: herdr session attach <name>").to_string());
         };
         if args.len() != 4 {
-            return Err("usage: herdr session attach <name>".to_string());
+            return Err(crate::tr!("usage: herdr session attach <name>").to_string());
         }
         apply_explicit_name(name)?;
         return Ok(cleaned);
@@ -63,7 +63,7 @@ pub fn configure_from_args(args: &[String]) -> Result<Vec<String>, String> {
         }
         if arg == "--session" {
             let Some(value) = args.get(index + 1) else {
-                return Err("missing value for --session".to_string());
+                return Err(crate::tr!("missing value for --session").to_string());
             };
             requested_session = Some(value.clone());
             index += 2;

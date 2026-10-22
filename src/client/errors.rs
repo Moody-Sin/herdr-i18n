@@ -135,7 +135,7 @@ impl From<protocol::FramingError> for ClientError {
         match err {
             protocol::FramingError::UnexpectedEof => ClientError::ConnectionLost(io::Error::new(
                 io::ErrorKind::UnexpectedEof,
-                "server closed connection",
+                crate::tr!("server closed connection"),
             )),
             protocol::FramingError::Io(err) => ClientError::ConnectionLost(err),
             err => ClientError::Protocol(err),

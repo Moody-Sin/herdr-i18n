@@ -112,6 +112,15 @@ pub(super) fn localized_notification_title(
             .strip_prefix("Herdr v")
             .and_then(|title| title.strip_suffix(" available"))
             .map(|version| crate::trf!("Herdr v{version} available", version = version))
+            .or_else(|| {
+                if event.title == "update ready" {
+                    Some(crate::tr!("update ready").to_owned())
+                } else if !event.title.is_empty() {
+                    Some(event.title.clone())
+                } else {
+                    None
+                }
+            })
             .unwrap_or_else(|| crate::tr!("update ready").to_owned()),
         SemanticNotificationKind::Custom => event.title.clone(),
     }
@@ -507,5 +516,51 @@ mod tests {
                 assert!(rect.bottom() <= area.bottom());
             }
         }
+    }
+
+    #[test]
+    fn localized_notification_title_handles_update_titles() {
+        let make_event = |title: &str| SemanticNotification {
+            kind: SemanticNotificationKind::UpdateInstalled,
+            title: title.into(),
+            body: None,
+            sound: None,
+            agent: None,
+            workspace_id: None,
+            tab_id: None,
+            pane_id: None,
+            position: None,
+        };
+
+        // English wire title gets translated to localized format
+        let en = make_event("Herdr v0.9.5 available");
+        assert_eq!(
+            localized_notification_title(&en),
+            crate::trf!("Herdr v{version} available", version = "0.9.5")
+        );
+
+        // Pre-translated server title is preserved with its version
+        let zh = make_event(&crate::trf!(
+            "Herdr v{version} available",
+            version = "0.9.5"
+        ));
+        assert_eq!(
+            localized_notification_title(&zh),
+            crate::trf!("Herdr v{version} available", version = "0.9.5")
+        );
+
+        // Generic "update ready" title translates to "更新已就绪"
+        let ready = make_event("update ready");
+        assert_eq!(
+            localized_notification_title(&ready),
+            crate::tr!("update ready")
+        );
+
+        // Empty title falls back to "更新已就绪"
+        let empty = make_event("");
+        assert_eq!(
+            localized_notification_title(&empty),
+            crate::tr!("update ready")
+        );
     }
 }

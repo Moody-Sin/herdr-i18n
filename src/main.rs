@@ -493,7 +493,7 @@ where
         .enumerate()
         .map(|(index, arg)| {
             arg.into_string()
-                .map_err(|_| format!("argument {index} is not valid UTF-8"))
+                .map_err(|_| crate::trf!("argument {index} is not valid UTF-8", index = index))
         })
         .collect()
 }
@@ -959,7 +959,7 @@ mod tests {
         ];
         assert_eq!(
             args_as_utf8(args).unwrap_err(),
-            "argument 2 is not valid UTF-8"
+            crate::trf!("argument {index} is not valid UTF-8", index = 2)
         );
     }
 }
