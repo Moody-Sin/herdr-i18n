@@ -376,6 +376,7 @@ impl App {
             .state
             .new_pane_size(crate::ui::NewPanePlacement::ZoomedOverlay);
         let (env, _) = self.custom_command_env();
+        let host_terminal_appearance = self.pane_host_terminal_appearance();
 
         let ws = self
             .state
@@ -403,7 +404,7 @@ impl App {
             env,
             self.state.pane_scrollback_limit_bytes,
             self.state.host_terminal_theme,
-            self.state.host_terminal_appearance,
+            host_terminal_appearance,
         )?;
         let new_pane_id = new_pane.pane_id;
         self.terminal_runtimes
@@ -473,6 +474,7 @@ impl App {
             })
         });
 
+        let host_terminal_appearance = self.pane_host_terminal_appearance();
         let (tab_idx, new_pane, workspace_id) = {
             let ws = self
                 .state
@@ -490,7 +492,7 @@ impl App {
                 extra_env,
                 self.state.pane_scrollback_limit_bytes,
                 self.state.host_terminal_theme,
-                self.state.host_terminal_appearance,
+                host_terminal_appearance,
                 true,
             );
             let (tab_idx, new_pane) = match result {
