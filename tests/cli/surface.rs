@@ -286,11 +286,7 @@ fn root_and_command_group_help_point_agents_to_plain_text_docs() {
             .unwrap();
         assert!(output.status.success(), "herdr {} failed", args.join(" "));
         let stdout = String::from_utf8_lossy(&output.stdout);
-        for expected in [
-            "https://herdr.dev/agent-guide.md",
-            "https://herdr.dev/llms.txt",
-            "herdr --skill",
-        ] {
+        for expected in ["herdr --skill", "https://github.com/herdrdev/herdr"] {
             assert!(
                 stdout.contains(expected),
                 "herdr {} help did not contain {expected:?}: {stdout}",

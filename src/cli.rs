@@ -48,12 +48,10 @@ fn terminal_session_control_usage() -> &'static str {
 }
 pub(crate) const AGENT_HELP_FOOTER: &str = concat!(
     "你是 AI 智能体吗？仅当任务明确要求时才使用以下资源：\n",
-    "  帮助人类首次理解或配置 Herdr：\n",
-    "    https://herdr.dev/agent-guide.md\n",
-    "  调试或调查 Herdr 问题：\n",
-    "    https://herdr.dev/llms.txt\n",
     "  控制 Herdr 窗格、智能体或工作区：\n",
-    "    如果上下文中已有 Herdr 技能，请跳过；否则运行：herdr --skill",
+    "    如果上下文中已有 Herdr 技能，请跳过；否则运行：herdr --skill\n",
+    "  帮助人类理解或配置 Herdr，或调试相关问题：\n",
+    "    阅读源码与文档：https://github.com/herdrdev/herdr",
 );
 
 pub(crate) fn parse_token_assignment(raw: &str) -> Result<(String, Option<String>), String> {
