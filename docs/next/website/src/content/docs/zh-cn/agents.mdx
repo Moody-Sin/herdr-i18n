@@ -154,9 +154,9 @@ herdr pane report-metadata w1:p1 \
 
 智能体侧边栏行也可以选择使用 `terminal_title` 或 `terminal_title_stripped`;两者都不在默认行中。前者显示经过安全规范化的最新 OSC 0/2 终端标题,后者会移除开头一个已识别的活动或旋转指示符字形及其后的空白。这些值由 Herdr 服务器所有,冷重启后不会保留,并且独立于元数据标题和语义智能体状态。因此,如果移除后的文本不变,旋转动画可以改变原始标题而不触发窗格更新。
 
-## 直接附加到智能体
+## 直接连接到智能体
 
-把当前终端附加到某一个智能体终端,而不是完整的 Herdr UI:
+将当前终端连接到某一个智能体终端,而不是完整的 Herdr UI:
 
 ```bash
 herdr agent attach reviewer
@@ -166,10 +166,10 @@ herdr agent attach reviewer
 
 用鼠标滚轮或普通的 page up/page down 滚动。正常输入会跳回底部。
 
-如果另一个直接附加客户端已经拥有输入,用 `--takeover`:
+如果另一个直接连接客户端已经拥有输入,用 `--takeover`:
 
 ```bash
 herdr agent attach reviewer --takeover
 ```
 
-想对非智能体终端获得相同的直接附加行为时,用 `herdr terminal attach <terminal_id>`。
+想对非智能体终端获得相同的直接连接行为时,用 `herdr terminal attach <terminal_id>`。

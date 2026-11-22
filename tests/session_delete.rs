@@ -92,10 +92,13 @@ fn delete_session_preserves_differently_cased_name() {
         assert_eq!(output.status.code(), Some(1));
         let error: serde_json::Value = serde_json::from_slice(&output.stderr).unwrap();
         assert_eq!(error["error"]["code"], "session_delete_failed");
-        assert!(error["error"]["message"]
-            .as_str()
-            .unwrap()
-            .contains("exact"));
+        assert!(
+            error["error"]["message"]
+                .as_str()
+                .unwrap()
+                .contains("exact")
+                || error["error"]["message"].as_str().unwrap().contains("精确")
+        );
     } else {
         assert_success(&output);
     }

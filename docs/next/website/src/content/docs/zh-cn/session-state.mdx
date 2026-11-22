@@ -55,7 +55,7 @@ Herdr 保留最新的三个恢复副本，只有在新副本安全写入后才�
 3. 先另存当前的 `session.json`，再将 `session-snapshots/` 中选定的文件复制到 `session.json`。文件修改时间表示快照的保存时间。
 4. 重新启动该会话。
 
-快照包含布局和代理会话引用，不包含运行中的进程或窗格屏幕历史。请将其视为私密会话数据。快照写入失败会记录到日志，但不会阻止主会话文件的正常保存。
+快照包含布局和智能体会话引用，不包含运行中的进程或窗格屏幕历史。请将其视为私密会话数据。快照写入失败会记录到日志，但不会阻止主会话文件的正常保存。
 
 ## 窗格屏幕历史回放
 
@@ -109,9 +109,9 @@ Herdr 会恢复通过当前官方 Herdr 集成上报了原生会话引用的窗�
 | Hermes Agent | `2` | `hermes --resume <id>` |
 | MastraCode | `1` | `mastracode --thread <id>` |
 
-运行 `herdr integration status` 查看已安装的集成版本。用 `herdr integration install <agent>` 重新安装过期的集成。
+运行 `herdr integration status` 查看已安装的集成版本。用 `herdr integration install <agent>` 重新安装已过时的集成。
 
-不受支持、缺失、无效、重复或过期的会话引用,会在保存的窗格目录中作为普通 shell 恢复。
+不受支持、缺失、无效、重复或失效的会话引用,会在保存的窗格目录中作为普通 shell 恢复。
 
 如果某个窗格适用智能体原生会话恢复,Herdr 会对该窗格恢复智能体会话,而不是回放保存的窗格历史。
 

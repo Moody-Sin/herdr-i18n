@@ -41,7 +41,7 @@ herdr session delete side-project --json
 
 ## 已保存的 SSH 机器
 
-要在一个 Herdr 窗口中使用 Local 和多台 SSH 机器，请参阅[连接机器](/zh-cn/docs/connecting-machines/)。该指南涵盖设置、切换、重连、配置和远程自动化。移除已保存的机器只会断开客户端，不会停止远程会话。
+要在一个 Herdr 窗口中使用 Local 和多台 SSH 机器，请参阅[连接机器](/zh-cn/docs/connecting-machines/)。该指南涵盖设置、切换、重新连接、配置和远程自动化。移除已保存的机器只会断开客户端，不会停止远程会话。
 
 ## 通过 SSH 远程连接
 
@@ -52,11 +52,11 @@ herdr --remote workbox
 herdr --remote ssh://you@server:2222
 ```
 
-侧栏宽度、分区比例、折叠分组和代理排序会按远程目标与会话保存在本地。重新连接同一目标和会话时会恢复这些偏好；不同 SSH 别名或会话的偏好相互独立。
+侧栏宽度、分区比例、折叠分组和智能体排序会按远程目标与会话保存在本地。重新连接同一目标和会话时会恢复这些偏好；不同 SSH 别名或会话的偏好相互独立。
 
 这种模式下，远程服务器保持窗格运行，并通过 SSH 发送终端内容和会话状态。本地 Herdr 负责绘制 UI，包括侧边栏、菜单和主题。因为客户端在本地运行,Herdr 可以把图像剪贴板粘贴等本地桌面功能桥接到远程会话: 把图像复制到远程临时文件,再粘贴该路径。
 
-默认情况下,`herdr --remote` 在这次连接中使用你本地的 Herdr 按键绑定。即使远程服务器的配置不同,也能保持本地的肌肉记忆。编辑本地按键绑定后，可通过 UI 中的 `reload config` 应用更改，无需分离重连。想改用远程服务器配置时,使用 `--remote-keybindings server`。本地的自定义命令按键绑定不会被发送,因为那些命令会在远程主机上执行。
+默认情况下,`herdr --remote` 在这次连接中使用你本地的 Herdr 按键绑定。即使远程服务器的配置不同,也能保持本地的肌肉记忆。编辑本地按键绑定后，可通过 UI 中的 `reload config` 应用更改，无需分离重新连接。想改用远程服务器配置时,使用 `--remote-keybindings server`。本地的自定义命令按键绑定不会被发送,因为那些命令会在远程主机上执行。
 
 对于经常连接的目标,使用你的 SSH 配置:
 
@@ -110,29 +110,29 @@ HERDR_REMOTE_BINARY=target/release/herdr herdr --remote workbox
 herdr --remote workbox --session agents
 ```
 
-## 直接终端附加
+## 直接终端连接
 
-完整的 Herdr 连接会打开整个工作区 UI。直接附加则在你当前的终端中打开一个由服务器拥有的终端。
+完整的 Herdr 连接会打开整个工作区 UI。直接连接则在你当前的终端中打开一个由服务器拥有的终端。
 
-直接终端附加适用于 Linux 和 macOS，不支持原生 Windows。
+直接终端连接适用于 Linux 和 macOS，不支持原生 Windows。
 
-按智能体目标附加:
+按智能体目标连接:
 
 ```bash
 herdr agent attach reviewer
 ```
 
-按终端 ID 附加:
+按终端 ID 连接:
 
 ```bash
 herdr terminal attach term_abc123
 ```
 
-直接附加先流式传输当前渲染的终端状态,然后是实时 ANSI 帧。输入直接进入该终端。
+直接连接先流式传输当前渲染的终端状态,然后是实时 ANSI 帧。输入直接进入该终端。
 
 用 `ctrl+b q` 分离。用 `ctrl+b ctrl+b` 发送字面的 `ctrl+b`。
 
-一个终端只能有一个可写的直接附加客户端拥有输入和调整尺寸的权限。用 `--takeover` 替换现有的所有者:
+一个终端只能有一个可写的直接连接客户端拥有输入和调整尺寸的权限。用 `--takeover` 替换现有的所有者:
 
 ```bash
 herdr terminal attach term_abc123 --takeover

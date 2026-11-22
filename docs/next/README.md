@@ -139,7 +139,7 @@ herdr
 
 1. **查找模式**：Rust 源码中通过 `crate::tr!("English text")`（静态文案）和 `crate::trf!("Message {name}", name = value)`（动态插值）进行匹配。英文原文即为字典 Key，若条目缺失则平滑回退至英文，绝不发生运行时崩溃。
 2. **规范术语统一**：所有界面的专业术语翻译均严格对照 [`src/i18n/GLOSSARY.md`](src/i18n/GLOSSARY.md)（例如：*worktree* 译为“工作树”，*pane* 译为“窗格”，*agent* 译为“智能体”）。
-3. **严格的自动化保障**：通过 `just localization-check` 扫描源代码 AST，确保所有面向用户的输出均走 `tr!`，并且严格验证插值占位符对称性与未登记英文字面量。
+3. **严格的自动化保障**：通过 `just localization-check` 扫描源代码中的本地化调用和用户可见文本，确保所有面向用户的输出均走 `tr!`，并且严格验证插值占位符对称性与未登记英文字面量。
 
 ---
 
