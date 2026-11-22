@@ -50,23 +50,70 @@ RAW_STRING = re.compile(r'r(#*)"[\s\S]*?"\1')
 
 
 def raw_string_regions(source: str) -> list[tuple[int, int]]:
-    """Character ranges covered by Rust raw string literals `r#"..."#`.
-
-    Raw string literals can embed quotes and prose (such as default config
-    templates and regex patterns) without backslash escapes. The regex-based
-    `STRING` scanner otherwise mistakes content between unescaped quotes inside
-    the raw string for separate code string literals.
-    """
+    """Character ranges covered by Rust raw string literals `r#"..."#`."""
     return [(match.start(), match.end()) for match in RAW_STRING.finditer(source)]
 
 
-def balanced_arguments(source: str, open_index: int) -> list[str] | None:
-    """Split the argument list whose opening `(` is at ``open_index``."""
+def string_scan_source(source: str) -> str:
+    """Mask comments, raw strings, and character literals for `STRING` scans."""
+    chars = list(source)
+    index = 0
+    while index < len(source):
+        if source[index : index + 2] == "//":
+            end = source.find("\n", index)
+            end = len(source) if end == -1 else end
+            chars[index:end] = " " * (end - index)
+            index = end
+            continue
+        if source[index : index + 2] == "/*":
+            end = source.find("*/", index + 2)
+            end = len(source) if end == -1 else end + 2
+            replacement = "".join("\n" if char == "\n" else " " for char in source[index:end])
+            chars[index:end] = replacement
+            index = end
+            continue
+        if (
+            source[index] == "r"
+            and index + 1 < len(source)
+            and source[index + 1] in {'"', '#'}
+            and (index == 0 or not (source[index - 1].isalnum() or source[index - 1] == "_"))
+        ):
+            raw = RAW_STRING.match(source, index)
+            if raw:
+                chars[index:raw.end()] = "".join("\n" if char == "\n" else " " for char in raw.group())
+                index = raw.end()
+                continue
+        if source[index] == "'":
+            end = index + 1
+            escaped = False
+            while end < min(len(source), index + 5):
+                char = source[end]
+                if escaped:
+                    escaped = False
+                elif char == "\\":
+                    escaped = True
+                elif char == "'":
+                    end += 1
+                    chars[index:end] = " " * (end - index)
+                    index = end
+                    break
+                elif char == "\n":
+                    break
+                end += 1
+            else:
+                index += 1
+            continue
+        index += 1
+    return "".join(chars)
+
+
+def balanced_argument_spans(source: str, open_index: int) -> list[tuple[int, int]] | None:
+    """Return argument offsets for the list whose `(` is at ``open_index``."""
     depth = 0
     in_string = False
     escaped = False
     start = open_index + 1
-    arguments: list[str] = []
+    spans: list[tuple[int, int]] = []
     index = open_index
     while index < len(source):
         char = source[index]
@@ -86,13 +133,21 @@ def balanced_arguments(source: str, open_index: int) -> list[str] | None:
         elif char in ")]}":
             depth -= 1
             if depth == 0:
-                arguments.append(source[start:index])
-                return arguments
+                spans.append((start, index))
+                return spans
         elif char == "," and depth == 1:
-            arguments.append(source[start:index])
+            spans.append((start, index))
             start = index + 1
         index += 1
     return None
+
+
+def balanced_arguments(source: str, open_index: int) -> list[str] | None:
+    """Split the argument list whose opening `(` is at ``open_index``."""
+    spans = balanced_argument_spans(source, open_index)
+    if spans is None:
+        return None
+    return [source[start:end] for start, end in spans]
 
 
 def literal_spans(source: str) -> list[tuple[int, int]]:
@@ -114,16 +169,16 @@ def literal_spans(source: str) -> list[tuple[int, int]]:
     for match in MESSAGE_CALL.finditer(source):
         spans.append((match.start(1), match.end(1)))
     for match in ENTRY_CALL.finditer(source):
-        arguments = balanced_arguments(source, match.end() - 1)
-        if not arguments or len(arguments) < 2:
+        argument_spans = balanced_argument_spans(source, match.end() - 1)
+        if not argument_spans or len(argument_spans) < 2:
             continue
-        raw = string_literal(arguments[1])
+        start, end = argument_spans[1]
+        raw = string_literal(source[start:end])
         if raw is None:
             continue
-        # locate the literal inside the original source after the call opens
-        offset = source.find(raw, match.end())
-        if offset != -1:
-            spans.append((offset + 1, offset + len(raw) - 1))
+        literal_start = source.find('"', start, end)
+        if literal_start != -1:
+            spans.append((literal_start + 1, literal_start + len(raw) - 1))
     for match in LEAF_ABOUT.finditer(source):
         # leaf! or about: span
         if match.group(1) is not None:
@@ -349,7 +404,7 @@ def test_regions(source: str) -> list[tuple[int, int]]:
     """
     return [
         (match.start(), item_end(source, match.end()))
-        for match in re.finditer(r"^#\[cfg\(test\)\]", source, re.MULTILINE)
+        for match in re.finditer(r"^[ \t]*#\[cfg\(test\)\]", source, re.MULTILINE)
     ]
 
 
@@ -389,6 +444,7 @@ def scanned_sources():
 
 def check_untranslated_cli(catalog: dict[str, str], errors: list[str]) -> None:
     allowlist = load_allowlist()
+    used_allowlist: set[str] = set()
     for path in scanned_sources():
         relative = path.relative_to(ROOT)
         source = path.read_text(encoding="utf-8")
@@ -422,6 +478,7 @@ def check_untranslated_cli(catalog: dict[str, str], errors: list[str]) -> None:
             if CLI_NOT_PROSE.match(value) or not CLI_PROSE.search(value):
                 continue
             if value in allowlist:
+                used_allowlist.add(value)
                 continue
             if value.startswith(USAGE_PREFIX):
                 errors.append(
@@ -435,6 +492,12 @@ def check_untranslated_cli(catalog: dict[str, str], errors: list[str]) -> None:
                 f"(wrap it in crate::tr!, or list it in "
                 f"{UNTRANSLATED_CLI_ALLOWLIST.relative_to(ROOT)})"
             )
+
+    for value in sorted(allowlist - used_allowlist):
+        errors.append(
+            f"{UNTRANSLATED_CLI_ALLOWLIST.relative_to(ROOT)}: stale allowlist entry {value!r} "
+            f"has no active scanned literal"
+        )
 
 
 def check_stale_entries(catalog: dict[str, str], errors: list[str]) -> None:

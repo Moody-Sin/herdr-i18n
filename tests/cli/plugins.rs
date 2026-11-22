@@ -381,6 +381,7 @@ fn plugin_update_refreshes_selected_then_all_github_plugins() {
     assert_eq!(malformed.status.code(), Some(2));
     assert!(
         String::from_utf8_lossy(&malformed.stderr).contains("invalid plugin subdir segment")
+            || String::from_utf8_lossy(&malformed.stderr).contains("无效的插件子目录片段")
             || String::from_utf8_lossy(&malformed.stderr).contains("无效的插件子目录片段"),
     );
 
@@ -978,6 +979,7 @@ command = ["sh", "-c", "sleep 5"]
     assert_eq!(invalid_limit.status.code(), Some(2));
     assert!(
         String::from_utf8_lossy(&invalid_limit.stderr).contains("invalid --limit value")
+            || String::from_utf8_lossy(&invalid_limit.stderr).contains("--limit 值无效")
             || String::from_utf8_lossy(&invalid_limit.stderr).contains("--limit 值无效")
     );
 

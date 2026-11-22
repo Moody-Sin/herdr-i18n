@@ -122,7 +122,7 @@ pub(super) fn localized_notification_title(
                 }
             })
             .unwrap_or_else(|| crate::tr!("update ready").to_owned()),
-        SemanticNotificationKind::Custom => event.title.clone(),
+        SemanticNotificationKind::Custom => crate::i18n::text_ref(&event.title).into_owned(),
     }
 }
 
@@ -516,6 +516,26 @@ mod tests {
                 assert!(rect.bottom() <= area.bottom());
             }
         }
+    }
+
+    #[test]
+    fn localized_custom_notification_title_uses_catalog() {
+        let event = SemanticNotification {
+            kind: SemanticNotificationKind::Custom,
+            title: "update ready".into(),
+            body: None,
+            sound: None,
+            agent: None,
+            workspace_id: None,
+            tab_id: None,
+            pane_id: None,
+            position: None,
+        };
+
+        assert_eq!(
+            localized_notification_title(&event),
+            crate::tr!("update ready")
+        );
     }
 
     #[test]

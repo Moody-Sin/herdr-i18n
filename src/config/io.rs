@@ -143,7 +143,10 @@ impl Config {
                 warn!(err = %err, "config read error, using defaults");
                 return LoadedConfig {
                     config: Self::default(),
-                    diagnostics: vec![format!("config read error: {err}; using defaults")],
+                    diagnostics: vec![crate::trf!(
+                        "config read error: {err}; using defaults",
+                        err = err
+                    )],
                     invalid_sections: Vec::new(),
                 };
             }
@@ -173,7 +176,10 @@ impl Config {
                 warn!(err = %err, "config parse error, using defaults");
                 LoadedConfig {
                     config: Self::default(),
-                    diagnostics: vec![format!("config parse error: {err}; using defaults")],
+                    diagnostics: vec![crate::trf!(
+                        "config parse error: {err}; using defaults",
+                        err = err
+                    )],
                     invalid_sections: Vec::new(),
                 }
             }
@@ -257,8 +263,9 @@ pub fn load_live_config() -> Result<LoadedConfig, Vec<String>> {
             });
         }
         Err(err) => {
-            return Err(vec![format!(
-                "config read error: {err}; keeping current config"
+            return Err(vec![crate::trf!(
+                "config read error: {err}; keeping current config",
+                err = err
             )]);
         }
     };
@@ -266,9 +273,12 @@ pub fn load_live_config() -> Result<LoadedConfig, Vec<String>> {
 }
 
 fn load_live_config_from_str(content: &str) -> Result<LoadedConfig, Vec<String>> {
-    let value = content
-        .parse::<toml::Value>()
-        .map_err(|err| vec![format!("config parse error: {err}; keeping current config")])?;
+    let value = content.parse::<toml::Value>().map_err(|err| {
+        vec![crate::trf!(
+            "config parse error: {err}; keeping current config",
+            err = err
+        )]
+    })?;
     let table = value.as_table().ok_or_else(|| {
         vec![
             "config parse error: top-level config must be a table; keeping current config"

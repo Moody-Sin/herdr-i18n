@@ -162,7 +162,7 @@ pub(crate) fn accept_and_validate_on(
     if token_line.trim_end() != token {
         return Err(io::Error::new(
             io::ErrorKind::PermissionDenied,
-            "handoff import token mismatch",
+            crate::tr!("handoff import token mismatch"),
         ));
     }
 
@@ -173,7 +173,9 @@ pub(crate) fn accept_and_validate_on(
     stream.set_read_timeout(Some(READY_TIMEOUT))?;
     let validated = read_line_unbuffered(&mut stream)?;
     if validated.trim_end() != "validated" {
-        return Err(io::Error::other("handoff import did not validate manifest"));
+        return Err(io::Error::other(crate::tr!(
+            "handoff import did not validate manifest"
+        )));
     }
     let _ = std::fs::remove_file(socket_path);
     Ok(stream)
@@ -186,9 +188,9 @@ pub(crate) fn send_fds_and_wait_restored(stream: &mut UnixStream, fds: &[RawFd])
     stream.set_read_timeout(Some(READY_TIMEOUT))?;
     let restored = read_line_unbuffered(&mut *stream)?;
     if restored.trim_end() != "restored" {
-        return Err(io::Error::other(
-            "handoff import did not report restored runtimes",
-        ));
+        return Err(io::Error::other(crate::tr!(
+            "handoff import did not report restored runtimes"
+        )));
     }
     Ok(())
 }
@@ -198,7 +200,9 @@ pub(crate) fn wait_ready(stream: &mut UnixStream) -> io::Result<()> {
     stream.set_read_timeout(Some(READY_TIMEOUT))?;
     let ready = read_line_unbuffered(&mut *stream)?;
     if ready.trim_end() != "ready" {
-        return Err(io::Error::other("handoff import did not report ready"));
+        return Err(io::Error::other(crate::tr!(
+            "handoff import did not report ready"
+        )));
     }
     Ok(())
 }
@@ -293,7 +297,9 @@ pub(crate) fn wait_committed(stream: &mut UnixStream) -> io::Result<()> {
     stream.set_read_timeout(Some(READY_TIMEOUT))?;
     let committed = read_line_unbuffered(&mut *stream)?;
     if committed.trim_end() != "committed" {
-        return Err(io::Error::other("handoff source did not commit"));
+        return Err(io::Error::other(crate::tr!(
+            "handoff source did not commit"
+        )));
     }
     Ok(())
 }

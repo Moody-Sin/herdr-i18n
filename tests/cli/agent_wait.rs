@@ -98,7 +98,11 @@ fn agent_wait_times_out_when_status_does_not_match() {
     );
     assert!(!waited.status.success());
     assert!(
-        String::from_utf8_lossy(&waited.stderr).contains("timed out waiting for agent status"),
+        {
+            let stderr = String::from_utf8_lossy(&waited.stderr);
+            stderr.contains("timed out waiting for agent status")
+                || stderr.contains("等待智能体状态超时")
+        },
         "stderr: {}",
         String::from_utf8_lossy(&waited.stderr)
     );

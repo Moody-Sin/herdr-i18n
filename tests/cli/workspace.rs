@@ -504,7 +504,10 @@ fn config_check_reports_invalid_config_without_server() {
         stdout.contains("config: issues found") || stdout.contains("配置：发现问题"),
         "{stdout}"
     );
-    assert!(stdout.contains("TOML parse error"), "{stdout}");
+    assert!(
+        stdout.contains("TOML parse error") || stdout.contains("TOML 解析错误"),
+        "{stdout}"
+    );
     assert!(stdout.contains("line 1"), "{stdout}");
 
     fs::write(
@@ -559,19 +562,23 @@ new_tabb = "ctrl+t"
         "{stdout}"
     );
     assert!(
-        stdout.contains("unknown config key made_up_toplevel; ignoring key"),
+        stdout.contains("unknown config key made_up_toplevel; ignoring key")
+            || stdout.contains("未知配置键 made_up_toplevel；已忽略"),
         "{stdout}"
     );
     assert!(
-        stdout.contains("unknown config key \"made.up\"; ignoring key"),
+        stdout.contains("unknown config key \"made.up\"; ignoring key")
+            || stdout.contains("未知配置键 \"made.up\"；已忽略"),
         "{stdout}"
     );
     assert!(
-        stdout.contains("unknown config key ui.mouse_captur; ignoring key"),
+        stdout.contains("unknown config key ui.mouse_captur; ignoring key")
+            || stdout.contains("未知配置键 ui.mouse_captur；已忽略"),
         "{stdout}"
     );
     assert!(
-        stdout.contains("unknown config key keys.new_tabb; ignoring key"),
+        stdout.contains("unknown config key keys.new_tabb; ignoring key")
+            || stdout.contains("未知配置键 keys.new_tabb；已忽略"),
         "{stdout}"
     );
     assert!(!stdout.contains("commented_out"), "{stdout}");
@@ -625,8 +632,14 @@ fn config_check_reports_unreadable_config_path() {
         stdout.contains("config: issues found") || stdout.contains("配置：发现问题"),
         "{stdout}"
     );
-    assert!(stdout.contains("config read error"), "{stdout}");
-    assert!(stdout.contains("using defaults"), "{stdout}");
+    assert!(
+        stdout.contains("config read error") || stdout.contains("配置读取错误"),
+        "{stdout}"
+    );
+    assert!(
+        stdout.contains("using defaults") || stdout.contains("使用默认配置"),
+        "{stdout}"
+    );
 
     cleanup_test_base(&base);
 }

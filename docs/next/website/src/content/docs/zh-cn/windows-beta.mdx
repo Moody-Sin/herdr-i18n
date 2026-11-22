@@ -77,7 +77,7 @@ Windows 目前支持安装 Pi、OMP、Claude Code、Codex、GitHub Copilot CLI�
 | 向本地窗格中的智能体粘贴剪贴板图像 | 取决于终端/智能体 |
 | CJK 输入法候选窗口定位 | 部分支持 |
 | 前缀输入源切换 (韩语输入法) | 部分支持 |
-| Kitty graphics 渲染 | 取决于终端 |
+| Kitty 图形渲染 | 取决于终端 |
 | 主机光标渲染 | 部分支持 |
 
 Herdr 可以在正确的目录中启动窗格,并能从你启动 Herdr 的目录创建初始工作区。启动之后 PowerShell 的目录变化则不同: Herdr 能检查的进程字段无法可靠跟踪后续的逻辑 `cd` 变化。实时 cwd 上报请使用 Herdr 集成或提示符 shell 集成。
@@ -95,7 +95,7 @@ switch_ascii_input_source_in_prefix = true
 
 Windows 上的部分智能体可以接收 `ctrl+v` 并直接读取剪贴板图像。Herdr 自己的剪贴板图像读取器尚未接入本地原生 Windows 窗格,因此智能体原生图像粘贴仍取决于终端和智能体。`alt+v` 等智能体图像粘贴快捷键不会增加由 Herdr 管理的本地剪贴板桥。远程剪贴板图像桥通过连接 Linux/macOS/Windows 主机的 `herdr --remote` 单独受支持。
 
-Kitty graphics 默认启用，并取决于外层终端。Herdr 会像在其他平台上一样在 Windows 上输出 Kitty graphics protocol。这个路径已在 Windows WezTerm 托管 WSL 中 Herdr 的配置下得到验证，但原生 Windows 的各种终端与 ConPTY 组合尚未全部验证。Windows Terminal 不提供 Herdr 使用的 Kitty graphics 路径。如果外层终端无法正确处理图形输出，请设置 `[terminal].kitty_graphics = false`。
+Kitty 图形 默认启用，并取决于外层终端。Herdr 会像在其他平台上一样在 Windows 上输出 Kitty 图形协议。这个路径已在 Windows WezTerm 托管 WSL 中 Herdr 的配置下得到验证，但原生 Windows 的各种终端与 ConPTY 组合尚未全部验证。Windows Terminal 不提供 Herdr 使用的 Kitty 图形 路径。如果外层终端无法正确处理图形输出，请设置 `[terminal].kitty_graphics = false`。
 
 ## 已知注意事项
 

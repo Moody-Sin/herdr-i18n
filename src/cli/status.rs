@@ -91,25 +91,40 @@ fn print_full_status(json: bool) -> std::io::Result<i32> {
         return Ok(0);
     }
 
-    println!("client:");
-    println!("  version: {}", crate::build_info::version());
+    println!("{}", crate::tr!("client:"));
     println!(
-        "  channel: {}",
+        "  {} {}",
+        crate::tr!("version:"),
+        crate::build_info::version()
+    );
+    println!(
+        "  {} {}",
+        crate::tr!("channel:"),
         crate::config::Config::load().config.update.channel.as_str()
     );
-    println!("  protocol: {}", crate::protocol::PROTOCOL_VERSION);
     println!(
-        "  endpoint_protocol_generation: {}",
+        "  {} {}",
+        crate::tr!("protocol:"),
+        crate::protocol::PROTOCOL_VERSION
+    );
+    println!(
+        "  {} {}",
+        crate::tr!("endpoint_protocol_generation:"),
         crate::protocol::endpoint::ENDPOINT_PROTOCOL_GENERATION
     );
     println!();
-    println!("server:");
+    println!("{}", crate::tr!("server:"));
     print_server_status_body(&server, "  ");
     println!();
-    println!("update:");
-    println!("  restart_needed: {}", restart_needed_label(&server));
+    println!("{}", crate::tr!("update:"));
     println!(
-        "  server_binary_stale: {}",
+        "  {} {}",
+        crate::tr!("restart_needed:"),
+        restart_needed_label(&server)
+    );
+    println!(
+        "  {} {}",
+        crate::tr!("server_binary_stale:"),
         server_binary_stale_label(&server)
     );
 
@@ -132,17 +147,27 @@ fn print_client_status(json: bool) -> std::io::Result<()> {
         return Ok(());
     }
 
-    println!("version: {}", crate::build_info::version());
     println!(
-        "channel: {}",
+        "{} {}",
+        crate::tr!("version:"),
+        crate::build_info::version()
+    );
+    println!(
+        "{} {}",
+        crate::tr!("channel:"),
         crate::config::Config::load().config.update.channel.as_str()
     );
-    println!("protocol: {}", crate::protocol::PROTOCOL_VERSION);
     println!(
-        "endpoint_protocol_generation: {}",
+        "{} {}",
+        crate::tr!("protocol:"),
+        crate::protocol::PROTOCOL_VERSION
+    );
+    println!(
+        "{} {}",
+        crate::tr!("endpoint_protocol_generation:"),
         crate::protocol::endpoint::ENDPOINT_PROTOCOL_GENERATION
     );
-    println!("binary: {}", current_exe_label());
+    println!("{} {}", crate::tr!("binary:"), current_exe_label());
     Ok(())
 }
 
@@ -153,25 +178,43 @@ fn print_server_status_body(server: &ServerRuntimeStatus, indent: &str) {
             protocol,
             capabilities,
         } => {
-            println!("{indent}status: running");
-            println!("{indent}version: {}", option_label(version.as_deref()));
+            println!("{indent}{}", crate::tr!("status: running"));
             println!(
-                "{indent}endpoint_compatible: {}",
+                "{indent}{} {}",
+                crate::tr!("version:"),
+                option_label(version.as_deref())
+            );
+            println!(
+                "{indent}{} {}",
+                crate::tr!("endpoint_compatible:"),
                 endpoint_compatibility_label(capabilities.as_ref())
             );
-            println!("{indent}private_protocol: {}", protocol_label(*protocol));
             println!(
-                "{indent}private_protocol_compatible: {}",
+                "{indent}{} {}",
+                crate::tr!("private_protocol:"),
+                protocol_label(*protocol)
+            );
+            println!(
+                "{indent}{} {}",
+                crate::tr!("private_protocol_compatible:"),
                 compatibility_label(*protocol)
             );
-            println!("{indent}socket: {}", super::target::socket_label());
+            println!(
+                "{indent}{} {}",
+                crate::tr!("socket:"),
+                super::target::socket_label()
+            );
         }
         ServerRuntimeStatus::NotRunning => {
             println!(
                 "{}",
                 crate::trf!("{indent}status: not running", indent = indent)
             );
-            println!("{indent}socket: {}", super::target::socket_label());
+            println!(
+                "{indent}{} {}",
+                crate::tr!("socket:"),
+                super::target::socket_label()
+            );
         }
     }
 }

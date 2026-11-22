@@ -1,4 +1,7 @@
 use ratatui::layout::{Constraint, Layout, Rect};
+use unicode_width::UnicodeWidthStr;
+
+use crate::tr;
 
 pub(crate) fn centered_popup_rect(area: Rect, popup_width: u16, popup_height: u16) -> Option<Rect> {
     let popup_width = popup_width.min(area.width.saturating_sub(4));
@@ -76,14 +79,15 @@ pub(crate) fn modal_stack_areas(
 }
 
 fn action_button_width(hint: Option<&str>, label: &str) -> u16 {
-    match hint {
-        Some(hint) => format!(" {hint} {label} ").chars().count() as u16,
-        None => format!(" {label} ").chars().count() as u16,
-    }
+    let content = match hint {
+        Some(hint) => format!(" {hint} {label} "),
+        None => format!(" {label} "),
+    };
+    u16::try_from(UnicodeWidthStr::width(content.as_str())).unwrap_or(u16::MAX)
 }
 
 pub(crate) fn close_button_rect(area: Rect) -> Rect {
-    let width = action_button_width(Some("esc"), "close");
+    let width = action_button_width(Some("esc"), tr!("close"));
     Rect::new(area.x + area.width.saturating_sub(width), area.y, width, 1)
 }
 
@@ -91,7 +95,18 @@ pub(crate) fn continue_button_rect(area: Rect) -> Rect {
     Rect::new(
         area.x,
         area.y,
-        action_button_width(Some("↵"), "continue"),
+        action_button_width(Some("↵"), tr!("continue")),
         1,
     )
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn localized_button_width_uses_display_width() {
+        assert_eq!(action_button_width(Some("esc"), tr!("close")), 10);
+        assert_eq!(action_button_width(Some("↵"), tr!("continue")), 8);
+    }
 }

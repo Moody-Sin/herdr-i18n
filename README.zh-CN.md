@@ -78,8 +78,8 @@ herdr
 ## 开发
 
 ```bash
-git clone https://github.com/herdrdev/herdr
-cd herdr
+git clone https://github.com/Moody-Sin/herdr-i18n
+cd herdr-i18n
 cargo build --release
 
 just test        # 单元测试
@@ -101,8 +101,8 @@ just check       # 格式检查、测试和维护性检查
 本复刻仓库跟随上游 `master`。同步步骤：
 
 ```bash
-git fetch origin
-git merge origin/master
+git fetch upstream
+git merge upstream/master
 just localization-check   # 为上游新增的界面文案补充译文
 just check
 ```

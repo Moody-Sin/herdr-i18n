@@ -518,7 +518,10 @@ fn api_schema_default_output_is_a_short_summary() {
 
     assert!(output.status.success());
     let stdout = String::from_utf8_lossy(&output.stdout);
-    assert!(stdout.contains("Herdr API schema"), "stdout: {stdout}");
+    assert!(
+        stdout.contains("Herdr API schema") || stdout.contains("Herdr API 架构"),
+        "stdout: {stdout}"
+    );
     assert!(
         stdout.contains("Use `herdr api schema --json`")
             || stdout.contains("使用 `herdr api schema --json`"),
@@ -602,7 +605,9 @@ fn api_schema_output_writes_bundled_schema_to_file() {
     assert!(output.status.success());
     let stdout = String::from_utf8_lossy(&output.stdout);
     assert!(
-        stdout.contains("wrote API schema") || stdout.contains("已将 API schema 写入"),
+        stdout.contains("wrote API schema")
+            || stdout.contains("已将 API schema 写入")
+            || stdout.contains("已将 API 架构写入"),
         "stdout: {stdout}"
     );
     let schema: serde_json::Value =

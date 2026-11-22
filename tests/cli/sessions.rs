@@ -398,34 +398,45 @@ fn status_commands_report_client_and_server_versions() {
         String::from_utf8_lossy(&full.stderr)
     );
     let full_stdout = String::from_utf8_lossy(&full.stdout);
-    assert!(full_stdout.contains("client:\n"), "stdout: {full_stdout}");
     assert!(
-        full_stdout.contains(&format!("  version: {}", env!("CARGO_PKG_VERSION"))),
+        full_stdout.contains("客户端：\n") || full_stdout.contains("client:\n"),
         "stdout: {full_stdout}"
     );
     assert!(
-        full_stdout.contains("  protocol: 22"),
-        "stdout: {full_stdout}"
-    );
-    assert!(full_stdout.contains("server:\n"), "stdout: {full_stdout}");
-    assert!(
-        full_stdout.contains("  status: running"),
+        (full_stdout.contains(&format!("  版本： {}", env!("CARGO_PKG_VERSION")))
+            || full_stdout.contains(&format!("  version: {}", env!("CARGO_PKG_VERSION")))),
         "stdout: {full_stdout}"
     );
     assert!(
-        full_stdout.contains("  private_protocol_compatible: yes"),
+        (full_stdout.contains("  协议： 22") || full_stdout.contains("  protocol: 22")),
         "stdout: {full_stdout}"
     );
     assert!(
-        full_stdout.contains("  endpoint_compatible: yes"),
+        full_stdout.contains("服务器：\n")
+            || (full_stdout.contains("服务器：\n") || full_stdout.contains("server:\n")),
         "stdout: {full_stdout}"
     );
     assert!(
-        full_stdout.contains("  restart_needed: no"),
+        (full_stdout.contains("  状态：运行中") || full_stdout.contains("  status: running")),
         "stdout: {full_stdout}"
     );
     assert!(
-        full_stdout.contains("  server_binary_stale: no"),
+        (full_stdout.contains("  私有协议兼容： yes")
+            || full_stdout.contains("  private_protocol_compatible: yes")),
+        "stdout: {full_stdout}"
+    );
+    assert!(
+        (full_stdout.contains("  端点兼容： yes")
+            || full_stdout.contains("  endpoint_compatible: yes")),
+        "stdout: {full_stdout}"
+    );
+    assert!(
+        (full_stdout.contains("  需要重启： no") || full_stdout.contains("  restart_needed: no")),
+        "stdout: {full_stdout}"
+    );
+    assert!(
+        (full_stdout.contains("  服务器二进制文件已过时： no")
+            || full_stdout.contains("  server_binary_stale: no")),
         "stdout: {full_stdout}"
     );
     assert!(

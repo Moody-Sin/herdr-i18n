@@ -162,8 +162,12 @@ impl fmt::Display for ApiClientError {
             Self::Io(err) => write!(f, "{err}"),
             Self::Json(err) => write!(f, "{err}"),
             Self::ErrorResponse(response) => write!(f, "{}", response.error.message),
-            Self::EmptyResponse => write!(f, "empty api response"),
-            Self::UnexpectedResult(result) => write!(f, "unexpected api result: {result}"),
+            Self::EmptyResponse => write!(f, "{}", crate::tr!("empty api response")),
+            Self::UnexpectedResult(result) => write!(
+                f,
+                "{}",
+                crate::trf!("unexpected api result: {result}", result = result)
+            ),
         }
     }
 }

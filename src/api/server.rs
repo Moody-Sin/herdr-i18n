@@ -287,7 +287,7 @@ fn retired_pane_graphics_method_error(line: &str, id: &str) -> Option<ErrorRespo
         id: id.into(),
         error: ErrorBody {
             code: "unknown_method".into(),
-            message: format!("unknown method: {method}"),
+            message: crate::trf!("unknown method: {method}", method = method),
         },
     })
 }
@@ -368,7 +368,10 @@ fn handle_connection_with_stop(
                     id,
                     error: ErrorBody {
                         code: "invalid_request".into(),
-                        message: format!("invalid request: {request_error}"),
+                        message: crate::trf!(
+                            "invalid request: {request_error}",
+                            request_error = request_error
+                        ),
                     },
                 });
             write_json_line_allow_disconnect(&mut stream, &response)?;
