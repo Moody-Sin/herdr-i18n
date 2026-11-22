@@ -1,17 +1,4 @@
-use ratatui::{
-    layout::{Constraint, Layout, Rect},
-    style::Color,
-};
-use unicode_width::UnicodeWidthStr;
-
-use crate::app::state::Palette;
-
-pub(super) fn panel_contrast_fg(palette: &Palette) -> Color {
-    match palette.panel_bg {
-        Color::Reset => palette.surface_dim,
-        color => color,
-    }
-}
+use ratatui::layout::{Constraint, Layout, Rect};
 
 pub(crate) fn centered_popup_rect(area: Rect, popup_width: u16, popup_height: u16) -> Option<Rect> {
     let popup_width = popup_width.min(area.width.saturating_sub(4));
@@ -89,15 +76,14 @@ pub(crate) fn modal_stack_areas(
 }
 
 fn action_button_width(hint: Option<&str>, label: &str) -> u16 {
-    let text = match hint {
-        Some(hint) => format!(" {hint} {label} "),
-        None => format!(" {label} "),
-    };
-    u16::try_from(UnicodeWidthStr::width(text.as_str())).unwrap_or(u16::MAX)
+    match hint {
+        Some(hint) => format!(" {hint} {label} ").chars().count() as u16,
+        None => format!(" {label} ").chars().count() as u16,
+    }
 }
 
 pub(crate) fn close_button_rect(area: Rect) -> Rect {
-    let width = action_button_width(Some("esc"), crate::tr!("close"));
+    let width = action_button_width(Some("esc"), "close");
     Rect::new(area.x + area.width.saturating_sub(width), area.y, width, 1)
 }
 
@@ -105,7 +91,7 @@ pub(crate) fn continue_button_rect(area: Rect) -> Rect {
     Rect::new(
         area.x,
         area.y,
-        action_button_width(Some("↵"), crate::tr!("continue")),
+        action_button_width(Some("↵"), "continue"),
         1,
     )
 }

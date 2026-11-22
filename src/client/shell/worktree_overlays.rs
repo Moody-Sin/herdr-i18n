@@ -78,7 +78,7 @@ pub(super) fn render_worktree_create_overlay(
         *primary,
         crate::tr!(" ↵ create and open "),
         Style::default()
-            .fg(contrast(p))
+            .fg(p.accent_foreground())
             .bg(p.accent)
             .add_modifier(Modifier::BOLD),
     );
@@ -214,7 +214,7 @@ pub(super) fn render_worktree_open_overlay(
         row_hits.push((rect, entry_index));
         let selected = entry_index == open.selected;
         let style = if selected {
-            Style::default().fg(contrast(p)).bg(p.accent)
+            Style::default().fg(p.accent_foreground()).bg(p.accent)
         } else {
             Style::default().fg(p.text).bg(p.panel_bg)
         };
@@ -282,7 +282,7 @@ pub(super) fn render_worktree_open_overlay(
         *primary,
         crate::tr!(" ↵ open "),
         Style::default()
-            .fg(contrast(p))
+            .fg(p.accent_foreground())
             .bg(p.accent)
             .add_modifier(Modifier::BOLD),
     );
@@ -394,7 +394,7 @@ pub(super) fn render_worktree_remove_overlay(
             crate::tr!(" ↵ remove ")
         },
         Style::default()
-            .fg(contrast(p))
+            .fg(p.fill_foreground())
             .bg(p.red)
             .add_modifier(Modifier::BOLD),
     );
